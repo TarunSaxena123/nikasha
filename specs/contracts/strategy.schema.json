@@ -1,0 +1,622 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://nikasha.local/contracts/strategy.schema.json",
+  "title": "Strategy",
+  "description": "Internal strategy format. Never shown to users (constitution §4). Structural rules live here; rules JSON Schema cannot express are in strategy-rules.md (SEM-xx) and are enforced identically by the web app and the engine. Mandatory inputs (product.md §6.1) are the required top-level fields. Every advanced option (product.md §6.2) is OFF when absent and has no default.",
+  "$comment": "Advanced options and where they live: SL cap → advanced.sl_cap_pts; trigger-candle SL → exit.stop_loss.type TRIGGER_CANDLE; R:R target → exit.target.type RR; trail to cost → advanced.trail_to_cost_at_r; exit after N candles → advanced.exit_after_candles; VIX sizing → advanced.vix_sizing; entry/no-entry windows → advanced.entry_windows / advanced.no_entry_windows; expiry-day cutoff → advanced.expiry_day_cutoff; daily limits → advanced.daily; 1–4 legs → legs (more than one leg); strike by delta/premium → legs[].strike.method DELTA / PREMIUM.",
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schema_version", "underlying", "timeframe_min", "holding", "position", "indicators", "legs", "entry", "exit"],
+  "properties": {
+    "schema_version": { "const": "1.0" },
+    "name": { "type": "string", "minLength": 1, "maxLength": 120 },
+    "origin": {
+      "description": "Which entry path produced this strategy. Informational only; does not change evaluation.",
+      "enum": ["TEMPLATE", "BUILDER", "UPLOAD"]
+    },
+    "template_id": { "type": "string", "pattern": "^[a-z0-9-]{1,40}$" },
+    "underlying": {
+      "description": "Instrument symbol from the instrument registry (mandatory input 1).",
+      "type": "string",
+      "pattern": "^[A-Z0-9_]{2,20}$"
+    },
+    "timeframe_min": {
+      "description": "Candle timeframe in minutes (mandatory input 7). Also limited by the instrument profile's allowed_timeframes_min.",
+      "enum": [1, 3, 5, 15, 30, 60, 240]
+    },
+    "holding": {
+      "description": "Mandatory input 8. INTRADAY positions are squared off at the profile's intraday_squareoff time.",
+      "enum": ["INTRADAY", "POSITIONAL"]
+    },
+    "position": {
+      "description": "Mandatory inputs 9 and 10. Applied uniformly to every trade in the backtest.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["lots", "lot_size"],
+      "properties": {
+        "lots": { "type": "integer", "minimum": 1, "maximum": 1000 },
+        "lot_size": { "type": "integer", "minimum": 1, "maximum": 100000 }
+      }
+    },
+    "indicators": {
+      "description": "Indicator instances referenced by conditions, keyed by an id such as ema9. May be empty for fixed-time strategies.",
+      "type": "object",
+      "propertyNames": { "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+      "additionalProperties": { "$ref": "#/$defs/Indicator" },
+      "maxProperties": 20
+    },
+    "legs": {
+      "description": "Mandatory inputs 2–6 (action, option type, moneyness, distance, expiry). More than one leg is an advanced option.",
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 4,
+      "items": { "$ref": "#/$defs/Leg" }
+    },
+    "entry": { "$ref": "#/$defs/Entry" },
+    "exit": { "$ref": "#/$defs/Exit" },
+    "advanced": { "$ref": "#/$defs/Advanced" }
+  },
+
+  "$defs": {
+    "Time": {
+      "description": "Clock time HH:MM, IST.",
+      "type": "string",
+      "pattern": "^([01][0-9]|2[0-3]):[0-5][0-9]$"
+    },
+    "TimeWindow": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["from", "to"],
+      "properties": {
+        "from": { "$ref": "#/$defs/Time" },
+        "to": { "$ref": "#/$defs/Time" }
+      }
+    },
+    "IndicatorId": { "type": "string", "pattern": "^[a-z][a-z0-9_]{0,31}$" },
+    "PriceField": { "enum": ["open", "high", "low", "close"] },
+
+    "Indicator": {
+      "oneOf": [
+        {
+          "title": "Moving average (EMA or SMA)",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "period", "source"],
+          "properties": {
+            "type": { "enum": ["EMA", "SMA"] },
+            "period": { "type": "integer", "minimum": 1, "maximum": 500 },
+            "source": { "$ref": "#/$defs/PriceField" }
+          }
+        },
+        {
+          "title": "RSI or ADX",
+          "description": "RSI outputs: value. ADX outputs: value (ADX), plus_di, minus_di.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "period"],
+          "properties": {
+            "type": { "enum": ["RSI", "ADX"] },
+            "period": { "type": "integer", "minimum": 2, "maximum": 200 }
+          }
+        },
+        {
+          "title": "Supertrend",
+          "description": "Outputs: value (the Supertrend line) and direction (up = green, down = red), used by state/turns conditions.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "period", "multiplier"],
+          "properties": {
+            "type": { "const": "SUPERTREND" },
+            "period": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "multiplier": { "type": "number", "exclusiveMinimum": 0, "maximum": 10 }
+          }
+        },
+        {
+          "title": "MACD",
+          "description": "Outputs: value (MACD line), signal, hist.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "fast", "slow", "signal"],
+          "properties": {
+            "type": { "const": "MACD" },
+            "fast": { "type": "integer", "minimum": 1, "maximum": 200 },
+            "slow": { "type": "integer", "minimum": 2, "maximum": 400 },
+            "signal": { "type": "integer", "minimum": 1, "maximum": 200 }
+          }
+        },
+        {
+          "title": "Bollinger Bands",
+          "description": "Outputs: upper, middle, lower.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "period", "stddev", "source"],
+          "properties": {
+            "type": { "const": "BBANDS" },
+            "period": { "type": "integer", "minimum": 2, "maximum": 500 },
+            "stddev": { "type": "number", "exclusiveMinimum": 0, "maximum": 5 },
+            "source": { "$ref": "#/$defs/PriceField" }
+          }
+        }
+      ]
+    },
+
+    "Offset": {
+      "description": "Shifts an operand, e.g. EMA 21 + 10 points, to express thresholds such as 'closes decisively above'.",
+      "oneOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pts"],
+          "properties": { "pts": { "type": "number", "minimum": -100000, "maximum": 100000 } }
+        },
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["pct"],
+          "properties": { "pct": { "type": "number", "minimum": -100, "maximum": 100 } }
+        }
+      ]
+    },
+
+    "Operand": {
+      "oneOf": [
+        {
+          "title": "Indicator output",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["ind", "output"],
+          "properties": {
+            "ind": { "$ref": "#/$defs/IndicatorId" },
+            "output": { "enum": ["value", "signal", "hist", "upper", "middle", "lower", "plus_di", "minus_di"] },
+            "offset": { "$ref": "#/$defs/Offset" }
+          }
+        },
+        {
+          "title": "Underlying candle price",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["price"],
+          "properties": {
+            "price": { "$ref": "#/$defs/PriceField" },
+            "offset": { "$ref": "#/$defs/Offset" }
+          }
+        },
+        {
+          "title": "Volatility index value on the candle",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["vix"],
+          "properties": {
+            "vix": { "enum": ["open", "close"] }
+          }
+        },
+        {
+          "title": "Constant number",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["const"],
+          "properties": {
+            "const": { "type": "number" }
+          }
+        }
+      ]
+    },
+
+    "Condition": {
+      "description": "Evaluated on each candle close. Groups nest (max depth 4, SEM-15).",
+      "oneOf": [
+        { "$ref": "#/$defs/AllGroup" },
+        { "$ref": "#/$defs/AnyGroup" },
+        { "$ref": "#/$defs/Compare" },
+        { "$ref": "#/$defs/Cross" },
+        { "$ref": "#/$defs/State" },
+        { "$ref": "#/$defs/Turns" },
+        { "$ref": "#/$defs/Slope" }
+      ]
+    },
+    "AllGroup": {
+      "description": "True when every condition is true (AND).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "conditions"],
+      "properties": {
+        "type": { "const": "all" },
+        "conditions": { "type": "array", "minItems": 1, "maxItems": 20, "items": { "$ref": "#/$defs/Condition" } }
+      }
+    },
+    "AnyGroup": {
+      "description": "True when at least one condition is true (OR). Only used where the user's rule says 'or' (product.md §6.4).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "conditions"],
+      "properties": {
+        "type": { "const": "any" },
+        "conditions": { "type": "array", "minItems": 2, "maxItems": 20, "items": { "$ref": "#/$defs/Condition" } }
+      }
+    },
+    "Compare": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "left", "op", "right"],
+      "properties": {
+        "type": { "const": "compare" },
+        "left": { "$ref": "#/$defs/Operand" },
+        "op": { "enum": ["gt", "gte", "lt", "lte"] },
+        "right": { "$ref": "#/$defs/Operand" }
+      }
+    },
+    "Cross": {
+      "description": "left crosses above/below right on this candle (was on the other side, or equal, on the previous candle).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "left", "direction", "right"],
+      "properties": {
+        "type": { "const": "cross" },
+        "left": { "$ref": "#/$defs/Operand" },
+        "direction": { "enum": ["above", "below"] },
+        "right": { "$ref": "#/$defs/Operand" }
+      }
+    },
+    "State": {
+      "description": "A direction indicator is currently up/down (e.g. Supertrend is green), on any candle while it holds.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "ind", "is"],
+      "properties": {
+        "type": { "const": "state" },
+        "ind": { "$ref": "#/$defs/IndicatorId" },
+        "is": { "enum": ["up", "down"] }
+      }
+    },
+    "Turns": {
+      "description": "A direction indicator flips to up/down on this candle only (e.g. Supertrend turns green).",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "ind", "to"],
+      "properties": {
+        "type": { "const": "turns" },
+        "ind": { "$ref": "#/$defs/IndicatorId" },
+        "to": { "enum": ["up", "down"] }
+      }
+    },
+    "Slope": {
+      "description": "Operand is higher (up) / lower (down) now than lookback candles ago.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["type", "operand", "direction", "lookback"],
+      "properties": {
+        "type": { "const": "slope" },
+        "operand": { "$ref": "#/$defs/Operand" },
+        "direction": { "enum": ["up", "down"] },
+        "lookback": { "type": "integer", "minimum": 1, "maximum": 50 }
+      }
+    },
+
+    "Leg": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["action", "option_type", "expiry", "strike"],
+      "properties": {
+        "action": { "description": "Mandatory input 2.", "enum": ["BUY", "SELL"] },
+        "option_type": {
+          "description": "Mandatory input 3. SIGNAL = CE when the CE entry condition is met, PE when the PE entry condition is met (option type 'both').",
+          "enum": ["CE", "PE", "SIGNAL"]
+        },
+        "expiry": { "description": "Mandatory input 6.", "enum": ["CURRENT_WEEKLY", "NEXT_WEEKLY", "MONTHLY"] },
+        "strike": { "$ref": "#/$defs/StrikeSelection" }
+      }
+    },
+    "StrikeSelection": {
+      "oneOf": [
+        {
+          "title": "By moneyness (mandatory inputs 4 and 5)",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "moneyness", "distance_pts"],
+          "properties": {
+            "method": { "const": "MONEYNESS" },
+            "moneyness": { "enum": ["ATM", "ITM", "OTM"] },
+            "distance_pts": { "type": "number", "minimum": 0, "maximum": 100000 }
+          }
+        },
+        {
+          "title": "By delta (advanced)",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "target_delta"],
+          "properties": {
+            "method": { "const": "DELTA" },
+            "target_delta": { "type": "number", "exclusiveMinimum": 0, "exclusiveMaximum": 1 }
+          }
+        },
+        {
+          "title": "By premium (advanced)",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["method", "target_premium"],
+          "properties": {
+            "method": { "const": "PREMIUM" },
+            "target_premium": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      ]
+    },
+
+    "Entry": {
+      "description": "Mandatory input 11. An entry happens only when the entire strategy is satisfied (product.md §7.2). Triggers present together must all hold (at_time AND the side's conditions).",
+      "type": "object",
+      "additionalProperties": false,
+      "minProperties": 1,
+      "properties": {
+        "at_time": { "description": "Fixed entry time; with conditions it is an additional requirement.", "$ref": "#/$defs/Time" },
+        "ce": { "description": "Conditions that open CE (and SIGNAL-as-CE) legs.", "$ref": "#/$defs/Condition" },
+        "pe": { "description": "Conditions that open PE (and SIGNAL-as-PE) legs.", "$ref": "#/$defs/Condition" },
+        "all_legs": { "description": "Conditions that open all legs together (multi-leg, non-directional).", "$ref": "#/$defs/Condition" }
+      }
+    },
+
+    "Exit": {
+      "description": "Mandatory inputs 12 and 13. INTRADAY: the square-off time is the time exit. POSITIONAL: needs target, time_exit, hold_to_expiry or advanced.exit_after_candles, chosen by the user (SEM-07). A position still open on its expiry day is settled at intrinsic value. For multi-leg strategies, stop_loss and target apply to the combined position.",
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["stop_loss"],
+      "properties": {
+        "stop_loss": {
+          "oneOf": [
+            {
+              "title": "Percent of entry premium",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "value"],
+              "properties": {
+                "type": { "const": "PCT_PREMIUM" },
+                "value": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000 }
+              }
+            },
+            {
+              "title": "Premium points",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "value"],
+              "properties": {
+                "type": { "const": "POINTS" },
+                "value": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            },
+            {
+              "title": "Trigger candle (advanced): low (bought) / high (sold) of the trigger candle on the modelled option premium",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": {
+                "type": { "const": "TRIGGER_CANDLE" }
+              }
+            }
+          ]
+        },
+        "target": {
+          "oneOf": [
+            {
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "value"],
+              "properties": {
+                "type": { "enum": ["PCT_PREMIUM", "POINTS"] },
+                "value": { "type": "number", "exclusiveMinimum": 0 }
+              }
+            },
+            {
+              "title": "Risk-reward (advanced): target distance = value × stop distance",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type", "value"],
+              "properties": {
+                "type": { "const": "RR" },
+                "value": { "type": "number", "exclusiveMinimum": 0, "maximum": 20 }
+              }
+            }
+          ]
+        },
+        "time_exit": {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["at", "on"],
+          "properties": {
+            "at": { "$ref": "#/$defs/Time" },
+            "on": { "enum": ["ENTRY_DAY", "EXPIRY_DAY"] }
+          }
+        },
+        "hold_to_expiry": {
+          "description": "Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen.",
+          "const": true
+        }
+      }
+    },
+
+    "Advanced": {
+      "description": "Every property is OFF when absent. No property has a default (constitution §3).",
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "sl_cap_pts": { "description": "Maximum stop distance in premium points.", "type": "number", "exclusiveMinimum": 0 },
+        "trail_to_cost_at_r": { "description": "Move stop to entry price once profit reaches this multiple of the initial risk.", "type": "number", "exclusiveMinimum": 0, "maximum": 20 },
+        "exit_after_candles": { "description": "Exit if neither stop nor target is hit within N candles after entry.", "type": "integer", "minimum": 1, "maximum": 500 },
+        "vix_sizing": {
+          "description": "Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot.",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measured_at", "bands"],
+          "properties": {
+            "measured_at": { "description": "DAY_OPEN = the day's first VIX value (09:15; used for 'pre-market' rules). ENTRY = VIX at the entry minute.", "enum": ["DAY_OPEN", "ENTRY"] },
+            "bands": {
+              "type": "array",
+              "minItems": 1,
+              "maxItems": 6,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["size_pct"],
+                "properties": {
+                  "vix_from": { "description": "Inclusive lower edge; absent = no lower edge.", "type": "number", "minimum": 0 },
+                  "vix_to": { "description": "Exclusive upper edge; absent = no upper edge.", "type": "number", "exclusiveMinimum": 0 },
+                  "size_pct": { "type": "number", "exclusiveMinimum": 0, "maximum": 1000 }
+                }
+              }
+            }
+          }
+        },
+        "entry_windows": { "description": "New entries only inside these windows.", "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/$defs/TimeWindow" } },
+        "no_entry_windows": { "description": "No new entries inside these windows.", "type": "array", "minItems": 1, "maxItems": 6, "items": { "$ref": "#/$defs/TimeWindow" } },
+        "expiry_day_cutoff": { "description": "No new entries at or after this time on the traded contract's expiry day.", "$ref": "#/$defs/Time" },
+        "daily": {
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "max_trades": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "stop_after_sl_hits": { "type": "integer", "minimum": 1, "maximum": 100 },
+            "max_daily_loss_rupees": { "type": "number", "exclusiveMinimum": 0 }
+          }
+        }
+      }
+    }
+  },
+
+  "examples": [
+    {
+      "schema_version": "1.0",
+      "name": "Simple Trend Follower",
+      "origin": "TEMPLATE",
+      "template_id": "simple-trend-follower",
+      "underlying": "NIFTY50",
+      "timeframe_min": 15,
+      "holding": "INTRADAY",
+      "position": { "lots": 1, "lot_size": 65 },
+      "indicators": {
+        "ema9": { "type": "EMA", "period": 9, "source": "close" },
+        "ema21": { "type": "EMA", "period": 21, "source": "close" }
+      },
+      "legs": [
+        { "action": "BUY", "option_type": "SIGNAL", "expiry": "CURRENT_WEEKLY", "strike": { "method": "MONEYNESS", "moneyness": "ATM", "distance_pts": 0 } }
+      ],
+      "entry": {
+        "ce": { "type": "cross", "left": { "ind": "ema9", "output": "value" }, "direction": "above", "right": { "ind": "ema21", "output": "value" } },
+        "pe": { "type": "cross", "left": { "ind": "ema9", "output": "value" }, "direction": "below", "right": { "ind": "ema21", "output": "value" } }
+      },
+      "exit": {
+        "stop_loss": { "type": "PCT_PREMIUM", "value": 30 },
+        "target": { "type": "PCT_PREMIUM", "value": 50 }
+      },
+      "advanced": {
+        "entry_windows": [ { "from": "09:30", "to": "14:30" } ],
+        "daily": { "max_trades": 2 }
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "name": "Nifty 15-min weekly option buying (sample, with example answers to its vague rules)",
+      "origin": "UPLOAD",
+      "underlying": "NIFTY50",
+      "timeframe_min": 15,
+      "holding": "INTRADAY",
+      "position": { "lots": 2, "lot_size": 65 },
+      "indicators": {
+        "st": { "type": "SUPERTREND", "period": 10, "multiplier": 2 },
+        "ema9": { "type": "EMA", "period": 9, "source": "close" },
+        "ema21": { "type": "EMA", "period": 21, "source": "close" },
+        "rsi14": { "type": "RSI", "period": 14 },
+        "adx14": { "type": "ADX", "period": 14 }
+      },
+      "legs": [
+        { "action": "BUY", "option_type": "SIGNAL", "expiry": "CURRENT_WEEKLY", "strike": { "method": "MONEYNESS", "moneyness": "ITM", "distance_pts": 100 } }
+      ],
+      "entry": {
+        "ce": {
+          "type": "all",
+          "conditions": [
+            { "type": "turns", "ind": "st", "to": "up" },
+            { "type": "compare", "left": { "ind": "ema9", "output": "value" }, "op": "gt", "right": { "ind": "ema21", "output": "value" } },
+            { "type": "compare", "left": { "price": "close" }, "op": "gt", "right": { "ind": "ema9", "output": "value", "offset": { "pts": 10 } } },
+            { "type": "compare", "left": { "price": "close" }, "op": "gt", "right": { "ind": "ema21", "output": "value", "offset": { "pts": 10 } } },
+            { "type": "compare", "left": { "ind": "rsi14", "output": "value" }, "op": "gt", "right": { "const": 55 } },
+            {
+              "type": "any",
+              "conditions": [
+                {
+                  "type": "all",
+                  "conditions": [
+                    { "type": "compare", "left": { "ind": "adx14", "output": "value" }, "op": "gt", "right": { "const": 20 } },
+                    { "type": "slope", "operand": { "ind": "adx14", "output": "value" }, "direction": "up", "lookback": 1 }
+                  ]
+                },
+                { "type": "compare", "left": { "ind": "adx14", "output": "value" }, "op": "gt", "right": { "const": 30 } }
+              ]
+            }
+          ]
+        },
+        "pe": {
+          "type": "all",
+          "conditions": [
+            { "type": "turns", "ind": "st", "to": "down" },
+            { "type": "compare", "left": { "ind": "ema9", "output": "value" }, "op": "lt", "right": { "ind": "ema21", "output": "value" } },
+            { "type": "compare", "left": { "price": "close" }, "op": "lt", "right": { "ind": "ema9", "output": "value", "offset": { "pts": -10 } } },
+            { "type": "compare", "left": { "price": "close" }, "op": "lt", "right": { "ind": "ema21", "output": "value", "offset": { "pts": -10 } } },
+            { "type": "compare", "left": { "ind": "rsi14", "output": "value" }, "op": "lt", "right": { "const": 45 } },
+            {
+              "type": "any",
+              "conditions": [
+                {
+                  "type": "all",
+                  "conditions": [
+                    { "type": "compare", "left": { "ind": "adx14", "output": "value" }, "op": "gt", "right": { "const": 20 } },
+                    { "type": "slope", "operand": { "ind": "adx14", "output": "value" }, "direction": "up", "lookback": 1 }
+                  ]
+                },
+                { "type": "compare", "left": { "ind": "adx14", "output": "value" }, "op": "gt", "right": { "const": 30 } }
+              ]
+            }
+          ]
+        }
+      },
+      "exit": {
+        "stop_loss": { "type": "TRIGGER_CANDLE" },
+        "target": { "type": "RR", "value": 1.5 }
+      },
+      "advanced": {
+        "sl_cap_pts": 30,
+        "trail_to_cost_at_r": 1,
+        "exit_after_candles": 4,
+        "vix_sizing": {
+          "measured_at": "DAY_OPEN",
+          "bands": [
+            { "vix_to": 12, "size_pct": 50 },
+            { "vix_from": 12, "vix_to": 18, "size_pct": 100 },
+            { "vix_from": 18, "size_pct": 50 }
+          ]
+        },
+        "no_entry_windows": [ { "from": "11:00", "to": "13:30" } ],
+        "expiry_day_cutoff": "12:00",
+        "daily": { "max_trades": 2, "stop_after_sl_hits": 2 }
+      }
+    },
+    {
+      "schema_version": "1.0",
+      "name": "Simple short straddle",
+      "origin": "TEMPLATE",
+      "template_id": "simple-short-straddle",
+      "underlying": "NIFTY50",
+      "timeframe_min": 5,
+      "holding": "INTRADAY",
+      "position": { "lots": 1, "lot_size": 65 },
+      "indicators": {},
+      "legs": [
+        { "action": "SELL", "option_type": "CE", "expiry": "CURRENT_WEEKLY", "strike": { "method": "MONEYNESS", "moneyness": "ATM", "distance_pts": 0 } },
+        { "action": "SELL", "option_type": "PE", "expiry": "CURRENT_WEEKLY", "strike": { "method": "MONEYNESS", "moneyness": "ATM", "distance_pts": 0 } }
+      ],
+      "entry": { "at_time": "09:20" },
+      "exit": {
+        "stop_loss": { "type": "PCT_PREMIUM", "value": 30 }
+      }
+    }
+  ]
+}
