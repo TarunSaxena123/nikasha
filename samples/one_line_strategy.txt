@@ -1,0 +1,1 @@
+Buy ATM Nifty call when RSI 14 crosses above 60 on 5-minute chart, stop-loss 30%.

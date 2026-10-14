@@ -1,0 +1,88 @@
+{
+ "nifty50": {
+  "raw_rows": 1048738,
+  "volume_all_zero": true,
+  "stamped_1s_late_fixed": 10693,
+  "duplicates_after_flooring_dropped": 4,
+  "sessions_dropped": {
+   "2015-11-11": 72,
+   "2016-10-30": 46,
+   "2017-10-19": 60,
+   "2018-11-07": 60,
+   "2019-10-27": 60,
+   "2020-11-14": 60,
+   "2021-02-24": 54,
+   "2021-11-04": 60,
+   "2022-10-24": 60,
+   "2023-11-12": 60,
+   "2024-03-02": 105,
+   "2024-05-18": 105,
+   "2024-11-01": 60,
+   "2025-10-21": 60,
+   "2026-05-15": 246
+  },
+  "rows_outside_0915_1529_dropped": 0,
+  "high_low_repaired": 0,
+  "non_positive_prices": 0,
+  "clean_rows": 1047566,
+  "days": 2794,
+  "first": "2015-01-09 09:15:00",
+  "last": "2026-05-14 15:29:00",
+  "missing_minutes_total": 184,
+  "days_with_missing_minutes": 28,
+  "weekend_days_kept": [
+   "2015-02-28",
+   "2020-02-01",
+   "2024-01-20",
+   "2025-02-01",
+   "2026-02-01"
+  ]
+ },
+ "indiavix": {
+  "raw_rows": 1048338,
+  "volume_all_zero": true,
+  "stamped_1s_late_fixed": 10751,
+  "duplicates_after_flooring_dropped": 4,
+  "sessions_dropped": {
+   "2015-11-11": 60,
+   "2016-10-30": 46,
+   "2017-10-19": 60,
+   "2018-11-07": 60,
+   "2019-10-27": 60,
+   "2020-11-14": 60,
+   "2021-02-24": 53,
+   "2021-11-04": 60,
+   "2022-10-24": 60,
+   "2023-11-12": 60,
+   "2024-03-02": 105,
+   "2024-05-18": 105,
+   "2024-11-01": 60,
+   "2025-10-21": 60,
+   "2026-05-15": 233
+  },
+  "rows_outside_0915_1529_dropped": 0,
+  "high_low_repaired": 2547,
+  "non_positive_prices": 0,
+  "clean_rows": 1047192,
+  "days": 2793,
+  "first": "2015-01-09 09:15:00",
+  "last": "2026-05-14 15:29:00",
+  "missing_minutes_total": 183,
+  "days_with_missing_minutes": 27,
+  "weekend_days_kept": [
+   "2015-02-28",
+   "2020-02-01",
+   "2024-01-20",
+   "2025-02-01",
+   "2026-02-01"
+  ]
+ },
+ "alignment": {
+  "common_minutes": 1047188,
+  "nifty_only": 378,
+  "vix_only": 4,
+  "days_only_in_one": [
+   "2019-07-02"
+  ]
+ }
+}
