@@ -471,6 +471,11 @@ The deadline is **2026-10-16**, two days after these specs were started, for a s
 | — | Short straddle template (multi-leg selling) | P2 — **first cut** |
 | 11 | Privacy audit, README, final deploy | P0 |
 
+**Schedule (owner decision, 2026-10-14):**
+- **Day 1 — 2026-10-15: complete development, locally.** Steps 2–4 and 6–10, run and tested on the local stack (`architecture.md` §10.1). Includes a **deployment rehearsal** that costs nothing and deploys nothing: build the engine container image, run `sam build` for both functions, and build the web app for production.
+- **Day 2 — 2026-10-16 (deadline): deployment only.** Step 5 (engine and extraction to Lambda, Vercel project and minimal page — T-ENG-16, T-UPL-02 deploy, T-EVL-09) and step 11 (privacy audit on CloudWatch, README, final deploy), then the deployment smoke tests (`architecture.md` §9).
+- Because deployment moves to the last day, the build order above is followed for development except that step 5's deploy is deferred; everything in step 5 that doesn't need AWS or Vercel (scaffolds, generated types, local runs) is still done on day 1.
+
 **Cut order if time runs short:** short straddle → suggestions engine → builder advanced options → CSV download → what-if sliders (cut last among these because they carry the "improves a strategy" success criterion). P0 items are never cut. Anything cut stays in the specs, marked "Not built" in `traceability.md`, so the gap is visible rather than hidden.
 
 ---
