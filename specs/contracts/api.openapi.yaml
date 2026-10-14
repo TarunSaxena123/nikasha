@@ -1,0 +1,769 @@
+openapi: 3.1.0
+info:
+  title: Nikasha API
+  version: "1.0.0"
+  summary: The frontend ↔ backend contract for Nikasha.
+  description: |
+    Status: Approved 2026-10-14 · Created 2026-10-14.
+
+    Two services:
+    - **Engine** (AWS Lambda Function URL): `/v1/meta`, `/v1/evaluate`, `/v1/suggestions/plan`.
+    - **Extraction** (a separate AWS Lambda Function URL): `/v1/extract`.
+    Vercel serves the web app's static files only and has no API endpoints.
+
+    Rules for every endpoint:
+    - Nothing sent or returned is stored or logged (constitution §5; backend.md §7).
+    - All user-facing strings in responses are plain English (constitution §4).
+    - Amounts are in rupees (₹), premiums and points in index points, dates `YYYY-MM-DD`, times `HH:MM` IST,
+      timestamps `YYYY-MM-DDTHH:MM` IST without offset.
+    - The strategy format is `strategy.schema.json`; semantic rules are in `strategy-rules.md`.
+servers:
+  - url: "{engineUrl}"
+    description: Engine (Lambda Function URL)
+    variables:
+      engineUrl:
+        default: https://example.lambda-url.ap-south-1.on.aws
+    # /v1/extract overrides this with the extraction function's URL (path-level servers).
+
+tags:
+  - name: engine
+  - name: extraction
+
+paths:
+  /v1/meta:
+    get:
+      tags: [engine]
+      operationId: getMeta
+      summary: Data range, instrument summary and pre-filled settings
+      description: |
+        Called once per tab on app load. All dates come from the loaded data, never hardcoded (product.md §9.2).
+      responses:
+        "200":
+          description: Metadata
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/MetaResponse" }
+        "503": { $ref: "#/components/responses/Busy" }
+        "500": { $ref: "#/components/responses/EngineError" }
+
+  /v1/evaluate:
+    post:
+      tags: [engine]
+      operationId: evaluate
+      summary: Run one backtest (with the volatility sensitivity reruns) and return the report
+      description: |
+        One call = one strategy variant (architecture.md §3.3). Used for Evaluate Strategy, each what-if value,
+        and each suggestion variant. The engine validates again (schema + SEM rules) before running.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/EvaluateRequest" }
+      responses:
+        "200":
+          description: Report
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Report" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/Busy" }
+        "503": { $ref: "#/components/responses/Busy" }
+        "500": { $ref: "#/components/responses/EngineError" }
+
+  /v1/suggestions/plan:
+    post:
+      tags: [engine]
+      operationId: planSuggestions
+      summary: Propose edited copies of the strategy to evaluate
+      description: |
+        Planning only; no backtests are run here. The browser then calls /v1/evaluate once per variant
+        (concurrency cap 4) and compares results. Selection rules (tuning on the in-sample period,
+        judging on the out-of-sample period) are specified in features/06-suggestions.
+      requestBody:
+        required: true
+        content:
+          application/json:
+            schema: { $ref: "#/components/schemas/SuggestionPlanRequest" }
+      responses:
+        "200":
+          description: Variants to evaluate
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/SuggestionPlanResponse" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "422": { $ref: "#/components/responses/ValidationFailed" }
+        "429": { $ref: "#/components/responses/Busy" }
+        "503": { $ref: "#/components/responses/Busy" }
+        "500": { $ref: "#/components/responses/EngineError" }
+
+  /v1/extract:
+    servers:
+      - url: "{extractUrl}"
+        description: Extraction function (Lambda Function URL)
+        variables:
+          extractUrl:
+            default: https://example-extract.lambda-url.ap-south-1.on.aws
+    post:
+      tags: [extraction]
+      operationId: extract
+      summary: Read a strategy document or pasted text into rule items and questions for vague rules
+      description: |
+        The only endpoint that uses an LLM (backend.md §9). Served by the extraction function, not the engine.
+        The file is read in memory and discarded. The response never echoes the document except short
+        quotes per rule item. Missing mandatory inputs are not reported here: the browser finds and asks
+        for them with the same check the builder uses (architecture.md decision A9).
+      requestBody:
+        required: true
+        content:
+          multipart/form-data:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [file]
+              properties:
+                file:
+                  type: string
+                  format: binary
+                  description: .pdf, .docx or .txt, at most 4 MB
+          application/json:
+            schema:
+              type: object
+              additionalProperties: false
+              required: [text]
+              properties:
+                text: { type: string, minLength: 1, maxLength: 20000 }
+      responses:
+        "200":
+          description: Extraction result
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/ExtractionResult" }
+        "400": { $ref: "#/components/responses/BadRequest" }
+        "413": { $ref: "#/components/responses/PayloadTooLarge" }
+        "415":
+          description: File type not supported (UNSUPPORTED_FILE)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "422":
+          description: No readable text (UNREADABLE_FILE) or the strategy could not be read (EXTRACTION_FAILED)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+        "503":
+          description: The AI service is busy (EXTRACTION_BUSY)
+          content:
+            application/json:
+              schema: { $ref: "#/components/schemas/Error" }
+
+components:
+  responses:
+    BadRequest:
+      description: Malformed request (BAD_REQUEST)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    PayloadTooLarge:
+      description: Request too large (PAYLOAD_TOO_LARGE)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    ValidationFailed:
+      description: Strategy or settings invalid (VALIDATION_FAILED, PERIOD_INVALID)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    Busy:
+      description: Throttled or overloaded (BUSY); retry with backoff
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+    EngineError:
+      description: Unexpected failure (ENGINE_ERROR)
+      content:
+        application/json:
+          schema: { $ref: "#/components/schemas/Error" }
+
+  schemas:
+    # ---------- shared ----------
+    Date: { type: string, format: date }
+    Time: { type: string, pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$" }
+    Timestamp:
+      type: string
+      pattern: "^\\d{4}-\\d{2}-\\d{2}T([01][0-9]|2[0-3]):[0-5][0-9]$"
+      description: IST, minute precision, no offset
+    Rupees: { type: number, description: "Amount in ₹, 2 decimals" }
+    Period:
+      type: object
+      additionalProperties: false
+      required: [start, end]
+      properties:
+        start: { $ref: "#/components/schemas/Date" }
+        end: { $ref: "#/components/schemas/Date" }
+    Strategy:
+      $ref: "strategy.schema.json"
+
+    Error:
+      type: object
+      additionalProperties: false
+      required: [error]
+      properties:
+        error:
+          type: object
+          additionalProperties: false
+          required: [code, message]
+          properties:
+            code:
+              enum: [BAD_REQUEST, PAYLOAD_TOO_LARGE, VALIDATION_FAILED, PERIOD_INVALID, BUSY, ENGINE_ERROR,
+                     UNSUPPORTED_FILE, UNREADABLE_FILE, EXTRACTION_FAILED, EXTRACTION_BUSY]
+            message: { type: string, description: Plain English }
+            problems:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [field_label, message]
+                properties:
+                  rule: { type: string, pattern: "^SEM-\\d{2}$", description: "Semantic rule id; not shown to users" }
+                  field_label: { type: string, description: "Plain-English field name, e.g. 'Stop-loss'" }
+                  message: { type: string }
+
+    # ---------- meta ----------
+    MetaResponse:
+      type: object
+      additionalProperties: false
+      required: [engine_version, instruments]
+      properties:
+        engine_version: { type: string }
+        instruments:
+          type: array
+          minItems: 1
+          items: { $ref: "#/components/schemas/InstrumentSummary" }
+
+    InstrumentSummary:
+      type: object
+      additionalProperties: false
+      required: [symbol, name, data_range, volatility_name, lot_size_suggested, lot_size_note, strike_interval,
+                 allowed_timeframes_min, intraday_squareoff, session, expiry_kinds, default_costs, risk_free_rate,
+                 data_source, data_gaps]
+      properties:
+        symbol: { type: string }
+        name: { type: string }
+        data_range:
+          type: object
+          additionalProperties: false
+          required: [first, last]
+          description: Actual first and last timestamps read from the loaded data
+          properties:
+            first: { $ref: "#/components/schemas/Timestamp" }
+            last: { $ref: "#/components/schemas/Timestamp" }
+        volatility_name: { type: string, examples: ["India VIX"] }
+        lot_size_suggested: { type: integer }
+        lot_size_note: { type: string }
+        strike_interval: { type: number }
+        allowed_timeframes_min: { type: array, items: { type: integer } }
+        intraday_squareoff: { $ref: "#/components/schemas/Time" }
+        session:
+          type: object
+          additionalProperties: false
+          required: [first_bar, last_bar]
+          properties:
+            first_bar: { $ref: "#/components/schemas/Time" }
+            last_bar: { $ref: "#/components/schemas/Time" }
+        expiry_kinds:
+          type: array
+          items:
+            type: object
+            additionalProperties: false
+            required: [kind, available_from, default_period, in_sample, out_of_sample_from]
+            properties:
+              kind: { enum: [WEEKLY, MONTHLY] }
+              available_from: { $ref: "#/components/schemas/Date" }
+              default_period: { $ref: "#/components/schemas/Period" }
+              in_sample: { $ref: "#/components/schemas/Period" }
+              out_of_sample_from: { $ref: "#/components/schemas/Date" }
+        default_costs:
+          type: object
+          additionalProperties: false
+          required: [verified_on, items]
+          properties:
+            verified_on: { $ref: "#/components/schemas/Date" }
+            items:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [key, value, label, applies_to, source]
+                properties:
+                  key: { enum: [brokerage_per_order, stt_sell_pct, stt_exercise_pct, exchange_txn_pct, sebi_per_crore, stamp_buy_pct, gst_pct, slippage_pts] }
+                  value: { type: number }
+                  label: { type: string }
+                  applies_to: { type: string }
+                  source: { type: string }
+        risk_free_rate: { type: number }
+        data_source: { $ref: "#/components/schemas/DataSource" }
+        data_gaps:
+          type: object
+          additionalProperties: false
+          required: [days_without_volatility, minutes_missing_underlying, minutes_missing_volatility]
+          properties:
+            days_without_volatility: { type: array, items: { $ref: "#/components/schemas/Date" } }
+            minutes_missing_underlying: { type: integer }
+            minutes_missing_volatility: { type: integer }
+
+    DataSource:
+      type: object
+      additionalProperties: false
+      required: [name, url, note, first, last]
+      properties:
+        name: { type: string }
+        url: { type: string, format: uri }
+        note: { type: string }
+        first: { $ref: "#/components/schemas/Date" }
+        last: { $ref: "#/components/schemas/Date" }
+
+    # ---------- evaluate ----------
+    EvaluationSettings:
+      type: object
+      additionalProperties: false
+      required: [period, costs]
+      description: Pre-filled from /v1/meta and confirmed by the user; the engine applies no defaults of its own.
+      properties:
+        period: { $ref: "#/components/schemas/Period" }
+        costs:
+          type: object
+          additionalProperties: false
+          required: [brokerage_per_order, stt_sell_pct, stt_exercise_pct, exchange_txn_pct, sebi_per_crore, stamp_buy_pct, gst_pct, slippage_pts]
+          properties:
+            brokerage_per_order: { type: number, minimum: 0 }
+            stt_sell_pct: { type: number, minimum: 0 }
+            stt_exercise_pct: { type: number, minimum: 0 }
+            exchange_txn_pct: { type: number, minimum: 0 }
+            sebi_per_crore: { type: number, minimum: 0 }
+            stamp_buy_pct: { type: number, minimum: 0 }
+            gst_pct: { type: number, minimum: 0 }
+            slippage_pts: { type: number, minimum: 0 }
+        capital_rupees:
+          type: [number, "null"]
+          exclusiveMinimum: 0
+          description: Optional. When present, % return and % drawdown are also reported.
+
+    EvaluateRequest:
+      type: object
+      additionalProperties: false
+      required: [strategy, settings]
+      properties:
+        strategy: { $ref: "#/components/schemas/Strategy" }
+        settings: { $ref: "#/components/schemas/EvaluationSettings" }
+
+    Metrics:
+      type: object
+      additionalProperties: false
+      required: [trades, wins, losses, win_rate_pct, net_pnl, gross_pnl, total_costs, total_slippage, avg_win, avg_loss,
+                 expectancy, largest_win, largest_loss, max_drawdown, worst_losing_streak]
+      description: Computed only over trades in the selected period (or the stated sub-period).
+      properties:
+        trades: { type: integer }
+        wins: { type: integer }
+        losses: { type: integer }
+        win_rate_pct: { type: [number, "null"], description: "Wins ÷ trades × 100; null when there are no trades" }
+        net_pnl: { $ref: "#/components/schemas/Rupees" }
+        gross_pnl: { $ref: "#/components/schemas/Rupees" }
+        total_costs: { $ref: "#/components/schemas/Rupees" }
+        total_slippage: { $ref: "#/components/schemas/Rupees" }
+        avg_win: { type: [number, "null"] }
+        avg_loss: { type: [number, "null"] }
+        expectancy: { type: [number, "null"], description: Average net P&L per trade }
+        largest_win: { type: [number, "null"] }
+        largest_loss: { type: [number, "null"] }
+        max_drawdown: { $ref: "#/components/schemas/Rupees" }
+        max_drawdown_pct: { type: [number, "null"], description: Only when capital was given }
+        return_pct: { type: [number, "null"], description: Only when capital was given }
+        worst_losing_streak: { type: integer }
+
+    BreakdownRow:
+      type: object
+      additionalProperties: false
+      required: [key, label, trades, wins, win_rate_pct, net_pnl, expectancy]
+      properties:
+        key: { type: string }
+        label: { type: string, description: "Plain English, e.g. 'VIX 12–18', 'Trending days', 'Mar 2024'" }
+        trades: { type: integer }
+        wins: { type: integer }
+        win_rate_pct: { type: [number, "null"] }
+        net_pnl: { $ref: "#/components/schemas/Rupees" }
+        expectancy: { type: [number, "null"] }
+
+    Trade:
+      type: object
+      additionalProperties: false
+      required: [n, side, legs, entry_time, exit_time, exit_reason, exit_reason_text, quantity, gross_pnl, costs, net_pnl,
+                 vol_at_entry, vol_band, regime, expiry_day]
+      properties:
+        n: { type: integer, minimum: 1 }
+        side: { enum: [CE, PE, MULTI] }
+        legs:
+          type: array
+          minItems: 1
+          items:
+            type: object
+            additionalProperties: false
+            required: [action, option_type, strike, expiry, entry_premium, exit_premium]
+            properties:
+              action: { enum: [BUY, SELL] }
+              option_type: { enum: [CE, PE] }
+              strike: { type: number }
+              expiry: { $ref: "#/components/schemas/Date" }
+              entry_premium: { type: number }
+              exit_premium: { type: number }
+        signal_time: { $ref: "#/components/schemas/Timestamp" }
+        entry_time: { $ref: "#/components/schemas/Timestamp" }
+        exit_time: { $ref: "#/components/schemas/Timestamp" }
+        spot_at_entry: { type: number }
+        exit_reason:
+          enum: [STOP_LOSS, TARGET, TRAIL_TO_COST, TIME_EXIT, SQUARE_OFF, N_CANDLES, EXPIRY_SETTLEMENT]
+        exit_reason_text: { type: string }
+        quantity: { type: integer }
+        gross_pnl: { $ref: "#/components/schemas/Rupees" }
+        costs: { $ref: "#/components/schemas/Rupees" }
+        net_pnl: { $ref: "#/components/schemas/Rupees" }
+        vol_at_entry: { type: number }
+        vol_band: { type: string }
+        regime: { enum: [TRENDING, MIXED, SIDEWAYS, UNKNOWN] }
+        expiry_day: { type: boolean }
+
+    Report:
+      type: object
+      additionalProperties: false
+      required: [engine_version, generated_at, instrument, period, metrics, equity_curve, breakdowns, overfit,
+                 sensitivity, skipped, settings_used, summary, simulation_notes, disclosures, data_source, trades]
+      properties:
+        engine_version: { type: string }
+        generated_at: { $ref: "#/components/schemas/Timestamp" }
+        instrument:
+          type: object
+          additionalProperties: false
+          required: [symbol, name]
+          properties:
+            symbol: { type: string }
+            name: { type: string }
+        period:
+          type: object
+          additionalProperties: false
+          required: [start, end, trading_days]
+          description: The period the user selected; every figure below covers only this period.
+          properties:
+            start: { $ref: "#/components/schemas/Date" }
+            end: { $ref: "#/components/schemas/Date" }
+            trading_days: { type: integer }
+        metrics: { $ref: "#/components/schemas/Metrics" }
+        equity_curve:
+          type: array
+          description: One point per closed trade, in order
+          items:
+            type: object
+            additionalProperties: false
+            required: [t, equity, drawdown]
+            properties:
+              t: { $ref: "#/components/schemas/Timestamp" }
+              equity: { $ref: "#/components/schemas/Rupees" }
+              drawdown: { $ref: "#/components/schemas/Rupees" }
+        breakdowns:
+          type: object
+          additionalProperties: false
+          required: [by_year, by_month, by_vol_band, by_regime, by_weekday, by_expiry_day, by_side]
+          properties:
+            by_year: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_month: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_vol_band: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_regime: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_weekday: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_expiry_day: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_side: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+        overfit:
+          type: object
+          additionalProperties: false
+          required: [status, status_text]
+          properties:
+            status: { enum: [OK, POSSIBLY_OVERFIT, TOO_FEW_TRADES, NOT_APPLICABLE] }
+            status_text: { type: string, description: Plain-English explanation }
+            in_sample:
+              type: object
+              additionalProperties: false
+              required: [period, metrics]
+              properties:
+                period: { $ref: "#/components/schemas/Period" }
+                metrics: { $ref: "#/components/schemas/Metrics" }
+            out_of_sample:
+              type: object
+              additionalProperties: false
+              required: [period, metrics]
+              properties:
+                period: { $ref: "#/components/schemas/Period" }
+                metrics: { $ref: "#/components/schemas/Metrics" }
+        sensitivity:
+          type: array
+          description: Same backtest with volatility shifted down and up (e.g. −2 and +2 points)
+          items:
+            type: object
+            additionalProperties: false
+            required: [vol_shift_pts, metrics]
+            properties:
+              vol_shift_pts: { type: number }
+              metrics: { $ref: "#/components/schemas/Metrics" }
+        skipped:
+          type: object
+          additionalProperties: false
+          required: [data_days, data_minutes, signals]
+          properties:
+            data_days:
+              type: array
+              description: Days skipped for missing data in the period, with reasons
+              items:
+                type: object
+                additionalProperties: false
+                required: [date, reason_text]
+                properties:
+                  date: { $ref: "#/components/schemas/Date" }
+                  reason_text: { type: string }
+            data_minutes:
+              type: object
+              additionalProperties: false
+              required: [missing_underlying, missing_volatility]
+              properties:
+                missing_underlying: { type: integer }
+                missing_volatility: { type: integer }
+            signals:
+              type: array
+              description: >
+                Signals that did not become trades, grouped by reason (product.md §7.2). A signal is counted once,
+                under the first failing check in the order of this enum (feature 01, REQ-ENG-20).
+              items:
+                type: object
+                additionalProperties: false
+                required: [reason, reason_text, count]
+                properties:
+                  reason:
+                    enum: [CONFLICTING_SIGNALS, POSITION_OPEN, OUTSIDE_ENTRY_WINDOW, IN_NO_ENTRY_WINDOW, AFTER_EXPIRY_CUTOFF,
+                           MAX_TRADES, SL_HITS_LIMIT, MAX_DAILY_LOSS, AFTER_SQUAREOFF, NEXT_DAY_FILL, NO_CONTRACT,
+                           EXPIRY_AFTER_DATA_END, UNPRICEABLE, EXIT_LEVELS_UNAVAILABLE]
+                  reason_text: { type: string }
+                  count: { type: integer }
+        settings_used:
+          type: object
+          additionalProperties: false
+          required: [quantity_text, holding_text, timeframe_text, expiry_text, period_text, costs, risk_free_rate_pct,
+                     capital_text, advanced, no_effect_rules]
+          properties:
+            quantity_text: { type: string, examples: ["2 lots × 65 = 130 quantity per trade"] }
+            holding_text: { type: string }
+            timeframe_text: { type: string }
+            expiry_text: { type: string }
+            period_text: { type: string }
+            costs:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [label, value_text, source]
+                properties:
+                  label: { type: string }
+                  value_text: { type: string }
+                  source: { type: string }
+            risk_free_rate_pct: { type: number }
+            capital_text: { type: string }
+            advanced:
+              type: array
+              description: Every advanced option, used or "Not used"
+              items:
+                type: object
+                additionalProperties: false
+                required: [label, used, value_text]
+                properties:
+                  label: { type: string }
+                  used: { type: boolean }
+                  value_text: { type: string, description: '"Not used" when off' }
+            no_effect_rules:
+              type: array
+              items:
+                type: object
+                additionalProperties: false
+                required: [text, trades_affected]
+                properties:
+                  text: { type: string }
+                  trades_affected: { type: integer }
+        summary:
+          type: array
+          description: Plain-English paragraphs built from fixed templates over computed numbers; risk first
+          items: { type: string }
+        simulation_notes:
+          type: array
+          description: Short "How this was simulated" lines (product.md §7)
+          items: { type: string }
+        disclosures:
+          type: object
+          additionalProperties: false
+          required: [modelled_premiums_text, volatility_limitation_text, costs_note_text]
+          properties:
+            modelled_premiums_text: { type: string }
+            volatility_limitation_text: { type: string }
+            costs_note_text: { type: string }
+        data_source: { $ref: "#/components/schemas/DataSource" }
+        trades:
+          type: array
+          items: { $ref: "#/components/schemas/Trade" }
+
+    # ---------- suggestions ----------
+    SuggestionPlanRequest:
+      type: object
+      additionalProperties: false
+      required: [strategy, settings, base]
+      properties:
+        strategy: { $ref: "#/components/schemas/Strategy" }
+        settings: { $ref: "#/components/schemas/EvaluationSettings" }
+        base:
+          type: object
+          additionalProperties: false
+          required: [metrics, by_vol_band, by_regime, by_side]
+          description: Parts of the base report the planner uses to choose regime filters
+          properties:
+            metrics: { $ref: "#/components/schemas/Metrics" }
+            by_vol_band: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_regime: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+            by_side: { type: array, items: { $ref: "#/components/schemas/BreakdownRow" } }
+
+    SuggestionPlanResponse:
+      type: object
+      additionalProperties: false
+      required: [variants, not_offered_text]
+      properties:
+        variants:
+          type: array
+          maxItems: 12
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, kind, change_text, reason_text, strategy]
+            properties:
+              id: { type: string }
+              kind: { enum: [PARAMETER_SWEEP, REGIME_FILTER, ALTERNATIVE] }
+              group: { type: string, description: "Variants in one sweep share a group, e.g. 'Stop-loss %'" }
+              change_text: { type: string, description: "Plain English, e.g. 'Stop-loss 25% instead of 30%'" }
+              reason_text:
+                type: string
+                description: >
+                  Plain-English reason this variant is worth testing, from past simulated results, e.g.
+                  "Trades taken when India VIX was below 12 lost ₹85 on average (42 trades)." Never advice.
+              strategy: { $ref: "#/components/schemas/Strategy" }
+        not_offered_text:
+          type: [string, "null"]
+          description: >
+            When no variants are planned (e.g. fewer than 30 trades in the base report), a plain-English explanation;
+            otherwise null.
+
+    # ---------- extraction ----------
+    ExtractionResult:
+      type: object
+      additionalProperties: false
+      required: [items, draft, questions, ignored_text_found]
+      properties:
+        items:
+          type: array
+          description: >
+            One per rule found, vague or unsupported. Missing mandatory inputs are added in the browser
+            (status MISSING there), not returned here.
+          items:
+            type: object
+            additionalProperties: false
+            required: [id, status, field_label, text]
+            properties:
+              id: { type: string }
+              status: { enum: [FOUND, VAGUE, UNSUPPORTED] }
+              field_label: { type: string, description: "Plain English, e.g. 'Stop-loss'" }
+              text: { type: string, description: "Plain-English statement of what was understood or what is needed" }
+              quote: { type: string, maxLength: 300, description: "Short quote from the document, if any" }
+              mandatory: { type: boolean }
+        draft:
+          type: object
+          description: >
+            Partial strategy in the shape of strategy.schema.json, possibly missing required fields. Answers to
+            questions are applied to it in the browser; it is validated in full on the review screen.
+        questions:
+          type: array
+          description: Questions for VAGUE items only
+          items: { $ref: "#/components/schemas/Question" }
+        ignored_text_found:
+          type: boolean
+          description: True when text that is not a trading rule was ignored (e.g. an unrelated footer)
+
+    Question:
+      type: object
+      additionalProperties: false
+      required: [id, item_id, kind, prompt]
+      properties:
+        id: { type: string }
+        item_id: { type: string }
+        kind: { enum: [CHOICE, NUMBER, TIME, CONFIRM] }
+        prompt: { type: string, examples: ["SL cap: 30 or 35 points?"] }
+        help: { type: string }
+        recommended_option_index:
+          type: [integer, "null"]
+          minimum: 0
+          description: >
+            CONFIRM questions only: index into `options` of the recommended reading, shown pre-selected but
+            applied only when the user confirms (feature 04 D5). Null or absent for other kinds.
+        options:
+          type: array
+          description: CHOICE and CONFIRM. Each option carries the change to apply to the draft.
+          items:
+            type: object
+            additionalProperties: false
+            required: [label, patch]
+            properties:
+              label: { type: string }
+              patch: { $ref: "#/components/schemas/JsonPatch" }
+        number:
+          type: object
+          description: NUMBER only
+          additionalProperties: false
+          required: [unit_label, targets]
+          properties:
+            unit_label: { type: string, examples: ["points", "%"] }
+            min: { type: number }
+            max: { type: number }
+            step: { type: number }
+            prefill: { type: number, description: "Only for inputs with a product-defined pre-fill (lots, lot size); must still be confirmed" }
+            targets:
+              type: array
+              minItems: 1
+              description: >
+                Where the answer is written. Usually one path; several when one answer sets several places
+                (e.g. a 'decisively above' margin applied to both EMAs on the CE side as +x and on the PE side as −x).
+              items:
+                type: object
+                additionalProperties: false
+                required: [path]
+                properties:
+                  path: { type: string, description: "JSON Pointer into the draft" }
+                  multiplier: { type: number, description: "Value written = answer × multiplier; absent means 1" }
+        time:
+          type: object
+          description: TIME only
+          additionalProperties: false
+          required: [path]
+          properties:
+            path: { type: string }
+
+    JsonPatch:
+      type: array
+      description: RFC 6902 operations applied to the draft strategy in the browser
+      items:
+        type: object
+        additionalProperties: false
+        required: [op, path]
+        properties:
+          op: { enum: [add, replace, remove] }
+          path: { type: string }
+          value: {}
