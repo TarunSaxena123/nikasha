@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { Logo } from "./Logo";
 
 const STEPS = [
   { label: "Choose", paths: ["/start", "/templates"] },
@@ -17,7 +18,8 @@ export function Header() {
     <header className="border-b border-line bg-surface">
       <a href="#main" className="skip-link">Skip to content</a>
       <div className="mx-auto flex max-w-6xl flex-wrap items-center justify-between gap-3 px-4 py-3">
-        <Link href="/" className="flex items-baseline gap-2">
+        <Link href="/" className="flex items-center gap-2">
+          <Logo size={28} className="shrink-0" />
           <span className="text-lg font-semibold text-brand">Nikasha</span>
           <span className="hidden text-sm text-ink-muted sm:inline">The touchstone for your trading strategy</span>
         </Link>

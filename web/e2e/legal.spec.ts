@@ -95,3 +95,14 @@ test("browser privacy: only the disclaimer key, no cookies, no third-party or ow
   for (const h of hosts) expect(["localhost:3000", "localhost:8000", "localhost:8001"]).toContain(h);
   expect(requests.filter((r) => r.hasBody && r.url.startsWith("http://localhost:3000"))).toEqual([]);
 });
+
+test("brand: logo beside the name in the header; tab icons linked and served", async ({ page, request }) => {
+  await page.goto("/");
+  const home = page.getByRole("link", { name: /^Nikasha/ });
+  await expect(home.locator("svg[aria-hidden='true']")).toHaveCount(1);
+  for (const rel of ["icon", "apple-touch-icon"]) {
+    const hrefs = await page.locator(`link[rel="${rel}"]`).evaluateAll((ls) => ls.map((l) => l.getAttribute("href")));
+    expect(hrefs.length).toBeGreaterThan(0);
+    for (const h of hrefs) expect((await request.get(h!)).status()).toBe(200);
+  }
+});

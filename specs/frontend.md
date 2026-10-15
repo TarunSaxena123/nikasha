@@ -121,6 +121,8 @@ Calm, trustworthy, educational. **Risk before reward.** Numbers are easy to scan
 | `--brand` | Brand mark, primary buttons (touchstone charcoal) | `#2B2F36` |
 | `--accent` | Highlights, focus ring (touchstone gold) | `#B08A2E` |
 | `--accent-soft` | Background of highlighted sections, e.g. Ideas to test (added 2026-10-15) | `#FAF5E8` |
+
+Brand marks (owner's choice, 2026-10-15): the header logo is a gold rising line on a round touchstone (`web/src/components/Logo.tsx`, decorative, beside the name); the browser-tab icon is an "N" whose diagonal is the gold streak, on a stone square with a light outline for dark tabs (`web/src/app/icon.svg`, rendered to `favicon.ico` and `apple-icon.png` by `web/scripts/make-icons.mjs`).
 | `--risk` | Losses, drawdown, warnings | `#B42318` |
 | `--gain` | Profits | `#1F7A4D` |
 | `--caution` | "Possibly overfit", modelled-data badges | `#B54708` |
