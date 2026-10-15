@@ -21,7 +21,7 @@ dev = [
   "pytest>=8",
   "ruff>=0.6",
   "mypy>=1.10",
-  "datamodel-code-generator>=0.25",
+  "datamodel-code-generator==0.83.0",  # pinned: newer versions write the generated models differently (drift check)
   "httpx2>=2.13",
   "pyyaml>=6",
   "openapi-spec-validator>=0.7",
