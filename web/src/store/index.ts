@@ -51,7 +51,7 @@ export interface SuggestionsState {
   message: string | null;
 }
 
-interface Store {
+export interface Store {
   meta: MetaState;
   draft: Draft | null;
   settings: SettingsState;

@@ -63,6 +63,13 @@ Implements [`product.md`](../../product.md) §3 (beginner user), §6.5 (intro, C
 |---|---|
 | REQ-BEG-19 | WHILE any page other than the intro is shown, THE app SHALL show a "← Back to <page>" link at the top of the page content that leads to that page's parent in the flow (`frontend.md` §2.1), not to the browser history, and SHALL keep the strategy and report held in the tab. |
 
+### 2.6 Keeping work safe (added 2026-10-15, owner request)
+
+| ID | Requirement |
+|---|---|
+| REQ-BEG-20 | WHILE a strategy with the user's input or a report is held in the tab, THE intro page and Choose a path SHALL show a "Continue where you left off" panel naming the strategy, with a link back to where it is being worked on (builder, upload, review or report) and a "Start a new strategy" choice. |
+| REQ-BEG-21 | WHEN an action would replace the held strategy (Use this template, Customize, reading a new upload, Start a new strategy), THE app SHALL first ask "Replace your current strategy? Your current rules and any report in this tab will be cleared." with Replace and Keep my strategy; Keep my strategy changes nothing. |
+
 ## 3. Acceptance criteria
 
 | AC | Req. | Given / When / Then |
@@ -81,6 +88,8 @@ Implements [`product.md`](../../product.md) §3 (beginner user), §6.5 (intro, C
 | AC-BEG-12 | 17 | **Given** a what-if result, **then** the original report is unchanged; **when** Use these settings is clicked, **then** the review screen opens with the changed strategy and nothing is evaluated. |
 | AC-BEG-13 | 18 | **Given** the advanced sample (trigger-candle SL, R:R target), **then** the what-if panel shows the explanation instead of sliders. |
 | AC-BEG-14 | 19 | **Given** each page in `frontend.md` §2.1, **then** a Back link at the top names its target and leads there; **given** a report, **when** Back to review is clicked and then Evaluate is not clicked, **then** the draft is unchanged and the report can be reopened. |
+| AC-BEG-15 | 20 | **Given** a part-built strategy, **when** the logo is clicked, **then** the intro shows "Continue where you left off", and Continue returns to the builder step with every value intact. |
+| AC-BEG-16 | 21 | **Given** a held strategy, **when** Use this template is clicked, **then** the replace question appears; Keep my strategy leaves the draft unchanged; Replace loads the template; with no held strategy no question appears. |
 
 ## 4. Edge cases
 

@@ -105,3 +105,56 @@ test("review of an upload leads back to the upload with the answers kept (AC-BEG
   await page.getByRole("button", { name: "Answer 4 questions" }).click();
   await expect(q.getByLabel("Current weekly")).toBeChecked();
 });
+
+async function startBuilding(page: Page) {
+  await mockServices(page);
+  await page.goto("/build");
+  await acceptGate(page);
+  await page.getByRole("radio", { name: "Buy options" }).click();
+  await page.getByRole("radio", { name: "Call", exact: true }).click();
+  await page.getByLabel("Expiry", { exact: true }).selectOption("NEXT_WEEKLY");
+}
+
+test("leaving through the logo keeps the work; Continue returns to it (AC-BEG-15)", async ({ page }) => {
+  await startBuilding(page);
+  await page.getByRole("link", { name: /^Nikasha/ }).click();
+  await expect(page).toHaveURL(/\/$/);
+  const panel = page.getByTestId("continue-panel");
+  await expect(panel).toContainText("Continue where you left off");
+  await panel.getByRole("link", { name: "Continue building" }).click();
+  await expect(page).toHaveURL(/\/build/);
+  await expect(page.getByLabel("Expiry", { exact: true })).toHaveValue("NEXT_WEEKLY");
+  await expect(page.getByRole("radio", { name: "Call", exact: true })).toBeChecked();
+});
+
+test("replacing the held strategy asks first; Keep changes nothing (AC-BEG-16)", async ({ page }) => {
+  await startBuilding(page);
+  await page.getByRole("link", { name: /^Nikasha/ }).click(); // in-app navigation keeps the tab's memory
+  await page.getByTestId("continue-panel").waitFor();
+  await page.getByRole("link", { name: "Get started" }).first().click();
+  await page.getByRole("link", { name: "See templates" }).click();
+  const card = page.getByTestId("template-simple-trend-follower");
+  await card.getByRole("button", { name: "Use this template" }).click();
+  const dialog = page.getByTestId("replace-dialog");
+  await expect(dialog).toContainText("Replace your current strategy?");
+  await dialog.getByRole("button", { name: "Keep my strategy" }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page).toHaveURL(/\/templates/);
+  await page.getByRole("link", { name: /^Back to Choose a path/ }).click();
+  await expect(page.getByTestId("continue-panel")).toContainText("Continue building"); // still the builder draft
+  await page.getByRole("link", { name: "See templates" }).click();
+  await card.getByRole("button", { name: "Use this template" }).click();
+  await page.getByTestId("replace-dialog").getByRole("button", { name: "Replace" }).click();
+  await expect(page).toHaveURL(/\/review$/);
+  await expect(page.locator('[data-rule="entry_windows"]')).toContainText("09:30–14:30");
+});
+
+test("with nothing held, no question and no panel (AC-BEG-16)", async ({ page }) => {
+  await mockServices(page);
+  await page.goto("/start");
+  await acceptGate(page);
+  await expect(page.getByTestId("continue-panel")).toHaveCount(0);
+  await page.getByRole("link", { name: "See templates" }).click();
+  await page.getByTestId("template-simple-trend-follower").getByRole("button", { name: "Use this template" }).click();
+  await expect(page).toHaveURL(/\/review$/);
+});

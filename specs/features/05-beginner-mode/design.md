@@ -135,6 +135,12 @@ All articles are written in past-simulated, educational language and are reviewe
 - The report page offers "View report" on the review screen while a report for the unchanged draft is held, so going back is never a dead end.
 - The evaluating screen has no Back link; its Cancel already returns to review.
 
+### 1.8 Keeping work safe (BEG-20, 21; added 2026-10-15)
+- `hasWork(draft, evaluation)` (`web/src/lib/work.ts`): true for a template or upload draft, a builder draft with any user input (a basics choice, indicator, entry, exit or advanced option), or a report.
+- `ContinuePanel` (intro page above the hero; Choose a path above the cards): "You have a strategy in progress: <name or how it started>". Continue goes to the report when one is held for the current draft, otherwise to the builder (builder drafts), upload (upload drafts) or review (template drafts); secondary links to Review. "Start a new strategy" asks first (below), then clears the draft, settings, extraction, evaluation, what-if and suggestions.
+- `useReplaceGuard()` shows one Radix dialog ("Replace your current strategy? …", buttons Replace / Keep my strategy, Esc = keep) and resolves to true only on Replace; it resolves to true at once when nothing is held. Used by Use this template, Customize, Read my strategy and Start a new strategy.
+- Leaving through the logo or menus never asks (nothing is lost; the panel offers the way back). Closing or refreshing the tab keeps the existing warning (REQ-EVL-10).
+
 ## 2. Backend
 
 **Not applicable.** Templates are static web data; what-if uses the existing `POST /v1/evaluate` unchanged. The engine validates every template through the shared fixtures (feature 01 T-DAT-02).

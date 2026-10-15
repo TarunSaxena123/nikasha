@@ -1,5 +1,6 @@
 "use client";
 import { BackLink } from "@/components/BackLink";
+import { ContinuePanel } from "@/components/ContinuePanel";
 import { ButtonLink } from "@/components/ui/Button";
 import { BACK } from "@/lib/navigation";
 import { START } from "@/copy/intro";
@@ -10,6 +11,7 @@ export default function StartPage() {
       <BackLink to={BACK["/start"]!} className="mb-4" />
       <h1 className="text-2xl font-semibold">{START.title}</h1>
       <p className="mt-2 text-sm text-ink-muted">{START.intro}</p>
+      <ContinuePanel className="mt-6" />
       <div className="mt-6 grid gap-4 md:grid-cols-3">
         {START.cards.map((c) => (
           <section key={c.title} className="flex flex-col rounded-lg border border-line bg-surface p-5" data-testid="path-card">

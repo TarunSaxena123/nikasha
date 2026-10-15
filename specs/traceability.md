@@ -13,11 +13,11 @@ All seven features are specified (written in the order 07, 01, 02, 05, 04, 03, 0
 | 07 Privacy and legal | 36 | 36 |
 | 01 Data and engine | 76 | 76 |
 | 02 Evaluation and report | 36 | 36 |
-| 05 Beginner mode | 19 | 19 |
+| 05 Beginner mode | 21 | 21 |
 | 04 Document upload | 23 | 23 |
 | 03 Strategy builder | 26 | 26 |
 | 06 Suggestions | 12 | 12 |
-| **Total** | **228** | **228** |
+| **Total** | **230** | **230** |
 
 ## Enabling tasks (no single requirement)
 
@@ -256,8 +256,10 @@ Design sections refer to [`features/05-beginner-mode/design.md`](features/05-beg
 | REQ-BEG-17 | Original untouched; Use these settings | §1.6 | T-BEG-10 | AC-BEG-12 (Playwright) | Built |
 | REQ-BEG-18 | Not-applicable explanation | §1.6 | T-BEG-10 | AC-BEG-13 (component) | Built |
 | REQ-BEG-19 | Back link to the page's parent on every page but the intro | §1.7 | T-BEG-11 | AC-BEG-14 (Playwright, `web/e2e/navigation.spec.ts`) | Built |
+| REQ-BEG-20 | Continue where you left off panel | §1.8 | T-BEG-12 | AC-BEG-15 (Playwright, `web/e2e/navigation.spec.ts`) | Built |
+| REQ-BEG-21 | Ask before replacing the held strategy | §1.8 | T-BEG-12 | AC-BEG-16 (Playwright, `web/e2e/navigation.spec.ts`) | Built |
 
-**Coverage check (feature 05):** 19 requirements · all have a design section, at least one task and at least one automated test.
+**Coverage check (feature 05):** 21 requirements · all have a design section, at least one task and at least one automated test.
 
 ## Feature 06 — Suggestions
 

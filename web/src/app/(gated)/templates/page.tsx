@@ -1,6 +1,7 @@
 "use client";
 import { useRouter } from "next/navigation";
 import { BackLink } from "@/components/BackLink";
+import { useReplaceGuard } from "@/components/ReplaceGuard";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Card";
 import { RuleTable } from "@/components/RuleTable";
@@ -20,8 +21,9 @@ function TemplateCard({ t }: { t: TemplateMeta }) {
   const settings = inst ? templateSettings(inst, t.strategy) : null;
   const pos = t.strategy.position;
 
-  const load = (confirmed: boolean) => {
-    if (!inst) return;
+  const [guard, dialog] = useReplaceGuard();
+  const load = async (confirmed: boolean) => {
+    if (!inst || !(await guard())) return;
     set({
       draft: { ...emptyDraft("TEMPLATE"), strategy: clone(t.strategy) as never, confirmed: { lots: confirmed, lotSize: confirmed } },
       settings: confirmed ? templateSettings(inst, t.strategy) : prefilledSettings(inst, t.strategy),
@@ -57,8 +59,9 @@ function TemplateCard({ t }: { t: TemplateMeta }) {
         <p>Period: {settings?.period ? `${period(settings.period.start, settings.period.end)} (full range)` : "loading…"}</p>
       </div>
       <div className="mt-4 flex flex-wrap gap-3">
-        <Button onClick={() => load(true)} disabled={status !== "ready"}>Use this template</Button>
-        <Button variant="secondary" onClick={() => load(false)} disabled={status !== "ready"}>Customize</Button>
+        <Button onClick={() => void load(true)} disabled={status !== "ready"}>Use this template</Button>
+        <Button variant="secondary" onClick={() => void load(false)} disabled={status !== "ready"}>Customize</Button>
+        {dialog}
       </div>
     </article>
   );

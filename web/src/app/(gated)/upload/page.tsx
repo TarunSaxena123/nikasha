@@ -5,6 +5,7 @@ import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiFailure, extractFile, extractText } from "@/api/client";
 import type { ExtractionResult, Question } from "@/api/types";
 import { BackLink } from "@/components/BackLink";
+import { useReplaceGuard } from "@/components/ReplaceGuard";
 import { UploadPrivacyNotice } from "@/components/legal/Legal";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, ErrorPanel } from "@/components/ui/Card";
@@ -62,6 +63,7 @@ export default function UploadPage() {
   const [step, setStep] = useState(0);
   const [ack, setAck] = useState(false);
   const request = useRef<{ id: number; abort: AbortController | null }>({ id: 0, abort: null });
+  const [guard, replaceDialog] = useReplaceGuard();
   useEffect(() => {
     if (result) set({ extraction: { status: "questions", result, answers, message: null } });
   }, [result, answers, set]);
@@ -116,6 +118,7 @@ export default function UploadPage() {
       if (text.length > MAX_CHARS) return setRefusal(`This text is too long (max ${MAX_CHARS.toLocaleString("en-IN")} characters).`);
       call = (signal) => extractText(text, signal);
     }
+    if (!(await guard())) return; // reading a new strategy replaces the one held in this tab (REQ-BEG-21)
     const id = ++request.current.id;
     request.current.abort = new AbortController();
     setPhase("reading");
@@ -200,6 +203,7 @@ export default function UploadPage() {
           )}
           {refusal && <p role="alert" className="mt-2 text-sm text-risk">{refusal}</p>}
           <Button className="mt-4" onClick={() => void submit()}>Read my strategy</Button>
+          {replaceDialog}
         </Card>
         {err && (
           <ErrorPanel message={err.text} onRetry={err.next === "retry" ? () => void submit() : undefined}

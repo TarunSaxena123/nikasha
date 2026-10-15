@@ -64,6 +64,10 @@ Every page except the intro starts with "← Back to <page>", leading to the pag
 | `/learn/<article>` | Learn |
 | `/learn`, `/disclaimer` | Intro |
 
+### 2.2 Keeping work safe (REQ-BEG-20, 21)
+
+Leaving the strategy pages (logo, Learn, Back links) never clears anything: the strategy and report stay in the tab, and the intro and Choose a path show "Continue where you left off". Only an action that starts a different strategy (Use this template, Customize, reading a new upload, Start a new strategy) can replace it, and it asks first: "Replace your current strategy? Your current rules and any report in this tab will be cleared." (Replace / Keep my strategy).
+
 ## 3. Screen map
 
 | Route | Screen | Feature | Gated | Needs in-memory state |
