@@ -57,10 +57,11 @@ export function indicatorName(ind: AnyRec | undefined): string {
   if (!ind) return "an indicator that isn't set up";
   const t = ind.type as string;
   const p = (k: string) => (ind[k] === undefined || ind[k] === null ? "?" : String(ind[k]));
+  const src = (ind.source as string | undefined) ?? "price not set";
   switch (t) {
     case "EMA":
     case "SMA":
-      return `${t} ${p("period")} (${(ind.source as string | undefined) ?? "?"})`;
+      return `${t} ${p("period")} (${src})`;
     case "RSI":
     case "ADX":
       return `${t} ${p("period")}`;
@@ -69,7 +70,7 @@ export function indicatorName(ind: AnyRec | undefined): string {
     case "MACD":
       return `MACD ${p("fast")}/${p("slow")}/${p("signal")}`;
     case "BBANDS":
-      return `Bollinger ${p("period")}, ${p("stddev")} SD (${(ind.source as string | undefined) ?? "?"})`;
+      return `Bollinger ${p("period")}, ${p("stddev")} SD (${src})`;
     case "OPENING_RANGE":
       return `Opening range ${p("minutes")} min`;
     case "PIVOTS":

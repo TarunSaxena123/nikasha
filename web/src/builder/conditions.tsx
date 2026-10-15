@@ -116,6 +116,8 @@ const OPS = [
   { key: "state_up", label: "is green" }, { key: "state_down", label: "is red" },
   { key: "rising", label: "is rising" }, { key: "falling", label: "is falling" },
 ];
+// Colour conditions only work with a Supertrend (SEM-04): listed first for one, hidden otherwise.
+const COLOUR_OPS = OPS.filter((o) => o.key.startsWith("turns_") || o.key.startsWith("state_"));
 
 function opOf(n: Node): string {
   if (n.type === "compare") return String(n.op ?? "gt");
@@ -192,6 +194,7 @@ export function ConditionRow({ node, onChange, indicators, highlight }: { node: 
   const left = leftOf(node);
   const right = (node.right as AnyRec | undefined) ?? undefined;
   const isCmp = node.type === "compare" || node.type === "cross";
+  const isSupertrend = !!left && "ind" in left && (indicators[left.ind as string]?.type === "SUPERTREND");
   const rightIsNumber = right ? "const" in right : true;
   const offset = right && !("const" in right) ? (right.offset as AnyRec | undefined) : undefined;
   const set = (o: string, l = left, r = right, lb = node.lookback as number | undefined) => onChange(buildNode(o, l, r, lb));
@@ -206,7 +209,14 @@ export function ConditionRow({ node, onChange, indicators, highlight }: { node: 
       <div className="flex flex-wrap items-center gap-2 text-sm">
         <OperandSelect label="What to check" value={left} indicators={indicators} supertrendOnly={op.startsWith("turns") || op.startsWith("state")} onChange={(o) => set(op, o)} />
         <select aria-label="Condition" className="rounded-md border border-line px-2 py-1" value={op} onChange={(e) => set(e.target.value)}>
-          {OPS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+          {isSupertrend && (
+            <optgroup label="Supertrend colour">
+              {COLOUR_OPS.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+            </optgroup>
+          )}
+          <optgroup label="Compare">
+            {OPS.filter((o) => !COLOUR_OPS.includes(o)).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+          </optgroup>
         </select>
         {isCmp && (
           <>

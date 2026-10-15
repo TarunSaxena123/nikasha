@@ -79,3 +79,24 @@ test("conditions: compare EMA 9 with EMA 21 from one list; an empty number block
   await expect(page.getByRole("button", { name: "Next" })).toBeEnabled();
   await expect(page.getByText("NaN")).toHaveCount(0);
 });
+
+test("Supertrend colour conditions are offered first for a Supertrend and hidden for others (REQ-INP-13, SEM-04)", async ({ page }) => {
+  await toStrikeStep(page);
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("radio", { name: "When conditions are met" }).check();
+  await page.getByRole("button", { name: "Add indicator" }).click();
+  await page.getByRole("button", { name: "Supertrend", exact: true }).click();
+  await page.getByLabel("Supertrend Period").fill("10");
+  await page.getByLabel("Supertrend Multiplier").fill("3");
+  await page.getByRole("button", { name: "Add indicator" }).click();
+  await page.getByRole("button", { name: "EMA", exact: true }).click();
+  await page.getByLabel("EMA Period").fill("21");
+  await page.getByRole("button", { name: "Add condition" }).click();
+  const cond = page.getByLabel("Condition", { exact: true });
+  await page.getByLabel("What to check").selectOption({ label: "EMA 21 (price not set)" });
+  await expect(cond.locator("option", { hasText: "turns green" })).toHaveCount(0);
+  await page.getByLabel("What to check").selectOption({ label: "Supertrend 10 × 3 line" });
+  await expect(cond.locator('optgroup[label="Supertrend colour"] option')).toHaveText(["turns green", "turns red", "is green", "is red"]);
+  await cond.selectOption({ label: "turns green" });
+  await expect(page.getByText("Reads as: Supertrend 10 × 3 turns green")).toBeVisible();
+});
