@@ -1,0 +1,193 @@
+{
+ "SCHEMA-timeframe-10": [
+  {
+   "field_label": "Candle timeframe",
+   "message": "Choose one of the candle timeframes Nikasha offers."
+  }
+ ],
+ "SCHEMA-unknown-field": [
+  {
+   "field_label": "Exit rule",
+   "message": "The exit rule isn't set up in a way Nikasha supports."
+  }
+ ],
+ "SCHEMA-vwap-indicator": [
+  {
+   "field_label": "Indicator settings",
+   "message": "One of the indicators isn't set up in a way Nikasha supports."
+  }
+ ],
+ "SEM-01-unregistered-instrument": [
+  {
+   "field_label": "Instrument",
+   "message": "This instrument isn't available in Nikasha yet.",
+   "rule": "SEM-01"
+  }
+ ],
+ "SEM-02-timeframe-not-allowed": [
+  {
+   "field_label": "Candle timeframe",
+   "message": "Choose one of these candle timeframes: 1 min, 3 min, 5 min, 15 min, 30 min, 1 hour.",
+   "rule": "SEM-02"
+  }
+ ],
+ "SEM-03-output-not-available": [
+  {
+   "field_label": "Entry conditions",
+   "message": "A condition uses an indicator that hasn't been set up: ema9.",
+   "rule": "SEM-03"
+  }
+ ],
+ "SEM-03-undefined-indicator": [
+  {
+   "field_label": "Entry conditions",
+   "message": "A condition uses an indicator that hasn't been set up: ema50.",
+   "rule": "SEM-03"
+  }
+ ],
+ "SEM-04-state-on-ema": [
+  {
+   "field_label": "Entry conditions",
+   "message": "'Turns green/red' only works with Supertrend.",
+   "rule": "SEM-04"
+  }
+ ],
+ "SEM-05-macd-fast-not-shorter": [
+  {
+   "field_label": "Indicator settings",
+   "message": "MACD fast period must be shorter than the slow period.",
+   "rule": "SEM-05"
+  }
+ ],
+ "SEM-06-atm-with-distance": [
+  {
+   "field_label": "Strike",
+   "message": "For ITM or OTM, enter a distance in steps of 50 points (e.g. 100).",
+   "rule": "SEM-06"
+  }
+ ],
+ "SEM-06-distance-not-multiple": [
+  {
+   "field_label": "Strike",
+   "message": "For ITM or OTM, enter a distance in steps of 50 points (e.g. 100).",
+   "rule": "SEM-06"
+  }
+ ],
+ "SEM-07-positional-no-exit": [
+  {
+   "field_label": "Exit rule",
+   "message": "Choose what should happen to an open positional trade: hold until expiry, exit at a set time on expiry day, set a target, or exit after a number of candles.",
+   "rule": "SEM-07"
+  }
+ ],
+ "SEM-08-intraday-time-exit-after-squareoff": [
+  {
+   "field_label": "Exit rule",
+   "message": "Intraday positions close by 15:15, so this exit can't apply.",
+   "rule": "SEM-08"
+  }
+ ],
+ "SEM-09-time-outside-session": [
+  {
+   "field_label": "Times",
+   "message": "Times must be within market hours (09:15–15:29), and a window must start before it ends.",
+   "rule": "SEM-09"
+  }
+ ],
+ "SEM-09-window-reversed": [
+  {
+   "field_label": "Times",
+   "message": "Times must be within market hours (09:15–15:29), and a window must start before it ends.",
+   "rule": "SEM-09"
+  }
+ ],
+ "SEM-10-signal-leg-without-conditions": [
+  {
+   "field_label": "Entry trigger",
+   "message": "The entry rule doesn't match the options you chose to trade.",
+   "rule": "SEM-10"
+  }
+ ],
+ "SEM-11-multileg-different-expiries": [
+  {
+   "field_label": "Legs",
+   "message": "Multi-leg strategies open all legs together on the same expiry, with one combined stop-loss.",
+   "rule": "SEM-11"
+  }
+ ],
+ "SEM-12-vix-bands-gap": [
+  {
+   "field_label": "Volatility sizing",
+   "message": "Volatility sizing must say what to do for every VIX level, with no gaps or overlaps.",
+   "rule": "SEM-12"
+  }
+ ],
+ "SEM-13-weekly-before-launch": [
+  {
+   "field_label": "Expiry",
+   "message": "Weekly options only exist from 11 Feb 2019. Choose a later start date or monthly expiry.",
+   "rule": "SEM-13"
+  }
+ ],
+ "SEM-14-period-beyond-data": [
+  {
+   "field_label": "Backtest period",
+   "message": "Choose dates between 9 Jan 2015 and 14 May 2026.",
+   "rule": "SEM-14"
+  }
+ ],
+ "SEM-14-period-reversed": [
+  {
+   "field_label": "Backtest period",
+   "message": "Choose dates between 9 Jan 2015 and 14 May 2026.",
+   "rule": "SEM-14"
+  }
+ ],
+ "SEM-15-too-deep": [
+  {
+   "field_label": "Entry conditions",
+   "message": "This entry rule is too complex. Please simplify it.",
+   "rule": "SEM-15"
+  }
+ ],
+ "SEM-16-trigger-candle-fixed-time": [
+  {
+   "field_label": "Stop-loss",
+   "message": "'Trigger candle' stop-loss needs an entry signal candle; a fixed-time entry has none.",
+   "rule": "SEM-16"
+  }
+ ],
+ "SEM-17-hold-to-expiry-intraday": [
+  {
+   "field_label": "Exit rule",
+   "message": "Intraday positions close by 15:15, so this exit can't apply.",
+   "rule": "SEM-08"
+  },
+  {
+   "field_label": "Exit rule",
+   "message": "This exit only applies to positional strategies.",
+   "rule": "SEM-17"
+  }
+ ],
+ "SEM-18-no-entry-time-left": [
+  {
+   "field_label": "Entry timing",
+   "message": "Your time windows leave no time to enter a trade.",
+   "rule": "SEM-18"
+  }
+ ],
+ "SEM-19-two-strike-methods": [
+  {
+   "field_label": "Strike",
+   "message": "Choose one way to pick the strike.",
+   "rule": "SEM-19"
+  }
+ ],
+ "SEM-20-position-too-large": [
+  {
+   "field_label": "Position size",
+   "message": "That position size is too large to simulate.",
+   "rule": "SEM-20"
+  }
+ ]
+}
