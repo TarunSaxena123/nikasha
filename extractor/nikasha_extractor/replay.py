@@ -1,7 +1,8 @@
 """Replays recorded LLM outputs instead of calling the API (tests and the local privacy E2E).
 
 A recording is chosen by a marker phrase in the text: each file `<name>.<PROMPT_VERSION>.json` holds
-{"match": "<phrase>", "output": <ExtractionDraft JSON>}. Unmatched text gets the 'no rules' recording.
+{"match": "<phrase>", "output": <ExtractionDraft JSON>}, returned in its wire form (wire.py) as the
+API would. Unmatched text gets the 'no rules' recording.
 """
 
 from __future__ import annotations
@@ -13,6 +14,7 @@ from typing import Any
 
 from nikasha_extractor.prompt import PROMPT_VERSION
 from nikasha_extractor.schema import ExtractionDraft
+from nikasha_extractor.wire import to_wire
 
 
 class _Messages:
@@ -27,7 +29,9 @@ class _Messages:
         text = kwargs["messages"][0]["content"]
         chosen = next((r for r in self.recordings if r["match"] and r["match"] in text), None)
         chosen = chosen or next(r for r in self.recordings if not r["match"])
-        return SimpleNamespace(stop_reason="end_turn", parsed_output=ExtractionDraft.model_validate(chosen["output"]))
+        return SimpleNamespace(
+            stop_reason="end_turn", parsed_output=to_wire(ExtractionDraft.model_validate(chosen["output"]))
+        )
 
 
 class ReplayClient:

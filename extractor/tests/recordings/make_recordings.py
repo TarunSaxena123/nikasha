@@ -430,7 +430,11 @@ CASES = {
 if __name__ == "__main__":
     for name, (match, output) in CASES.items():
         ExtractionDraft.model_validate(output)
-        (HERE / f"{name}.{PROMPT_VERSION}.json").write_text(
+        path = HERE / f"{name}.{PROMPT_VERSION}.json"
+        if path.exists() and json.loads(path.read_text())["recorded"] == "live":
+            print("kept live recording", name)  # live recordings come from scripts/record_extraction.py
+            continue
+        path.write_text(
             json.dumps(
                 {"match": match, "recorded": "hand-written (not a live call)", "output": output},
                 indent=1,

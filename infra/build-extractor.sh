@@ -11,4 +11,6 @@ cp -R "$ROOT/pylib/nikasha_log/nikasha_log" "$OUT/"
 cp -R "$ROOT/extractor/nikasha_extractor" "$OUT/"
 cp "$ROOT/specs/contracts/banned-phrases.txt" "$OUT/contracts/"
 find "$OUT" -name "__pycache__" -prune -exec rm -rf {} +
+# `sam build` (BuildMethod: makefile) copies the prebuilt package unchanged, compiled libraries included.
+printf 'build-ExtractFunction:\n\tcp -R . "$(ARTIFACTS_DIR)"\n\trm -f "$(ARTIFACTS_DIR)/Makefile"\n' > "$OUT/Makefile"
 echo "extractor package in $OUT ($(du -sh "$OUT" | cut -f1))"

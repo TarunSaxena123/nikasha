@@ -3,8 +3,8 @@
   {
    "id": "i1",
    "status": "FOUND",
-   "field_label": "Strike",
-   "text": "Buy an at-the-money Nifty call.",
+   "field_label": "Buy or sell",
+   "text": "Buy an at-the-money Nifty call option.",
    "mandatory": true,
    "quote": "Buy ATM Nifty call"
   },
@@ -12,23 +12,15 @@
    "id": "i2",
    "status": "FOUND",
    "field_label": "Entry conditions",
-   "text": "Enter when RSI 14 crosses above 60.",
+   "text": "Enter when the 14-period RSI crosses above 60 on the 5-minute chart.",
    "mandatory": true,
-   "quote": "when RSI 14 crosses above 60"
+   "quote": "when RSI 14 crosses above 60 on 5-minute chart"
   },
   {
    "id": "i3",
    "status": "FOUND",
-   "field_label": "Candle timeframe",
-   "text": "5-minute candles.",
-   "mandatory": true,
-   "quote": "on 5-minute chart"
-  },
-  {
-   "id": "i4",
-   "status": "FOUND",
    "field_label": "Stop-loss",
-   "text": "The stop-loss is 30% of the option premium.",
+   "text": "Stop-loss is 30% of the option premium.",
    "mandatory": true,
    "quote": "stop-loss 30%"
   }

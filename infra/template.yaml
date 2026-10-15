@@ -74,6 +74,10 @@ Resources:
 
   ExtractFunction:
     Type: AWS::Serverless::Function
+    Metadata:
+      # The package is prebuilt for Linux by infra/build-extractor.sh; SAM's default Python build
+      # would drop its compiled libraries (*.so), so the Makefile there copies it unchanged.
+      BuildMethod: makefile
     Properties:
       FunctionName: !Sub nikasha-extract-${Stage}
       Runtime: python3.12

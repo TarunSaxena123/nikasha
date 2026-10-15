@@ -76,12 +76,14 @@ test("upload advanced sample: vague questions first, then missing; Back changes 
   await expect(page.getByText("Some text that wasn't a trading rule was ignored.")).toBeVisible();
   await page.getByRole("button", { name: /Answer 11 questions/ }).click();
   const q = page.getByTestId("question");
-  await expect(q).toContainText("Your title says weekly. Which expiry?");
-  await answerChoice(page, "Current weekly");
+  await expect(q).toContainText("Read VIX at the day's open or at entry time?");
+  await answerChoice(page, /^Day open \(09:15 value\)/);
+  await page.getByRole("button", { name: "Confirm" }).click();
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(q).toContainText("Use the 09:15 opening VIX?");
+  await expect(q).toContainText("What % of normal size should be traded when VIX is above 18?");
   await page.getByRole("button", { name: "Back" }).click();
-  await answerChoice(page, "Next weekly");
+  await answerChoice(page, /^At entry$/);
+  await page.getByRole("button", { name: "Confirm" }).click();
   await page.getByRole("button", { name: "Next" }).click();
   await expect(page.getByText("Question 2 of 11")).toBeVisible();
 });

@@ -1,0 +1,216 @@
+{
+ "match": "RSI 14 crosses above 60",
+ "recorded": "live",
+ "output": {
+  "ignored_text_found": false,
+  "basics": {
+   "action": "BUY",
+   "option_side": "CALL",
+   "moneyness": "ATM",
+   "distance_pts": null,
+   "expiry": null,
+   "timeframe_min": 5,
+   "holding": null,
+   "lots": null,
+   "lot_size": null,
+   "fixed_entry_time": null
+  },
+  "indicators": [
+   {
+    "id": "rsi14",
+    "type": "RSI",
+    "period": 14,
+    "source": null,
+    "multiplier": null,
+    "fast": null,
+    "slow": null,
+    "signal": null,
+    "stddev": null
+   }
+  ],
+  "conditions": [
+   {
+    "id": "c1",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "cross",
+    "left": {
+     "kind": "indicator",
+     "ind": "rsi14",
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": null,
+    "right": {
+     "kind": "const",
+     "ind": null,
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": 60.0,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": "above",
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   }
+  ],
+  "exit": {
+   "sl_type": "PCT_PREMIUM",
+   "sl_value": 30.0,
+   "target_type": null,
+   "target_value": null,
+   "time_exit_at": null,
+   "time_exit_on": null,
+   "hold_to_expiry": null
+  },
+  "advanced": {
+   "sl_cap_pts": null,
+   "trail_to_cost_at_r": null,
+   "exit_after_candles": null,
+   "vix_sizing": null,
+   "entry_windows": [],
+   "no_entry_windows": [],
+   "expiry_day_cutoff": null,
+   "daily_max_trades": null,
+   "daily_stop_after_sl_hits": null,
+   "daily_max_loss_rupees": null
+  },
+  "items": [
+   {
+    "id": "i1",
+    "status": "FOUND",
+    "field": "action",
+    "quote": "Buy ATM Nifty call",
+    "understood": "Buy an at-the-money Nifty call option.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i2",
+    "status": "FOUND",
+    "field": "entry_condition",
+    "quote": "when RSI 14 crosses above 60 on 5-minute chart",
+    "understood": "Enter when the 14-period RSI crosses above 60 on the 5-minute chart.",
+    "reason": null,
+    "targets": [
+     "cond:c1"
+    ],
+    "question": null
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "stop_loss",
+    "quote": "stop-loss 30%",
+    "understood": "Stop-loss is 30% of the option premium.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   }
+  ]
+ },
+ "wire": {
+  "ignored_text_found": false,
+  "basics": {
+   "action": "BUY",
+   "option_side": "CALL",
+   "moneyness": "ATM",
+   "distance_pts": "",
+   "expiry": "NONE",
+   "timeframe_min": "5",
+   "holding": "NONE",
+   "lots": "",
+   "lot_size": "",
+   "fixed_entry_time": ""
+  },
+  "indicators": [
+   {
+    "id": "rsi14",
+    "type": "RSI",
+    "source": "NONE",
+    "params": "14"
+   }
+  ],
+  "conditions": [
+   {
+    "id": "c1",
+    "parent_id": "",
+    "side": "CE",
+    "kind": "cross",
+    "left": {
+     "ref": "rsi14",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "above",
+    "right": {
+     "ref": "60",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   }
+  ],
+  "exit": {
+   "sl_type": "PCT_PREMIUM",
+   "sl_value": "30",
+   "target_type": "NONE",
+   "target_value": "",
+   "time_exit_at": "",
+   "time_exit_on": "NONE",
+   "hold_to_expiry": "NONE"
+  },
+  "advanced": [],
+  "items": [
+   {
+    "id": "i1",
+    "status": "FOUND",
+    "field": "action",
+    "quote": "Buy ATM Nifty call",
+    "understood": "Buy an at-the-money Nifty call option.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i2",
+    "status": "FOUND",
+    "field": "entry_condition",
+    "quote": "when RSI 14 crosses above 60 on 5-minute chart",
+    "understood": "Enter when the 14-period RSI crosses above 60 on the 5-minute chart.",
+    "targets": [
+     "cond:c1"
+    ],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "stop_loss",
+    "quote": "stop-loss 30%",
+    "understood": "Stop-loss is 30% of the option premium.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   }
+  ]
+ }
+}

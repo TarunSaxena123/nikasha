@@ -63,6 +63,7 @@ Free tiers only; see [`specs/architecture.md`](specs/architecture.md) §5 and §
    ```bash
    infra/build-extractor.sh
    cd infra
+   export DOCKER_HOST=unix://$HOME/.docker/run/docker.sock   # Docker Desktop on macOS, so SAM finds Docker
    sam build
    sam deploy --guided --stack-name nikasha-prod \
      --parameter-overrides Stage=prod AllowedOrigin=https://<your-vercel-domain> BudgetEmail=<you@example.com> \

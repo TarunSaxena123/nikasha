@@ -2,8 +2,8 @@
 
 The request carries exactly two things: the fixed system prompt and one user message with the
 extracted text. No file name, no metadata, no user details. Structured output guarantees the
-reply matches ExtractionDraft; refusals and truncation become EXTRACTION_FAILED (never partial
-output); rate limits, server errors and connection problems become EXTRACTION_BUSY.
+reply matches WireDraft (wire.py), which is turned into ExtractionDraft; refusals and truncation
+become EXTRACTION_FAILED (never partial output); rate limits, server errors and connection problems become EXTRACTION_BUSY.
 """
 
 from __future__ import annotations
@@ -15,6 +15,7 @@ import anthropic
 from nikasha_extractor.core.errors import ExtractError
 from nikasha_extractor.prompt import SYSTEM_PROMPT
 from nikasha_extractor.schema import ExtractionDraft
+from nikasha_extractor.wire import WireDraft, from_wire
 
 MODEL = "claude-sonnet-5-5"  # owner's choice (backend.md §9.2)
 MAX_TOKENS = 16_000
@@ -43,7 +44,7 @@ def build_request(text: str) -> dict[str, Any]:
         "max_tokens": MAX_TOKENS,
         "system": SYSTEM_PROMPT,
         "messages": [{"role": "user", "content": text}],
-        "output_format": ExtractionDraft,
+        "output_format": WireDraft,
         "output_config": {"effort": EFFORT},
         "betas": [FALLBACK_BETA],
         "fallbacks": "default",
@@ -51,6 +52,15 @@ def build_request(text: str) -> dict[str, Any]:
 
 
 def extract_with_llm(text: str, client: ParseClient | None = None) -> ExtractionDraft:
+    wire = extract_wire(text, client)
+    try:
+        return from_wire(wire)
+    except ValueError as exc:  # e.g. a combination the internal model rejects
+        raise ExtractError("EXTRACTION_FAILED") from exc
+
+
+def extract_wire(text: str, client: ParseClient | None = None) -> WireDraft:
+    """The model's reply in its wire form (the recording script keeps it for review)."""
     c = client or make_client()
     try:
         response = c.beta.messages.parse(**build_request(text))
@@ -72,6 +82,6 @@ def extract_with_llm(text: str, client: ParseClient | None = None) -> Extraction
     if getattr(response, "stop_reason", None) in ("refusal", "max_tokens"):
         raise ExtractError("EXTRACTION_FAILED")
     parsed = getattr(response, "parsed_output", None)
-    if not isinstance(parsed, ExtractionDraft):
+    if not isinstance(parsed, WireDraft):
         raise ExtractError("EXTRACTION_FAILED")
     return parsed

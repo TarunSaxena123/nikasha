@@ -15,23 +15,37 @@ def run_pdf():
     return api.dispatch("POST", "/v1/extract", body, ct)
 
 
+def _paths(q):
+    """The strategy paths a question fills: how a question is identified, whatever its wording."""
+    ops = {op["path"] for o in q.get("options", []) for op in o["patch"]}
+    return frozenset(ops | {t["path"] for t in q.get("number", {}).get("targets", [])})
+
+
+C, P = "/entry/ce/conditions", "/entry/pe/conditions"
+EXPECTED = {  # feature 04 design §2.5: every ambiguity in the advanced sample, by the values it asks for
+    frozenset({"/legs/0/expiry"}): "CHOICE",
+    frozenset({"/advanced/vix_sizing/measured_at"}): "CONFIRM",
+    frozenset({"/advanced/vix_sizing/bands/2/size_pct"}): "NUMBER",
+    frozenset({f"{C}/0", f"{P}/0"}): "CHOICE",
+    frozenset({f"{s}/{i}/right/offset/pts" for s in (C, P) for i in (2, 3)}): "NUMBER",
+    frozenset({f"{s}/5/conditions/0/conditions/1/lookback" for s in (C, P)}): "NUMBER",
+    frozenset({"/advanced/sl_cap_pts"}): "CHOICE",
+    frozenset({"/advanced/expiry_day_cutoff"}): "CONFIRM",
+}
+
+
+def _questions(out):
+    return {_paths(q): q for q in out["questions"]}
+
+
 def test_advanced_sample_questions(replay):
-    """AC-UPL-04, 05, 15: every expected ambiguity has a question; the footer has none."""
+    """AC-UPL-04, 05, 15: every expected ambiguity has exactly one question; the footer has none."""
     status, out = run_pdf()
     assert status == 200 and out["ignored_text_found"] is True
-    prompts = [q["prompt"] for q in out["questions"]]
-    assert prompts == [
-        "Your title says weekly. Which expiry?",
-        "Use the 09:15 opening VIX? (the earliest available)",
-        "With India VIX above 18, trade what % of your normal size?",
-        "Enter only on the candle it turns green, or on any candle while it's green?",
-        "How many points beyond both EMAs must the candle close? (0 = just beyond)",
-        "'Rising' compared with how many candles back?",
-        "SL cap: 30 or 35 points?",
-        "By 'Thursday', do you mean expiry day? (Thursday until Aug 2025, Tuesday since)",
-    ]
-    kinds = [q["kind"] for q in out["questions"]]
-    assert kinds == ["CHOICE", "CONFIRM", "NUMBER", "CHOICE", "NUMBER", "NUMBER", "CHOICE", "CONFIRM"]
+    qs = _questions(out)
+    assert len(out["questions"]) == len(EXPECTED)
+    assert {k: q["kind"] for k, q in qs.items()} == EXPECTED
+    assert all(0 < len(q["prompt"]) <= 120 for q in out["questions"])
     text = json.dumps(out).lower()
     assert "medical" not in text
     # No value exists for vague or unstated inputs.
@@ -42,20 +56,25 @@ def test_advanced_sample_questions(replay):
     assert "offset" not in d["entry"]["ce"]["conditions"][2]["right"]
 
 
+def _choose(d, q, value):
+    option = next(o for o in q["options"] if o["patch"] and o["patch"][0].get("value") == value)
+    return apply_patch(d, option["patch"])
+
+
 def test_advanced_sample_answers_give_the_reference_strategy(replay):
     """Applying the example answers reproduces the shared 'sample with answers' fixture exactly."""
     status, out = run_pdf()
     d = out["draft"]
-    qs = out["questions"]
-    choose = lambda d, q, label: apply_patch(d, next(o["patch"] for o in q["options"] if o["label"].startswith(label)))  # noqa: E731
-    d = choose(d, qs[0], "Current weekly")
-    d = choose(d, qs[1], "Yes")
-    d = answer_number(d, qs[2], 50)
-    d = choose(d, qs[3], "Only on the candle")
-    d = answer_number(d, qs[4], 10)
-    d = answer_number(d, qs[5], 1)
-    d = choose(d, qs[6], "30 points")
-    d = choose(d, qs[7], "Yes")
+    qs = _questions(out)
+    q = [qs[k] for k in EXPECTED]  # in EXPECTED's order
+    d = _choose(d, q[0], "CURRENT_WEEKLY")
+    d = _choose(d, q[1], "DAY_OPEN")
+    d = answer_number(d, q[2], 50)
+    d = _choose(d, q[3], {"type": "turns", "ind": "st", "to": "up"})
+    d = answer_number(d, q[4], 10)
+    d = answer_number(d, q[5], 1)
+    d = _choose(d, q[6], 30)
+    d = _choose(d, q[7], "12:00")
     # The browser then asks the missing inputs; example answers: intraday, 2 lots × 65.
     d["holding"] = "INTRADAY"
     d["position"] = {"lots": 2, "lot_size": 65}

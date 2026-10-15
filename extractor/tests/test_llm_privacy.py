@@ -18,7 +18,7 @@ from nikasha_extractor import llm
 from nikasha_extractor.core import api
 from nikasha_extractor.core.errors import ExtractError
 from nikasha_extractor.prompt import SYSTEM_PROMPT
-from nikasha_extractor.schema import ExtractionDraft
+from nikasha_extractor.wire import WireDraft
 
 MARKER = "NIKASHA-PRIVACY-MARKER-7f3a"
 
@@ -33,7 +33,7 @@ def test_request_has_only_system_prompt_and_text(replay):
     assert "Supertrend turns Green" in call["messages"][0]["content"]
     assert MARKER not in json.dumps({k: v for k, v in call.items() if k != "output_format"})  # file name never sent
     assert call["model"] == "claude-sonnet-5-5" and call["max_tokens"] == 16000
-    assert call["output_config"] == {"effort": "medium"} and call["output_format"] is ExtractionDraft
+    assert call["output_config"] == {"effort": "medium"} and call["output_format"] is WireDraft
     assert call["fallbacks"] == "default" and call["betas"] == ["server-side-fallback-2026-07-01"]
 
 

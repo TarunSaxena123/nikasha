@@ -49,3 +49,9 @@ def test_function_urls_and_budget():
         url = R[fn]["Properties"]["FunctionUrlConfig"]
         assert url["AuthType"] == "NONE" and url["InvokeMode"] == "BUFFERED"
     assert any(r["Type"] == "AWS::Budgets::Budget" for r in R.values())
+
+
+def test_extraction_package_is_copied_unchanged():
+    # SAM's default Python build drops the prebuilt Linux libraries (*.so); found in the 2026-10-15 rehearsal.
+    assert R["ExtractFunction"]["Metadata"]["BuildMethod"] == "makefile"
+    assert "build-ExtractFunction:" in (Path(__file__).parent / "build-extractor.sh").read_text()

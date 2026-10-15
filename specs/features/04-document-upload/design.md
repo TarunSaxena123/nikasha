@@ -109,6 +109,17 @@ ExtractionDraft
 
 `FieldKey` enumerates every mandatory input and advanced option plus `condition`, `condition_offset`, `condition_kind`, `slope_lookback`, `vix_band_size`, `expiry_weekday_term`, `premarket_time`, `other`.
 
+**Wire form (`wire.py`, added 2026-10-15 after the first live call).** The API rejects a structured-output schema whose compiled grammar is too large: in practice about 70 distinct fields in total, whatever their types, and at most 16 nullable (union) fields. `ExtractionDraft` above has 84 fields and 57 nullable ones, so the model is asked for a compact equivalent, `WireDraft`, which `from_wire` turns into `ExtractionDraft` before conversion. Nothing else changes:
+- No nullable or optional fields. "Not stated" is `""` for text and numbers (numbers travel as text) and `NONE` for choices. A number that doesn't parse counts as not stated, so it is asked.
+- An operand is one `ref` (`ema9`, `macd.signal`, `close`, `vix.close` or a number) plus `offset_pts` / `offset_pct`.
+- A condition row has one `op` (gt, gte, lt, lte, above, below, up, down). State and turns rows name the Supertrend in `left.ref`.
+- Indicator numbers are one `params` text in a fixed order per type, e.g. Supertrend `"10,3"`.
+- Advanced options are a list of `{name, value}` settings, one per option stated. Windows are `"HH:MM-HH:MM"`, VIX bands `"FROM-TO=SIZE"`.
+- The question is flattened into its item. An unsupported item's `understood` text is its reason.
+- `from_wire` also clears any value a VAGUE item points at (REQ-UPL-08: a vague value is asked, never pre-filled).
+
+The measured weights and the manual compile check are in `extractor/scripts/check_schema_compiles.py`.
+
 ### 2.3 Conversion (`convert.py`)
 - **Strategy.** Build the partial strategy:
   - Assemble the condition tree from `parent_id` links; reject cycles or orphans → `EXTRACTION_FAILED`.
@@ -120,7 +131,7 @@ ExtractionDraft
 - **Options → patches.** `value_text` values are parsed by field type (number, enum, time) into RFC 6902 patches. Unparseable options are dropped. A question left with no usable options becomes NUMBER/TIME where possible, otherwise `EXTRACTION_FAILED` for that run (never a silent guess).
 - **Labels.** `understood` and `prompt` texts are kept from the model but trimmed (≤ 200 chars) and scanned against `banned-phrases.txt`. A hit replaces them with a fixed fallback ("We found a rule here; please check it on the review screen").
 
-### 2.4 System prompt (`prompt.py`, versioned `PROMPT_VERSION = "upl-1"`)
+### 2.4 System prompt (`prompt.py`, versioned `PROMPT_VERSION = "upl-2"`)
 
 Sections:
 1. **Role and limits:**

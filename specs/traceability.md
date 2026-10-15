@@ -207,7 +207,7 @@ Design sections refer to [`features/04-document-upload/design.md`](features/04-d
 | REQ-UPL-17 | Hand-off to review | §1.6 | T-UPL-14 | AC-UPL-13 (Playwright) | Built |
 | REQ-UPL-18 | No rules found | §1.3 | T-UPL-11 | AC-UPL-14 (component) | Built |
 | REQ-UPL-19 | Error messages | §1.7, §4 | T-UPL-15 | AC-UPL-14 (component) | Built |
-| REQ-UPL-20 | Advanced sample questions | §2.5 | T-UPL-08 | AC-UPL-15 (replay; live before release) | Built |
+| REQ-UPL-20 | Advanced sample questions | §2.5 | T-UPL-08 | AC-UPL-15 (replay of live recordings, prompt upl-2, recorded 2026-10-15) | Built |
 | REQ-UPL-21 | One-line sample questions | §2.5 | T-UPL-08, T-UPL-12 | AC-UPL-07 (replay + Playwright) | Built |
 
 **Coverage check (feature 04):** 21 requirements · all have a design section, at least one task and at least one automated test (sample behaviour is tested by replaying recorded responses; the live run before release is an extra check).
