@@ -1,0 +1,17 @@
+{
+  "$comment": "The 12 advanced options in display order (feature 02 design §1.7). Read by the web app's describeStrategy and the engine's settings_used, so both show the same labels in the same order (T-RPT-01).",
+  "options": [
+    { "key": "sl_cap", "label": "SL cap", "where": "advanced.sl_cap_pts" },
+    { "key": "trigger_candle_sl", "label": "Trigger-candle stop-loss", "where": "exit.stop_loss.type = TRIGGER_CANDLE" },
+    { "key": "rr_target", "label": "Risk-reward target", "where": "exit.target.type = RR" },
+    { "key": "trail_to_cost", "label": "Trail stop to cost", "where": "advanced.trail_to_cost_at_r" },
+    { "key": "exit_after_candles", "label": "Exit after N candles", "where": "advanced.exit_after_candles" },
+    { "key": "vix_sizing", "label": "Volatility (VIX) sizing", "where": "advanced.vix_sizing" },
+    { "key": "entry_windows", "label": "Entry windows", "where": "advanced.entry_windows" },
+    { "key": "no_entry_windows", "label": "No-entry windows", "where": "advanced.no_entry_windows" },
+    { "key": "expiry_day_cutoff", "label": "Expiry-day cutoff", "where": "advanced.expiry_day_cutoff" },
+    { "key": "daily_limits", "label": "Daily limits", "where": "advanced.daily" },
+    { "key": "multiple_legs", "label": "Multiple legs", "where": "legs (more than one)" },
+    { "key": "strike_by_delta_premium", "label": "Strike by delta or premium", "where": "legs[].strike.method = DELTA / PREMIUM" }
+  ]
+}

@@ -15,6 +15,13 @@ def test_function_url_events(real_md):
     out = handler({"rawPath": "/v1/meta", "requestContext": {"http": {"method": "GET"}, "requestId": "r1"}}, None)
     assert out["statusCode"] == 200 and json.loads(out["body"])["instruments"][0]["symbol"] == "NIFTY50"
     bad = base64.b64encode(b"{oops").decode()
-    out = handler({"rawPath": "/v1/evaluate", "body": bad, "isBase64Encoded": True,
-                   "requestContext": {"http": {"method": "POST"}}}, None)
+    out = handler(
+        {
+            "rawPath": "/v1/evaluate",
+            "body": bad,
+            "isBase64Encoded": True,
+            "requestContext": {"http": {"method": "POST"}},
+        },
+        None,
+    )
     assert out["statusCode"] == 400

@@ -28,5 +28,5 @@ def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:
     return {
         "statusCode": status,
         "headers": {"content-type": "application/json"},
-        "body": json.dumps(out, ensure_ascii=False),
+        "body": json.dumps(out, ensure_ascii=False, separators=(",", ":")),
     }

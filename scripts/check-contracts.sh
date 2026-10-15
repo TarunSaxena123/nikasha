@@ -9,7 +9,7 @@ PY="${PYTHON:-$ROOT/engine/.venv/bin/python}"
 [ -x "$PY" ] || PY=python3
 
 echo "== Engine: schemas, OpenAPI, shared strategy fixtures, generated models"
-(cd "$ROOT/engine" && "$PY" scripts/codegen.py --check && "$PY" -m pytest -q -p no:cacheprovider tests/test_contracts.py)
+(cd "$ROOT/engine" && "$PY" scripts/codegen.py --check && "$PY" -m pytest -q -p no:cacheprovider tests/test_contracts.py tests/test_report.py -k "fixture or contract or schema or openapi or vwap or sem_rule")
 
 if [ -f "$ROOT/web/package.json" ]; then
   echo "== Web: shared fixtures and generated types"

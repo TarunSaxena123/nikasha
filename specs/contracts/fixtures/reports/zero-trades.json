@@ -1,0 +1,363 @@
+{
+ "request": {
+  "strategy": {
+   "schema_version": "1.0",
+   "name": "Never triggers",
+   "origin": "TEMPLATE",
+   "template_id": "simple-trend-follower",
+   "underlying": "NIFTY50",
+   "timeframe_min": 15,
+   "holding": "INTRADAY",
+   "position": {
+    "lots": 1,
+    "lot_size": 65
+   },
+   "indicators": {
+    "rsi14": {
+     "type": "RSI",
+     "period": 14
+    }
+   },
+   "legs": [
+    {
+     "action": "BUY",
+     "option_type": "SIGNAL",
+     "expiry": "CURRENT_WEEKLY",
+     "strike": {
+      "method": "MONEYNESS",
+      "moneyness": "ATM",
+      "distance_pts": 0
+     }
+    }
+   ],
+   "entry": {
+    "ce": {
+     "type": "compare",
+     "left": {
+      "ind": "rsi14",
+      "output": "value"
+     },
+     "op": "gt",
+     "right": {
+      "const": 100
+     }
+    },
+    "pe": {
+     "type": "compare",
+     "left": {
+      "ind": "rsi14",
+      "output": "value"
+     },
+     "op": "lt",
+     "right": {
+      "const": 0
+     }
+    }
+   },
+   "exit": {
+    "stop_loss": {
+     "type": "PCT_PREMIUM",
+     "value": 30
+    },
+    "target": {
+     "type": "PCT_PREMIUM",
+     "value": 50
+    }
+   },
+   "advanced": {
+    "entry_windows": [
+     {
+      "from": "09:30",
+      "to": "14:30"
+     }
+    ],
+    "daily": {
+     "max_trades": 2
+    }
+   }
+  },
+  "settings": {
+   "period": {
+    "start": "2024-01-01",
+    "end": "2024-03-31"
+   },
+   "costs": {
+    "brokerage_per_order": 20,
+    "stt_sell_pct": 0.15,
+    "stt_exercise_pct": 0.15,
+    "exchange_txn_pct": 0.03553,
+    "sebi_per_crore": 10,
+    "stamp_buy_pct": 0.003,
+    "gst_pct": 18,
+    "slippage_pts": 0.5
+   }
+  }
+ },
+ "report": {
+  "engine_version": "fixture",
+  "generated_at": "2026-10-15T12:00",
+  "instrument": {
+   "symbol": "NIFTY50",
+   "name": "Nifty 50"
+  },
+  "period": {
+   "start": "2024-01-01",
+   "end": "2024-03-31",
+   "trading_days": 61
+  },
+  "metrics": {
+   "trades": 0,
+   "wins": 0,
+   "losses": 0,
+   "win_rate_pct": null,
+   "net_pnl": 0.0,
+   "gross_pnl": 0.0,
+   "total_costs": 0.0,
+   "total_slippage": 0.0,
+   "avg_win": null,
+   "avg_loss": null,
+   "expectancy": null,
+   "largest_win": null,
+   "largest_loss": null,
+   "max_drawdown": 0.0,
+   "max_drawdown_pct": null,
+   "return_pct": null,
+   "worst_losing_streak": 0
+  },
+  "equity_curve": [],
+  "breakdowns": {
+   "by_year": [],
+   "by_month": [],
+   "by_vol_band": [],
+   "by_regime": [],
+   "by_weekday": [],
+   "by_expiry_day": [],
+   "by_side": []
+  },
+  "overfit": {
+   "status": "NOT_APPLICABLE",
+   "status_text": "This period doesn't include both the earlier tuning years and the unseen recent years, so overfitting can't be checked. Choose a longer period to see this check.",
+   "out_of_sample": {
+    "period": {
+     "start": "2024-01-01",
+     "end": "2024-03-31"
+    },
+    "metrics": {
+     "trades": 0,
+     "wins": 0,
+     "losses": 0,
+     "win_rate_pct": null,
+     "net_pnl": 0.0,
+     "gross_pnl": 0.0,
+     "total_costs": 0.0,
+     "total_slippage": 0.0,
+     "avg_win": null,
+     "avg_loss": null,
+     "expectancy": null,
+     "largest_win": null,
+     "largest_loss": null,
+     "max_drawdown": 0.0,
+     "max_drawdown_pct": null,
+     "return_pct": null,
+     "worst_losing_streak": 0
+    }
+   }
+  },
+  "sensitivity": [
+   {
+    "vol_shift_pts": -2.0,
+    "metrics": {
+     "trades": 0,
+     "wins": 0,
+     "losses": 0,
+     "win_rate_pct": null,
+     "net_pnl": 0.0,
+     "gross_pnl": 0.0,
+     "total_costs": 0.0,
+     "total_slippage": 0.0,
+     "avg_win": null,
+     "avg_loss": null,
+     "expectancy": null,
+     "largest_win": null,
+     "largest_loss": null,
+     "max_drawdown": 0.0,
+     "max_drawdown_pct": null,
+     "return_pct": null,
+     "worst_losing_streak": 0
+    }
+   },
+   {
+    "vol_shift_pts": 2.0,
+    "metrics": {
+     "trades": 0,
+     "wins": 0,
+     "losses": 0,
+     "win_rate_pct": null,
+     "net_pnl": 0.0,
+     "gross_pnl": 0.0,
+     "total_costs": 0.0,
+     "total_slippage": 0.0,
+     "avg_win": null,
+     "avg_loss": null,
+     "expectancy": null,
+     "largest_win": null,
+     "largest_loss": null,
+     "max_drawdown": 0.0,
+     "max_drawdown_pct": null,
+     "return_pct": null,
+     "worst_losing_streak": 0
+    }
+   }
+  ],
+  "skipped": {
+   "data_days": [],
+   "data_minutes": {
+    "missing_underlying": 0,
+    "missing_volatility": 0
+   },
+   "signals": []
+  },
+  "settings_used": {
+   "quantity_text": "1 lot × 65 = 65 quantity per trade",
+   "holding_text": "Intraday (closed by 15:15)",
+   "timeframe_text": "15-minute candles",
+   "expiry_text": "Current weekly expiry",
+   "period_text": "1 Jan 2024 – 31 Mar 2024 (61 trading days)",
+   "costs": [
+    {
+     "label": "Brokerage",
+     "value_text": "₹20 per order",
+     "source": "Typical flat discount-broker fee (Nikasha assumption)"
+    },
+    {
+     "label": "Securities Transaction Tax",
+     "value_text": "0.15%",
+     "source": "Finance Act 2026, effective 1 Apr 2026"
+    },
+    {
+     "label": "STT on exercise",
+     "value_text": "0.15%",
+     "source": "Finance Act 2026, effective 1 Apr 2026"
+    },
+    {
+     "label": "Exchange transaction charges",
+     "value_text": "0.03553%",
+     "source": "NSE circular NSE/FA/73061 (27 Feb 2026) — to re-confirm"
+    },
+    {
+     "label": "SEBI turnover fee",
+     "value_text": "₹10 per crore",
+     "source": "SEBI regulatory fee"
+    },
+    {
+     "label": "Stamp duty",
+     "value_text": "0.003%",
+     "source": "Indian Stamp Act, as amended by Finance Act 2019"
+    },
+    {
+     "label": "GST",
+     "value_text": "18%",
+     "source": "CGST/IGST Acts, 2017"
+    },
+    {
+     "label": "Slippage",
+     "value_text": "0.5 points per fill",
+     "source": "Nikasha assumption (no order-book data)"
+    }
+   ],
+   "risk_free_rate_pct": 6.5,
+   "capital_text": "Not entered",
+   "advanced": [
+    {
+     "label": "SL cap",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Trigger-candle stop-loss",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Risk-reward target",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Trail stop to cost",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Exit after N candles",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Volatility (VIX) sizing",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Entry windows",
+     "used": true,
+     "value_text": "New entries only 09:30–14:30"
+    },
+    {
+     "label": "No-entry windows",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Expiry-day cutoff",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Daily limits",
+     "used": true,
+     "value_text": "At most 2 trades a day"
+    },
+    {
+     "label": "Multiple legs",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Strike by delta or premium",
+     "used": false,
+     "value_text": "Not used"
+    }
+   ],
+   "no_effect_rules": []
+  },
+  "summary": [
+   "This strategy took no trades in 1 Jan 2024 – 31 Mar 2024 (61 trading days). Its entry conditions were never all true at the same time."
+  ],
+  "simulation_notes": [
+   "Entries fill at the open of the minute after the signal candle closes (or at the fixed entry time).",
+   "Stop-loss and target are checked every minute; if both are reached in the same minute, the stop-loss is assumed to come first.",
+   "Intraday positions are closed at 15:15.",
+   "Positions still open at expiry are settled at intrinsic value, using the expiry day's last minute.",
+   "Strikes are chosen from the index level at the signal, rounded to 50 points.",
+   "Option premiums are modelled with Black-Scholes using India VIX as the volatility (each minute's range uses that minute's closing India VIX) and a 6.5% risk-free rate.",
+   "Slippage of 0.5 points is applied to every fill.",
+   "Charges are applied at today's rates for the whole period.",
+   "Only one position is open at a time.",
+   "Missing market data is never filled in; minutes and days without data are skipped."
+  ],
+  "disclosures": {
+   "modelled_premiums_text": "Premiums modelled, not actual. Nikasha has no historical option prices, so every option price in this report is calculated from the index level and India VIX. Real prices, and so real results, would differ.",
+   "volatility_limitation_text": "India VIX measures expected 30-day volatility for near-the-money options. It doesn't capture how far-from-the-money options or options close to expiry are priced, so results for expiry-day trades and far strikes are the least reliable.",
+   "costs_note_text": "Costs use the rates you confirmed, which are today's rates. Charges were different in earlier years, and that change isn't modelled."
+  },
+  "data_source": {
+   "name": "Kaggle: NSE - Nifty 50 Index Minute data (2015 to 2026)",
+   "url": "https://www.kaggle.com/datasets/debashis74017/nifty-50-minute-data",
+   "note": "Collected by the uploader from internet sources for research purposes; not an official NSE data feed. Used for non-commercial, educational purposes only.",
+   "first": "2015-01-09",
+   "last": "2026-05-14"
+  },
+  "trades": []
+ }
+}

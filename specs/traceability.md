@@ -31,7 +31,7 @@ These tasks build the foundations, fixtures and pipelines that the requirement t
 | T-EVL-07 | 02 | Web app scaffold, design tokens, shared components, store, test tooling | Specified |
 | T-EVL-08 | 02 | Generated TypeScript types from the contracts, drift check | Specified |
 | T-EVL-09 | 02 | Minimal deployed page proving Vercel → Lambda (build step 5) | Specified |
-| T-RPT-02, T-RPT-10 | 02 | Engine-generated report fixtures and golden reports used by web and engine tests | Specified |
+| T-RPT-02, T-RPT-10 | 02 | Engine-generated report fixtures and golden reports used by web and engine tests | Built |
 | T-UPL-01 | 04 | Extraction fixtures used by web tests | Specified |
 
 ## Feature 01 — Data and Engine
@@ -103,7 +103,7 @@ Design sections refer to [`features/01-data-and-engine/design.md`](features/01-d
 | REQ-ENG-42 | Entries only inside period; follow to exit | §2.12 | T-ENG-08 | AC-ENG-21 | Built |
 | REQ-ENG-43 | RunResult for feature 02 | §2.11 | T-ENG-13, T-ENG-14 | RunResult shape test; contract test | Built |
 | REQ-ENG-44 | Deterministic | §2.11 | T-ENG-13 | AC-ENG-23 | Built |
-| REQ-ENG-45 | Performance budgets | §2.17 | T-ENG-15, T-ENG-16 | AC-ENG-24 | Specified |
+| REQ-ENG-45 | Performance budgets | §2.17 | T-ENG-15, T-ENG-16 | AC-ENG-24 (reference machine; Lambda timing after deploy) | Built |
 | REQ-ENG-46 | Next-day fill skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-26 | Built |
 | REQ-ENG-47 | Conflicting CE/PE signals skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-27 | Built |
 
@@ -128,20 +128,20 @@ Design sections refer to [`features/02-evaluation-and-report/design.md`](feature
 | REQ-EVL-11 | Cancel; late response discarded | §1.2 | T-EVL-04 | AC-EVL-07 (Playwright) | Specified |
 | REQ-EVL-12 | Report ready: title, notification, open | §1.2 | T-EVL-06 | AC-EVL-08 (Playwright) | Specified |
 | REQ-EVL-13 | Busy retries, 422, errors | §1.2, §4 | T-EVL-04 | AC-EVL-09 (Playwright) | Specified |
-| REQ-RPT-01 | Figures from the selected period only | §2.2 | T-RPT-03 | AC-RPT-01 (pytest) | Specified |
-| REQ-RPT-02 | Metric definitions | §2.2 | T-RPT-03 | AC-RPT-02 (pytest) | Specified |
-| REQ-RPT-03 | Equity curve and drawdown | §2.2 | T-RPT-03 | AC-RPT-02 (pytest) | Specified |
-| REQ-RPT-04 | Capital-based % | §2.2, §1.4 | T-RPT-03, T-RPT-11 | AC-RPT-03 (pytest, component) | Specified |
-| REQ-RPT-05 | Seven breakdowns | §2.3, §1.5 | T-RPT-05, T-RPT-13 | AC-RPT-04 (pytest); component | Specified |
-| REQ-RPT-06 | Regime from previous-day ADX | §2.4 | T-RPT-04 | AC-RPT-04 (pytest) | Specified |
-| REQ-RPT-07 | In/out-of-sample split | §2.5 | T-RPT-06 | AC-RPT-05 (pytest) | Specified |
-| REQ-RPT-08 | Overfitting status | §2.5, §1.5 | T-RPT-06, T-RPT-14 | AC-RPT-05 (pytest); AC-RPT-11 | Specified |
-| REQ-RPT-09 | Volatility sensitivity | §2.6 | T-RPT-07, T-RPT-14 | AC-RPT-06 (pytest) | Specified |
-| REQ-RPT-10 | Summary from fixed templates, risk first | §2.7 | T-RPT-08 | AC-RPT-07 (golden + scan) | Specified |
-| REQ-RPT-11 | Settings used incl. "Not used" and no-effect rules | §2.8 | T-RPT-01, T-RPT-09, T-RPT-16 | AC-RPT-08 (pytest) | Specified |
-| REQ-RPT-12 | Skipped data and signals | §2.8 | T-RPT-09, T-RPT-16 | AC-RPT-09 (pytest) | Specified |
-| REQ-RPT-13 | Simulation notes and disclosures | §2.8 | T-RPT-09, T-RPT-16 | Golden report check | Specified |
-| REQ-RPT-14 | Complete report with zero trades | §2.7, §1.5 | T-RPT-08, T-RPT-16 | AC-RPT-10 (pytest, Playwright) | Specified |
+| REQ-RPT-01 | Figures from the selected period only | §2.2 | T-RPT-03 | AC-RPT-01 (pytest) | Built |
+| REQ-RPT-02 | Metric definitions | §2.2 | T-RPT-03 | AC-RPT-02 (pytest) | Built |
+| REQ-RPT-03 | Equity curve and drawdown | §2.2 | T-RPT-03 | AC-RPT-02 (pytest) | Built |
+| REQ-RPT-04 | Capital-based % | §2.2, §1.4 | T-RPT-03, T-RPT-11 | AC-RPT-03 (pytest, component) | Built |
+| REQ-RPT-05 | Seven breakdowns | §2.3, §1.5 | T-RPT-05, T-RPT-13 | AC-RPT-04 (pytest); component | Built |
+| REQ-RPT-06 | Regime from previous-day ADX | §2.4 | T-RPT-04 | AC-RPT-04 (pytest) | Built |
+| REQ-RPT-07 | In/out-of-sample split | §2.5 | T-RPT-06 | AC-RPT-05 (pytest) | Built |
+| REQ-RPT-08 | Overfitting status | §2.5, §1.5 | T-RPT-06, T-RPT-14 | AC-RPT-05 (pytest); AC-RPT-11 | Built |
+| REQ-RPT-09 | Volatility sensitivity | §2.6 | T-RPT-07, T-RPT-14 | AC-RPT-06 (pytest) | Built |
+| REQ-RPT-10 | Summary from fixed templates, risk first | §2.7 | T-RPT-08 | AC-RPT-07 (golden + scan) | Built |
+| REQ-RPT-11 | Settings used incl. "Not used" and no-effect rules | §2.8 | T-RPT-01, T-RPT-09, T-RPT-16 | AC-RPT-08 (pytest) | Built |
+| REQ-RPT-12 | Skipped data and signals | §2.8 | T-RPT-09, T-RPT-16 | AC-RPT-09 (pytest) | Built |
+| REQ-RPT-13 | Simulation notes and disclosures | §2.8 | T-RPT-09, T-RPT-16 | Golden report check | Built |
+| REQ-RPT-14 | Complete report with zero trades | §2.7, §1.5 | T-RPT-08, T-RPT-16 | AC-RPT-10 (pytest, Playwright) | Built |
 | REQ-RPT-15 | Report section order, risk first | §1.4 | T-RPT-11 | AC-RPT-11 (Playwright) | Specified |
 | REQ-RPT-16 | Captions, table toggle, never colour only | §1.5 | T-RPT-12, T-RPT-13 | AC-RPT-11 (Playwright) | Specified |
 | REQ-RPT-17 | Trades table, 50 per page | §1.4 | T-RPT-15 | AC-RPT-12 (component) | Specified |

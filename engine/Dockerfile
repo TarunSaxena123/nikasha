@@ -25,6 +25,6 @@ COPY engine/nikasha_engine /tmp/engine/nikasha_engine
 RUN pip install --no-cache-dir /tmp/pylib/nikasha_log /tmp/engine && rm -rf /tmp/pylib /tmp/engine
 COPY --from=data /build/parquet/ /opt/nikasha/data/
 COPY instruments/ /opt/nikasha/instruments/
-COPY specs/contracts/strategy.schema.json specs/contracts/instrument.schema.json /opt/nikasha/contracts/
+COPY specs/contracts/strategy.schema.json specs/contracts/instrument.schema.json specs/contracts/advanced-options.json /opt/nikasha/contracts/
 ENTRYPOINT ["python", "-m", "awslambdaric"]
 CMD ["nikasha_engine.adapters.lambda_handler.handler"]

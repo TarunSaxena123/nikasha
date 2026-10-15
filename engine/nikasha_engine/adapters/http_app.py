@@ -30,7 +30,10 @@ async def handle(request: Request) -> Response:
     body = await request.body()
     status, out = api.dispatch(request.method, request.url.path, body)
     return Response(
-        json.dumps(out, ensure_ascii=False), status_code=status, media_type="application/json", headers=CORS
+        json.dumps(out, ensure_ascii=False, separators=(",", ":")),
+        status_code=status,
+        media_type="application/json",
+        headers=CORS,
     )
 
 
