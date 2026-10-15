@@ -4,7 +4,7 @@ import type { Back } from "@/lib/navigation";
 
 export function BackLink({ to, className = "" }: { to: Back; className?: string }) {
   return (
-    <Link href={to.href} data-testid="back-link" className={`inline-block text-sm text-info underline ${className}`}>
+    <Link href={to.href} prefetch={false} data-testid="back-link" className={`inline-block text-sm text-info underline ${className}`}>
       <span aria-hidden>← </span>Back to {to.label}
     </Link>
   );
