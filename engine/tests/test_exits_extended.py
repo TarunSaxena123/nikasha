@@ -196,3 +196,32 @@ def test_orb_cpr_sample_runs_on_real_data(real_md):
             assert tr.partial["quantity"] == 65 and tr.entry_minute <= tr.partial["minute"] < tr.exit_minute
     days = [tr.entry_date for tr in res.trades]
     assert len(days) == len(set(days))  # at most one trade a day
+
+
+def test_level_already_passed_at_entry_is_not_used():
+    """AC-ENG-32 (owner decision R23): a bought call's target level below the index at entry isn't used;
+    the trade runs to its other exits and the rule is counted as having no effect."""
+    from nikasha_engine.backtest.runner import LEVEL_PASSED_NO_EFFECT
+
+    md = synth(NIFTY, DAY, spot=bars({"10:20": (24500, 24500, 24475, 24490)}))
+    s = single_leg()
+    s["exit"] = {
+        "stop_loss": {"type": "PCT_PREMIUM", "value": 30},
+        "target": {"type": "SPOT_LEVEL", "ce": {"const": 24450}},
+    }
+    res = run(md, s, SETT)
+    assert (
+        res.trades[0].exit_reason == "SQUARE_OFF"
+    )  # 10:20 dips to 24,475, through the level, but it was behind the trade
+    assert res.no_effect == {LEVEL_PASSED_NO_EFFECT["target"]: 1}
+
+
+def test_partial_level_already_passed_keeps_the_whole_position():
+    md = synth(NIFTY, DAY, spot=bars({"10:20": (24500, 24500, 24475, 24490)}))
+    s = _partial("UNCHANGED", when={"type": "SPOT_LEVEL", "ce": {"const": 24480}})
+    del s["exit"]["target"]
+    res = run(md, s, SETT)
+    assert res.trades[0].partial is None
+    from nikasha_engine.backtest.runner import LEVEL_PASSED_NO_EFFECT
+
+    assert res.no_effect == {LEVEL_PASSED_NO_EFFECT["partial"]: 1}

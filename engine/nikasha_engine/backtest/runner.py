@@ -110,6 +110,12 @@ def _aux(md: MarketData, candles: Candles, strategy: dict[str, Any]) -> TradeAux
 VIX_SIZING_NO_EFFECT = (
     "Volatility sizing: the size it set was below 1 lot, so 1 lot was used (the rule had no effect on these trades)"
 )
+LEVEL_PASSED_NO_EFFECT = {
+    "target": "Index-level target: the level was already passed when the trade was entered, so it wasn't used "
+    "(the rule had no effect on these trades)",
+    "partial": "Partial exit: the index level was already passed when the trade was entered, so it wasn't used "
+    "(the rule had no effect on these trades)",
+}
 PARTIAL_NO_EFFECT = (
     "Partial exit: the trade used 1 lot, so nothing could be split off (the rule had no effect on these trades)"
 )
@@ -182,6 +188,8 @@ def run_once(prep: Prepared, shift: float, pricer: Pricer | None = None) -> RunR
             no_effect[VIX_SIZING_NO_EFFECT] += 1
         if adv.get("partial_exit") and used < 2:
             no_effect[PARTIAL_NO_EFFECT] += 1
+        for kind in path.extra.get("levels_passed", []):
+            no_effect[LEVEL_PASSED_NO_EFFECT[kind]] += 1
 
         trade = _finish(len(trades) + 1, sig, path, qty, used, rates, md, lot_size)
         trades.append(trade)

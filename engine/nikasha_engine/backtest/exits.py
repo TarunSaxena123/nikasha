@@ -333,15 +333,27 @@ def simulate_trade(
     # The last candle that closed before each window minute (−1 before the first one).
     last_closed = np.searchsorted(candles.end_minute, win_minutes, side="left") - 1
 
+    # The direction in which the trade gains: up for bought calls and sold puts (single leg).
+    gains_up = legs[0].is_call == (legs[0].action == "BUY")
+    passed: list[str] = []  # index-level rules not used because the level was already passed at entry
+
     def level_track(key: str) -> tuple[FloatArr, bool] | None:
-        """Per-window-minute level and whether it lies above the index at entry (REQ-ENG-53)."""
+        """Per-window-minute level and the trade's profitable direction (REQ-ENG-53).
+
+        A level counts only if, where it is first known, it lies on the profitable side of the
+        index; a level already passed isn't used for this trade (owner decision R23).
+        """
         arr = aux.levels.get(key)
         if arr is None:
             return None
         lv = np.where(last_closed >= 0, arr[np.maximum(last_closed, 0)], np.nan)
         known = np.flatnonzero(~np.isnan(lv))
-        up = bool(lv[known[0]] >= md.s_open[window[known[0]]]) if len(known) else True
-        return lv, up
+        if len(known):
+            level, index = float(lv[known[0]]), float(md.s_open[window[known[0]]])
+            if (level < index) if gains_up else (level > index):
+                passed.append(key.split("_")[0])
+                return None
+        return lv, gains_up
 
     def touches(track: tuple[FloatArr, bool], start: int = 0) -> int:
         lv, up = track
@@ -429,7 +441,7 @@ def simulate_trade(
             fav_up = legs[0].is_call == (legs[0].action == "BUY")
         else:
             track = level_track(f"partial_{side}")
-            fav_up = True if track is None else track[1]
+            fav_up = gains_up
             if track is not None:
                 pp = touches(track)
                 if pp < pos:
@@ -474,7 +486,9 @@ def simulate_trade(
             leg.exit = round(intrinsic, 2)
             leg.settled_intrinsic = leg.exit
         settled = int(md.minutes[settle_idx])
-        return TradePath(legs, f, settle_idx, settled, reason, 0, stop_amt, target_amt, partial=partial)
+        return TradePath(
+            legs, f, settle_idx, settled, reason, 0, stop_amt, target_amt, {"levels_passed": passed}, partial
+        )
 
     xi = int(window[pos])
     xarr = np.array([xi], dtype=np.int64)
@@ -506,7 +520,8 @@ def simulate_trade(
             leg.exit = float(pricer.at(xarr, leg, md.s_open[xarr], md.v_open[xarr])[0])
     for leg in legs:
         leg.exit = _floor_tick(leg.exit - slippage if leg.action == "BUY" else leg.exit + slippage, tick)
-    return TradePath(legs, f, xi, int(md.minutes[xi]), reason, len(legs), stop_amt, target_amt, partial=partial)
+    extra = {"levels_passed": passed}
+    return TradePath(legs, f, xi, int(md.minutes[xi]), reason, len(legs), stop_amt, target_amt, extra, partial)
 
 
 def _exit_multi_at_level(

@@ -259,17 +259,17 @@
   },
   "metrics": {
    "trades": 41,
-   "wins": 9,
-   "losses": 32,
-   "win_rate_pct": 21.95,
-   "net_pnl": -19516.28,
-   "gross_pnl": -15317.25,
-   "total_costs": 4199.03,
+   "wins": 10,
+   "losses": 31,
+   "win_rate_pct": 24.39,
+   "net_pnl": -2514.84,
+   "gross_pnl": 1693.25,
+   "total_costs": 4208.09,
    "total_slippage": 5330.0,
-   "avg_win": 2852.29,
-   "avg_loss": -1412.09,
-   "expectancy": -476.01,
-   "largest_win": 6738.26,
+   "avg_win": 4190.3,
+   "avg_loss": -1432.83,
+   "expectancy": -61.34,
+   "largest_win": 16232.32,
    "largest_loss": -3433.67,
    "max_drawdown": 24438.8,
    "max_drawdown_pct": null,
@@ -279,207 +279,207 @@
   "equity_curve": [
    {
     "t": "2024-01-09T10:57",
-    "equity": -2370.84,
-    "drawdown": 2370.84
+    "equity": -2489.96,
+    "drawdown": 2489.96
    },
    {
     "t": "2024-01-12T15:15",
-    "equity": 2650.22,
+    "equity": 2531.1,
     "drawdown": 0.0
    },
    {
-    "t": "2024-01-29T10:20",
-    "equity": 2047.43,
-    "drawdown": 602.79
+    "t": "2024-01-29T15:15",
+    "equity": 18763.42,
+    "drawdown": 0.0
    },
    {
     "t": "2024-02-16T10:40",
-    "equity": -130.32,
-    "drawdown": 2780.54
+    "equity": 16585.67,
+    "drawdown": 2177.75
    },
    {
-    "t": "2024-02-19T11:25",
-    "equity": -583.46,
-    "drawdown": 3233.68
+    "t": "2024-02-19T14:57",
+    "equity": 16417.98,
+    "drawdown": 2345.44
    },
    {
     "t": "2024-02-26T10:59",
-    "equity": -227.76,
-    "drawdown": 2877.98
+    "equity": 16773.68,
+    "drawdown": 1989.74
    },
    {
     "t": "2024-03-01T10:09",
-    "equity": 133.57,
-    "drawdown": 2516.65
+    "equity": 17135.01,
+    "drawdown": 1628.41
    },
    {
     "t": "2024-03-19T10:34",
-    "equity": -26.63,
-    "drawdown": 2676.85
+    "equity": 16974.81,
+    "drawdown": 1788.61
    },
    {
     "t": "2024-03-21T10:30",
-    "equity": -228.73,
-    "drawdown": 2878.95
+    "equity": 16772.71,
+    "drawdown": 1990.71
    },
    {
     "t": "2024-03-27T10:00",
-    "equity": 57.07,
-    "drawdown": 2593.15
+    "equity": 17058.51,
+    "drawdown": 1704.91
    },
    {
     "t": "2024-03-28T15:09",
-    "equity": -87.19,
-    "drawdown": 2737.41
+    "equity": 16914.25,
+    "drawdown": 1849.17
    },
    {
     "t": "2024-04-08T15:15",
-    "equity": 4922.52,
+    "equity": 21923.96,
     "drawdown": 0.0
    },
    {
     "t": "2024-04-12T10:32",
-    "equity": 3822.19,
+    "equity": 20823.63,
     "drawdown": 1100.33
    },
    {
     "t": "2024-04-24T13:11",
-    "equity": 3676.07,
+    "equity": 20677.51,
     "drawdown": 1246.45
    },
    {
     "t": "2024-04-30T10:08",
-    "equity": 273.1,
+    "equity": 17274.54,
     "drawdown": 4649.42
    },
    {
     "t": "2024-05-29T12:46",
-    "equity": -2739.7,
+    "equity": 14261.74,
     "drawdown": 7662.22
    },
    {
     "t": "2024-05-30T10:22",
-    "equity": -2890.49,
+    "equity": 14110.95,
     "drawdown": 7813.01
    },
    {
     "t": "2024-06-28T10:48",
-    "equity": -3530.65,
+    "equity": 13470.79,
     "drawdown": 8453.17
    },
    {
     "t": "2024-07-04T10:12",
-    "equity": -6088.05,
+    "equity": 10913.39,
     "drawdown": 11010.57
    },
    {
     "t": "2024-07-09T11:01",
-    "equity": -6597.76,
+    "equity": 10403.68,
     "drawdown": 11520.28
    },
    {
     "t": "2024-07-16T11:11",
-    "equity": -7660.07,
+    "equity": 9341.37,
     "drawdown": 12582.59
    },
    {
     "t": "2024-07-26T10:00",
-    "equity": -6570.85,
+    "equity": 10430.59,
     "drawdown": 11493.37
    },
    {
     "t": "2024-08-08T11:17",
-    "equity": -9690.57,
+    "equity": 7310.87,
     "drawdown": 14613.09
    },
    {
     "t": "2024-08-12T10:15",
-    "equity": -10997.43,
+    "equity": 6004.01,
     "drawdown": 15919.95
    },
    {
     "t": "2024-08-20T10:00",
-    "equity": -11141.95,
+    "equity": 5859.49,
     "drawdown": 16064.47
    },
    {
     "t": "2024-08-26T10:51",
-    "equity": -11310.15,
+    "equity": 5691.29,
     "drawdown": 16232.67
    },
    {
     "t": "2024-09-06T10:30",
-    "equity": -11624.12,
+    "equity": 5377.32,
     "drawdown": 16546.64
    },
    {
     "t": "2024-09-16T10:04",
-    "equity": -12178.08,
+    "equity": 4823.36,
     "drawdown": 17100.6
    },
    {
     "t": "2024-09-26T14:09",
-    "equity": -12918.24,
+    "equity": 4083.2,
     "drawdown": 17840.76
    },
    {
     "t": "2024-09-27T10:58",
-    "equity": -14336.78,
+    "equity": 2664.66,
     "drawdown": 19259.3
    },
    {
     "t": "2024-09-30T10:08",
-    "equity": -17749.59,
+    "equity": -748.15,
     "drawdown": 22672.11
    },
    {
     "t": "2024-10-09T11:24",
-    "equity": -11011.33,
+    "equity": 5990.11,
     "drawdown": 15933.85
    },
    {
     "t": "2024-10-14T10:13",
-    "equity": -11850.46,
+    "equity": 5150.98,
     "drawdown": 16772.98
    },
    {
     "t": "2024-11-19T10:25",
-    "equity": -7371.49,
+    "equity": 9629.95,
     "drawdown": 12294.01
    },
    {
     "t": "2024-12-03T12:25",
-    "equity": -9361.28,
+    "equity": 7640.16,
     "drawdown": 14283.8
    },
    {
     "t": "2024-12-04T10:13",
-    "equity": -10204.87,
+    "equity": 6796.57,
     "drawdown": 15127.39
    },
    {
     "t": "2024-12-13T10:02",
-    "equity": -11598.53,
+    "equity": 5402.91,
     "drawdown": 16521.05
    },
    {
     "t": "2024-12-17T10:20",
-    "equity": -9267.93,
+    "equity": 7733.51,
     "drawdown": 14190.45
    },
    {
     "t": "2024-12-18T10:25",
-    "equity": -12669.43,
+    "equity": 4332.01,
     "drawdown": 17591.95
    },
    {
     "t": "2024-12-27T11:04",
-    "equity": -16103.1,
+    "equity": 898.34,
     "drawdown": 21025.62
    },
    {
     "t": "2024-12-30T09:50",
-    "equity": -19516.28,
+    "equity": -2514.84,
     "drawdown": 24438.8
    }
   ],
@@ -489,10 +489,10 @@
      "key": "2024",
      "label": "2024",
      "trades": 41,
-     "wins": 9,
-     "win_rate_pct": 21.95,
-     "net_pnl": -19516.28,
-     "expectancy": -476.01
+     "wins": 10,
+     "win_rate_pct": 24.39,
+     "net_pnl": -2514.84,
+     "expectancy": -61.34
     }
    ],
    "by_month": [
@@ -500,10 +500,10 @@
      "key": "2024-01",
      "label": "Jan 2024",
      "trades": 3,
-     "wins": 1,
-     "win_rate_pct": 33.33,
-     "net_pnl": 2047.43,
-     "expectancy": 682.48
+     "wins": 2,
+     "win_rate_pct": 66.67,
+     "net_pnl": 18763.42,
+     "expectancy": 6254.47
     },
     {
      "key": "2024-02",
@@ -511,8 +511,8 @@
      "trades": 3,
      "wins": 1,
      "win_rate_pct": 33.33,
-     "net_pnl": -2275.19,
-     "expectancy": -758.4
+     "net_pnl": -1989.74,
+     "expectancy": -663.25
     },
     {
      "key": "2024-03",
@@ -619,10 +619,10 @@
      "key": "band_1",
      "label": "India VIX 12–18",
      "trades": 35,
-     "wins": 8,
-     "win_rate_pct": 22.86,
-     "net_pnl": -18697.41,
-     "expectancy": -534.21
+     "wins": 9,
+     "win_rate_pct": 25.71,
+     "net_pnl": -1695.97,
+     "expectancy": -48.46
     },
     {
      "key": "band_2",
@@ -639,10 +639,10 @@
      "key": "TRENDING",
      "label": "Trending days",
      "trades": 12,
-     "wins": 3,
-     "win_rate_pct": 25.0,
-     "net_pnl": -2086.05,
-     "expectancy": -173.84
+     "wins": 4,
+     "win_rate_pct": 33.33,
+     "net_pnl": 14629.94,
+     "expectancy": 1219.16
     },
     {
      "key": "MIXED",
@@ -659,8 +659,8 @@
      "trades": 24,
      "wins": 6,
      "win_rate_pct": 25.0,
-     "net_pnl": -13531.06,
-     "expectancy": -563.79
+     "net_pnl": -13245.61,
+     "expectancy": -551.9
     }
    ],
    "by_weekday": [
@@ -668,10 +668,10 @@
      "key": "monday",
      "label": "Monday",
      "trades": 10,
-     "wins": 2,
-     "win_rate_pct": 20.0,
-     "net_pnl": -5384.66,
-     "expectancy": -538.47
+     "wins": 3,
+     "win_rate_pct": 30.0,
+     "net_pnl": 11735.9,
+     "expectancy": 1173.59
     },
     {
      "key": "tuesday",
@@ -679,8 +679,8 @@
      "trades": 9,
      "wins": 2,
      "win_rate_pct": 22.22,
-     "net_pnl": -2830.77,
-     "expectancy": -314.53
+     "net_pnl": -2949.89,
+     "expectancy": -327.77
     },
     {
      "key": "wednesday",
@@ -724,10 +724,10 @@
      "key": "other_days",
      "label": "Other days",
      "trades": 35,
-     "wins": 9,
-     "win_rate_pct": 25.71,
-     "net_pnl": -12601.85,
-     "expectancy": -360.05
+     "wins": 10,
+     "win_rate_pct": 28.57,
+     "net_pnl": 4399.59,
+     "expectancy": 125.7
     }
    ],
    "by_side": [
@@ -735,10 +735,10 @@
      "key": "CE",
      "label": "Call (CE)",
      "trades": 28,
-     "wins": 7,
-     "win_rate_pct": 25.0,
-     "net_pnl": -1416.76,
-     "expectancy": -50.6
+     "wins": 8,
+     "win_rate_pct": 28.57,
+     "net_pnl": 15584.68,
+     "expectancy": 556.6
     },
     {
      "key": "PE",
@@ -761,17 +761,17 @@
     },
     "metrics": {
      "trades": 41,
-     "wins": 9,
-     "losses": 32,
-     "win_rate_pct": 21.95,
-     "net_pnl": -19516.28,
-     "gross_pnl": -15317.25,
-     "total_costs": 4199.03,
+     "wins": 10,
+     "losses": 31,
+     "win_rate_pct": 24.39,
+     "net_pnl": -2514.84,
+     "gross_pnl": 1693.25,
+     "total_costs": 4208.09,
      "total_slippage": 5330.0,
-     "avg_win": 2852.29,
-     "avg_loss": -1412.09,
-     "expectancy": -476.01,
-     "largest_win": 6738.26,
+     "avg_win": 4190.3,
+     "avg_loss": -1432.83,
+     "expectancy": -61.34,
+     "largest_win": 16232.32,
      "largest_loss": -3433.67,
      "max_drawdown": 24438.8,
      "max_drawdown_pct": null,
@@ -785,17 +785,17 @@
     "vol_shift_pts": -2.0,
     "metrics": {
      "trades": 41,
-     "wins": 9,
-     "losses": 32,
-     "win_rate_pct": 21.95,
-     "net_pnl": -16671.47,
-     "gross_pnl": -12645.75,
-     "total_costs": 4025.72,
+     "wins": 10,
+     "losses": 31,
+     "win_rate_pct": 24.39,
+     "net_pnl": 1024.12,
+     "gross_pnl": 5060.25,
+     "total_costs": 4036.13,
      "total_slippage": 5330.0,
-     "avg_win": 3013.16,
-     "avg_loss": -1368.44,
-     "expectancy": -406.62,
-     "largest_win": 7081.73,
+     "avg_win": 4406.24,
+     "avg_loss": -1388.33,
+     "expectancy": 24.98,
+     "largest_win": 16943.93,
      "largest_loss": -3426.52,
      "max_drawdown": 22884.31,
      "max_drawdown_pct": null,
@@ -807,17 +807,17 @@
     "vol_shift_pts": 2.0,
     "metrics": {
      "trades": 41,
-     "wins": 10,
-     "losses": 31,
-     "win_rate_pct": 24.39,
-     "net_pnl": -2464.94,
-     "gross_pnl": 1950.0,
-     "total_costs": 4414.94,
+     "wins": 11,
+     "losses": 30,
+     "win_rate_pct": 26.83,
+     "net_pnl": 13939.64,
+     "gross_pnl": 18362.5,
+     "total_costs": 4422.86,
      "total_slippage": 5330.0,
-     "avg_win": 3895.22,
-     "avg_loss": -1336.04,
-     "expectancy": -60.12,
-     "largest_win": 14448.06,
+     "avg_win": 4962.7,
+     "avg_loss": -1355.0,
+     "expectancy": 339.99,
+     "largest_win": 15637.42,
      "largest_loss": -3440.97,
      "max_drawdown": 19114.75,
      "max_drawdown_pct": null,
@@ -836,17 +836,17 @@
     {
      "reason": "POSITION_OPEN",
      "reason_text": "A trade was already open",
-     "count": 112
+     "count": 146
     },
     {
      "reason": "OUTSIDE_ENTRY_WINDOW",
      "reason_text": "Outside your entry windows",
-     "count": 498
+     "count": 468
     },
     {
      "reason": "MAX_TRADES",
      "reason_text": "Daily trade limit reached",
-     "count": 105
+     "count": 101
     },
     {
      "reason": "AFTER_SQUAREOFF",
@@ -982,13 +982,23 @@
      "value_text": "Not used"
     }
    ],
-   "no_effect_rules": []
+   "no_effect_rules": [
+    {
+     "text": "Index-level target: the level was already passed when the trade was entered, so it wasn't used (the rule had no effect on these trades)",
+     "trades_affected": 14
+    },
+    {
+     "text": "Partial exit: the index level was already passed when the trade was entered, so it wasn't used (the rule had no effect on these trades)",
+     "trades_affected": 35
+    }
+   ]
   },
   "summary": [
    "Over 1 Jan 2024 – 31 Dec 2024 (246 trading days), this strategy took 41 trades. Its largest fall from a peak was ₹24,439, its longest run of losing trades was 9 trades, and its single biggest loss was −₹3,434.",
-   "In total it would have lost ₹19,516 after ₹4,199 in costs. 22.0% of trades made money; the average winning trade made ₹2,852 and the average losing trade lost ₹1,412.",
+   "In total it would have lost ₹2,515 after ₹4,208 in costs. 24.4% of trades made money; the average winning trade made ₹4,190 and the average losing trade lost ₹1,433.",
+   "It did best on trending days (on average ₹1,219 per trade over 12 trades) and worst on put trades (−₹1,392 over 13 trades).",
    "This period doesn't include both the earlier tuning years and the unseen recent years, so overfitting can't be checked. Choose a longer period to see this check.",
-   "If volatility had been 2 points lower, the result would have been −₹16,671; 2 points higher, −₹2,465."
+   "If volatility had been 2 points lower, the result would have been ₹1,024; 2 points higher, ₹13,940. The result depends heavily on the volatility assumption."
   ],
   "simulation_notes": [
    "Entries fill at the open of the minute after the signal candle closes (or at the fixed entry time).",
@@ -1035,21 +1045,13 @@
     "exit_reason": "STOP_LOSS",
     "exit_reason_text": "Stop-loss hit",
     "quantity": 130,
-    "gross_pnl": -2255.5,
-    "costs": 115.34,
-    "net_pnl": -2370.84,
+    "gross_pnl": -2398.5,
+    "costs": 91.46,
+    "net_pnl": -2489.96,
     "vol_at_entry": 13.15,
     "vol_band": "India VIX 12–18",
     "regime": "TRENDING",
-    "expiry_day": false,
-    "partial_exit": {
-     "time": "2024-01-09T10:55",
-     "quantity": 65,
-     "exit_premiums": [
-      142.3
-     ],
-     "reason_text": "Partial exit"
-    }
+    "expiry_day": false
    },
    {
     "n": 2,
@@ -1089,19 +1091,19 @@
       "strike": 21450.0,
       "expiry": "2024-02-01",
       "entry_premium": 202.9,
-      "exit_premium": 199.1
+      "exit_premium": 328.85
      }
     ],
     "signal_time": "2024-01-29T10:14",
     "entry_time": "2024-01-29T10:15",
-    "exit_time": "2024-01-29T10:20",
+    "exit_time": "2024-01-29T15:15",
     "spot_at_entry": 21573.3,
-    "exit_reason": "SPOT_TARGET",
-    "exit_reason_text": "Index reached the target level",
+    "exit_reason": "SQUARE_OFF",
+    "exit_reason_text": "Intraday square-off",
     "quantity": 130,
-    "gross_pnl": -494.0,
-    "costs": 108.79,
-    "net_pnl": -602.79,
+    "gross_pnl": 16373.5,
+    "costs": 141.18,
+    "net_pnl": 16232.32,
     "vol_at_entry": 15.25,
     "vol_band": "India VIX 12–18",
     "regime": "TRENDING",
@@ -1145,19 +1147,19 @@
       "strike": 22050.0,
       "expiry": "2024-02-22",
       "entry_premium": 180.5,
-      "exit_premium": 177.8
+      "exit_premium": 180.0
      }
     ],
     "signal_time": "2024-02-19T11:14",
     "entry_time": "2024-02-19T11:15",
-    "exit_time": "2024-02-19T11:25",
+    "exit_time": "2024-02-19T14:57",
     "spot_at_entry": 22125.65,
-    "exit_reason": "SPOT_TARGET",
-    "exit_reason_text": "Index reached the target level",
+    "exit_reason": "TRAIL_TO_COST",
+    "exit_reason_text": "Stop moved to entry price, then hit",
     "quantity": 130,
-    "gross_pnl": -351.0,
-    "costs": 102.14,
-    "net_pnl": -453.14,
+    "gross_pnl": -65.0,
+    "costs": 102.69,
+    "net_pnl": -167.69,
     "vol_at_entry": 15.97,
     "vol_band": "India VIX 12–18",
     "regime": "SIDEWAYS",
