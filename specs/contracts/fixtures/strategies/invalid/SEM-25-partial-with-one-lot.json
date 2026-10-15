@@ -1,0 +1,237 @@
+{
+  "description": "Partial exit with a single lot",
+  "expect": {
+    "kind": "SEM",
+    "rules": [
+      "SEM-25"
+    ]
+  },
+  "strategy": {
+    "schema_version": "1.0",
+    "name": "Nifty 15-min ORB + CPR (sample, with example answers to its vague rules)",
+    "origin": "UPLOAD",
+    "underlying": "NIFTY50",
+    "timeframe_min": 15,
+    "holding": "INTRADAY",
+    "position": {
+      "lots": 1,
+      "lot_size": 65
+    },
+    "indicators": {
+      "or15": {
+        "type": "OPENING_RANGE",
+        "minutes": 15
+      },
+      "piv": {
+        "type": "PIVOTS"
+      },
+      "ema20": {
+        "type": "EMA",
+        "period": 20,
+        "source": "close"
+      }
+    },
+    "legs": [
+      {
+        "action": "BUY",
+        "option_type": "SIGNAL",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ITM",
+          "distance_pts": 100
+        }
+      }
+    ],
+    "entry": {
+      "ce": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "compare",
+            "left": {
+              "ind": "or15",
+              "output": "low"
+            },
+            "op": "gt",
+            "right": {
+              "ind": "piv",
+              "output": "tc"
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "price": "open"
+            },
+            "op": "gt",
+            "right": {
+              "ind": "or15",
+              "output": "high"
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "price": "close"
+            },
+            "op": "gt",
+            "right": {
+              "ind": "or15",
+              "output": "high"
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "candle": "range"
+            },
+            "op": "lte",
+            "right": {
+              "const": 70
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "ind": "piv",
+              "output": "cpr_width_pct"
+            },
+            "op": "lte",
+            "right": {
+              "const": 0.4
+            }
+          }
+        ]
+      },
+      "pe": {
+        "type": "all",
+        "conditions": [
+          {
+            "type": "compare",
+            "left": {
+              "ind": "or15",
+              "output": "high"
+            },
+            "op": "lt",
+            "right": {
+              "ind": "piv",
+              "output": "bc"
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "price": "open"
+            },
+            "op": "lt",
+            "right": {
+              "ind": "or15",
+              "output": "low"
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "price": "close"
+            },
+            "op": "lt",
+            "right": {
+              "ind": "or15",
+              "output": "low"
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "candle": "range"
+            },
+            "op": "lte",
+            "right": {
+              "const": 70
+            }
+          },
+          {
+            "type": "compare",
+            "left": {
+              "ind": "piv",
+              "output": "cpr_width_pct"
+            },
+            "op": "lte",
+            "right": {
+              "const": 0.4
+            }
+          }
+        ]
+      }
+    },
+    "exit": {
+      "stop_loss": {
+        "type": "TRIGGER_CANDLE"
+      },
+      "target": {
+        "type": "SPOT_LEVEL",
+        "ce": {
+          "ind": "piv",
+          "output": "r2"
+        },
+        "pe": {
+          "ind": "piv",
+          "output": "s2"
+        }
+      },
+      "exit_when": {
+        "ce": {
+          "type": "compare",
+          "left": {
+            "price": "close"
+          },
+          "op": "lt",
+          "right": {
+            "ind": "ema20",
+            "output": "value"
+          }
+        },
+        "pe": {
+          "type": "compare",
+          "left": {
+            "price": "close"
+          },
+          "op": "gt",
+          "right": {
+            "ind": "ema20",
+            "output": "value"
+          }
+        }
+      }
+    },
+    "advanced": {
+      "sl_cap_pts": 25,
+      "trail_to_cost_at_pts": 25,
+      "partial_exit": {
+        "percent": 50,
+        "when": {
+          "type": "SPOT_LEVEL",
+          "ce": {
+            "ind": "piv",
+            "output": "r1"
+          },
+          "pe": {
+            "ind": "piv",
+            "output": "s1"
+          }
+        },
+        "then_stop": "PARTIAL_CANDLE"
+      },
+      "entry_windows": [
+        {
+          "from": "09:15",
+          "to": "11:30"
+        }
+      ],
+      "daily": {
+        "max_trades": 1
+      }
+    }
+  }
+}

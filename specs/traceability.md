@@ -4,20 +4,20 @@ Requirement ID → design section → task(s) → test(s). Constitution §11: ev
 
 **Status values:** `Specified` (spec approved, not built) · `Built` (code done, tests passing) · `Not built` (cut for time; gap kept visible, `product.md` §15).
 
-All seven features are specified (written in the order 07, 01, 02, 05, 04, 03, 06; listed here by feature number) and built (2026-10-15). Only T-EVL-09, the deployed page, waits for deployment day.
+All seven features are specified (written in the order 07, 01, 02, 05, 04, 03, 06; listed here by feature number) and built (2026-10-15). Only T-EVL-09, the deployed page, waits for deployment day. Vocabulary extensions (ENG-48…57, RPT-22–23, INP-22–26, UPL-22–23) were added on 2026-10-15 at the owner's request.
 
 ## Totals (all features)
 
 | Feature | Requirements | Traced to design + task + automated test |
 |---|---|---|
 | 07 Privacy and legal | 36 | 36 |
-| 01 Data and engine | 66 | 66 |
-| 02 Evaluation and report | 34 | 34 |
+| 01 Data and engine | 76 | 76 |
+| 02 Evaluation and report | 36 | 36 |
 | 05 Beginner mode | 19 | 19 |
-| 04 Document upload | 21 | 21 |
-| 03 Strategy builder | 21 | 21 |
+| 04 Document upload | 23 | 23 |
+| 03 Strategy builder | 26 | 26 |
 | 06 Suggestions | 12 | 12 |
-| **Total** | **209** | **209** |
+| **Total** | **228** | **228** |
 
 ## Enabling tasks (no single requirement)
 
@@ -106,6 +106,16 @@ Design sections refer to [`features/01-data-and-engine/design.md`](features/01-d
 | REQ-ENG-45 | Performance budgets | §2.17 | T-ENG-15, T-ENG-16 | AC-ENG-24 (reference machine; Lambda timing after deploy) | Built |
 | REQ-ENG-46 | Next-day fill skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-26 | Built |
 | REQ-ENG-47 | Conflicting CE/PE signals skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-27 | Built |
+| REQ-ENG-48 | Opening range, no look-ahead | §2.18 | T-ENG-17, T-ENG-18 | AC-ENG-28 (`engine/tests/test_levels.py`) | Built |
+| REQ-ENG-49 | Daily pivots and CPR from the previous day | §2.18 | T-ENG-17, T-ENG-18 | AC-ENG-29 (`test_levels.py`) | Built |
+| REQ-ENG-50 | Candle range and body | §2.18 | T-ENG-17, T-ENG-18 | AC-ENG-29 (`test_levels.py`) | Built |
+| REQ-ENG-51 | Exit conditions on candle close | §2.18 | T-ENG-17, T-ENG-19 | AC-ENG-30 (`engine/tests/test_exits_extended.py`) | Built |
+| REQ-ENG-52 | Trail to cost after premium points | §2.18 | T-ENG-17, T-ENG-19 | AC-ENG-31 (`test_exits_extended.py`) | Built |
+| REQ-ENG-53 | Index levels: touch and fill | §2.18 | T-ENG-19 | AC-ENG-32 (`test_exits_extended.py`, incl. put levels and no look-ahead) | Built |
+| REQ-ENG-54 | Index-level target | §2.18 | T-ENG-17, T-ENG-19 | AC-ENG-32 (`test_exits_extended.py`) | Built |
+| REQ-ENG-55 | Partial exit of lots | §2.18 | T-ENG-17, T-ENG-20 | AC-ENG-33 (`test_exits_extended.py`; real-data ORB run) | Built |
+| REQ-ENG-56 | Stop for the rest after a partial exit | §2.18 | T-ENG-20 | AC-ENG-33 (`test_exits_extended.py`) | Built |
+| REQ-ENG-57 | Sizing before the path; split costs | §2.18 | T-ENG-20 | AC-ENG-33 (`test_exits_extended.py`, split costs) | Built |
 
 **Coverage check (feature 01):** 66 requirements (19 DAT + 47 ENG) · all have a design section, at least one task and at least one automated test.
 
@@ -149,6 +159,8 @@ Design sections refer to [`features/02-evaluation-and-report/design.md`](feature
 | REQ-RPT-19 | PDF in the browser | §1.6 | T-RPT-17 | AC-RPT-13 (Playwright) | Built |
 | REQ-RPT-20 | CSV in the browser (trades ≥ 1) | §1.6 | T-RPT-18 | AC-RPT-14, AC-RPT-15 (Playwright) | Built |
 | REQ-RPT-21 | File names | §1.6 | T-RPT-17, T-RPT-18 | AC-RPT-13, AC-RPT-14 (unit + Playwright) | Built |
+| REQ-RPT-22 | Partial exits in trade table and CSV; counted in the PDF | §1.8 | T-RPT-19 | AC-RPT-16 (`engine/tests/test_report.py`, `web/src/features.test.ts`, `web/e2e/extensions.spec.ts`) | Built |
+| REQ-RPT-23 | New exit reason texts and settings lines | §1.8 | T-RPT-19 | AC-RPT-17 (`test_report.py`, `extensions.spec.ts`) | Built |
 
 **Coverage check (feature 02):** 34 requirements (13 EVL + 21 RPT) · all have a design section, at least one task and at least one automated test.
 
@@ -179,6 +191,11 @@ Design sections refer to [`features/03-strategy-builder/design.md`](features/03-
 | REQ-INP-19 | All advanced options supported | §1.9 | T-INP-13 | AC-INP-13 (component) | Built |
 | REQ-INP-20 | Multi-leg editor | §1.10 | T-INP-14 | AC-INP-14 (component) | Built |
 | REQ-INP-21 | Plain-English messages beside fields | §1.12 | T-INP-04, T-INP-05 | AC-INP-15 (component) | Built |
+| REQ-INP-22 | Opening range, pivots / CPR, candle size in the builder | §1.13 | T-INP-15 | AC-INP-16 (`web/e2e/extensions.spec.ts`) | Built |
+| REQ-INP-23 | Exit-when editor | §1.13 | T-INP-16 | AC-INP-17 (`extensions.spec.ts`) | Built |
+| REQ-INP-24 | Trail to cost: × risk or premium points | §1.13 | T-INP-16 | AC-INP-18 (`extensions.spec.ts`) | Built |
+| REQ-INP-25 | Index-level target and partial exit (single leg) | §1.13 | T-INP-16 | AC-INP-19 (`extensions.spec.ts`; multi-leg disabled test) | Built |
+| REQ-INP-26 | Mirror swaps pivot and opening-range sides | §1.13 | T-INP-15 | AC-INP-20 (`web/src/strategy/strategy.test.ts`, `extensions.spec.ts`) | Built |
 
 **Coverage check (feature 03):** 21 requirements · all have a design section, at least one task and at least one automated test.
 
@@ -209,6 +226,8 @@ Design sections refer to [`features/04-document-upload/design.md`](features/04-d
 | REQ-UPL-19 | Error messages | §1.7, §4 | T-UPL-15 | AC-UPL-14 (component) | Built |
 | REQ-UPL-20 | Advanced sample questions | §2.5 | T-UPL-08 | AC-UPL-15 (replay of live recordings, prompt upl-2, recorded 2026-10-15) | Built |
 | REQ-UPL-21 | One-line sample questions | §2.5 | T-UPL-08, T-UPL-12 | AC-UPL-07 (replay + Playwright) | Built |
+| REQ-UPL-22 | Extraction of the new vocabulary | §2.5b | T-UPL-16 | AC-UPL-16 (`extractor/tests/test_extract.py`, `test_wire.py`; `extensions.spec.ts`) | Built |
+| REQ-UPL-23 | ORB + CPR sample extraction | §2.5b | T-UPL-16 | AC-UPL-16 (replay of a live recording, prompt upl-3) | Built |
 
 **Coverage check (feature 04):** 21 requirements · all have a design section, at least one task and at least one automated test (sample behaviour is tested by replaying recorded responses; the live run before release is an extra check).
 

@@ -24,7 +24,8 @@ export function stepIssues(draft: Draft, meta: MetaResponse | null): Record<Step
   const missing = completeness(draft, meta);
   for (const m of missing) {
     const message = m.key === "lots" || m.key === "lot_size" ? "please confirm"
-      : m.key === "entry_conditions" ? "fill in every box of each condition, or remove the ones you don't need"
+      : m.key === "entry_conditions" || m.key === "exit_conditions" ? "fill in every box of each condition, or remove the ones you don't need"
+      : m.key === "target_levels" ? "choose the index level for each side you trade"
       : "not set yet";
     out[m.step].push({ label: m.label, message });
   }

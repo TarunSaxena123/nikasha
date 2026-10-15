@@ -100,7 +100,7 @@ The same rule applies to every entry path (upload, builder, template). A strateg
 
 None has a default value; none is pre-filled; none is asked about unless the user's own text mentions it vaguely. Each is shown as **"Not used"** on the review screen and in the report when off.
 
-SL cap · trigger-candle SL · risk-reward (R:R) targets · trail SL to cost at xR · exit after N candles · volatility-band (VIX) sizing · entry windows · no-entry windows · expiry-day cutoff time · daily limits (max trades, stop after N SL hits, max daily loss) · 1–4 legs · strike by delta or by premium.
+SL cap · trigger-candle SL · risk-reward (R:R) targets · trail SL to cost at xR **or after N premium points** · exit after N candles · **exit when a condition is met** · **target at an index level** (e.g. pivot R2) · **partial exit** (close part of the lots at a premium gain or an index level, then keep, move to cost, or trail the rest to the partial-exit candle) · volatility-band (VIX) sizing · entry windows · no-entry windows · expiry-day cutoff time · daily limits (max trades, stop after N SL hits, max daily loss) · 1–4 legs · strike by delta or by premium.
 
 ### 6.3 Evaluation settings
 
@@ -114,7 +114,8 @@ Not strategy rules, but the engine needs a value. Shown upfront on the review sc
 
 ### 6.4 Supported indicators and conditions
 
-- Indicators (each with parameters; multiple instances allowed): Supertrend, EMA, SMA, RSI, ADX, MACD, Bollinger Bands.
+- Indicators (each with parameters; multiple instances allowed): Supertrend, EMA, SMA, RSI, ADX, MACD, Bollinger Bands, **opening range** (the high and low of the session's first N minutes, known only once that range has finished) and **daily pivots / CPR** (classic floor pivots P, TC, BC, R1–R3, S1–S3 and the CPR width in points and %, from the previous trading day's high, low and close). Added 2026-10-15.
+- Values: indicator outputs, candle open/high/low/close, **candle range (high − low) and candle body (|close − open|)**, India VIX, numbers.
 - **VWAP is not offered, and the user is told why** wherever they might look for it: in the builder's indicator list (a disabled "VWAP" entry with the note), in upload results (listed as Unsupported with the same note), and in the glossary. The note: *"VWAP isn't available for Nifty 50. VWAP is calculated from traded volume, and Nifty 50 is an index, not a traded stock, so its chart has no volume and no VWAP."* Inputs may also reference candle open/high/low/close and India VIX.
 - Operators: `>`, `<`, `>=`, `<=`, crosses above, crosses below, turns (state flip, e.g. Supertrend turns green), slope up / slope down over N candles.
 - CE and PE have separate condition sets. **Every condition the user lists for a side must be true at the same time** (they are joined by AND). OR is used only where the user's own rule says "or" or is built from alternatives — e.g. the advanced sample's ADX rule, *"ADX > 20 and rising; if ADX is above 30, the slope doesn't matter"*, is stored as *(ADX > 20 AND ADX rising) OR ADX > 30*. At ADX exactly 30 it must be rising. The review screen shows it in the user's own wording, not as a formula. How many candles "rising" is measured over is still asked (§6.7). Groups can nest (AND inside OR inside AND).
@@ -194,6 +195,9 @@ These rules are fixed product behaviour. Every report discloses them (in a short
 - Signals are evaluated on candle close. An entry fills at the **next minute's open** modelled premium. If that minute cannot be priced, the entry is skipped (it is not moved to a later minute, because the strategy was satisfied at the candle close, not later).
 - Fixed-time entries fill at that minute's open premium.
 - Stop-loss and target are checked on every 1-minute bar using the modelled premium. If both are hit in the same minute, **the stop-loss is assumed to have been hit first** (conservative).
+- **Exit conditions** (added 2026-10-15) are checked on each candle close after the entry, like entry conditions; when true, the position exits at the next minute's open, before any stop or target in that minute.
+- **Index levels** (added 2026-10-15; e.g. a pivot level or the opening range, for a target, a partial exit or the trailing stop after it) use the value from the last completed candle. A level above the index at entry is reached when a minute's high touches it, a level below when a minute's low touches it. The option is priced with the index exactly at the level, or at the minute's open if the open is already beyond it. Single-leg strategies only.
+- **Partial exit** (added 2026-10-15): a set share of the lots (rounded down to whole lots, at least 1 closed and 1 kept) is closed when its trigger is reached, unless the whole position exits in the same minute; with 1 lot there is nothing to split and the report says the rule had no effect. The rest then keeps its stop, moves its stop to cost, or exits when the index breaks back beyond the low (or high) of the candle in which the partial exit happened. Each part pays its own charges; the trade's result is the sum of both parts.
 - The report counts entries that were skipped and why (e.g. "14 signals skipped: daily trade limit reached"), so a low trade count is never a mystery.
 - **One position at a time** per strategy (a multi-leg position counts as one). A signal on the opposite side while a position is open is ignored.
 - **Intraday:** any open position is squared off at **15:15**.

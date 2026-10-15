@@ -212,4 +212,3 @@ def plan(strategy: dict[str, Any], settings: dict[str, Any], base: dict[str, Any
     if not variants:
         return {"variants": [], "not_offered_text": T_NONE_APPLY}
     return {"variants": variants, "not_offered_text": None}
-

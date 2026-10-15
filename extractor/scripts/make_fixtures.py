@@ -15,6 +15,7 @@ REC = ROOT / "extractor" / "tests" / "recordings"
 INPUTS = {
     "advanced-sample": ("file", ROOT / "samples" / "nifty_weekly_options_strategy.pdf"),
     "one-line-sample": ("text", (ROOT / "samples" / "one_line_strategy.txt")),
+    "orb-cpr-sample": ("text", (ROOT / "samples" / "nifty_15min_orb_cpr_strategy.txt")),
     "vwap": ("text", "Buy ATM call when price crosses above VWAP on the 5-minute chart, stop-loss 20 points."),
     "no-rules": ("text", "hello"),
 }

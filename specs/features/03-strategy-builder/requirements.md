@@ -81,6 +81,15 @@ Implements [`product.md`](../../product.md) §6.1–§6.5 (inputs, advanced opti
 |---|---|
 | REQ-INP-21 | WHEN a value breaks a schema limit or a SEM rule, THE builder SHALL show that rule's plain-English message next to the field (field labels, never paths or ids). |
 
+### 2.9 Vocabulary extensions (added 2026-10-15, owner approval)
+
+| ID | Requirement |
+|---|---|
+| REQ-INP-22 | THE indicator picker SHALL offer "Opening range" (minutes, empty, suggestions 15 and 30) and "Daily pivots / CPR" (no settings), with their outputs selectable in conditions and index levels, and the value lists SHALL include "Candle range (high − low)" and "Candle body". |
+| REQ-INP-23 | THE Exit step SHALL offer an optional "Exit when…" condition editor, one set per side as in the Entry step (SEM-24), with Mirror from Call. |
+| REQ-INP-24 | THE "Move stop to cost" advanced option SHALL ask whether it triggers after a multiple of the risk or after a number of premium points (SEM-21). |
+| REQ-INP-25 | FOR a single-leg strategy, THE builder SHALL offer a target "When the index reaches a level" and an advanced "Partial exit" (percent of lots, trigger: premium gain or index level, then: keep stop / move to cost / trail to the partial-exit candle), with a level per side chosen from indicator values or a number; for several legs the index-level choices SHALL be unavailable with the reason shown (SEM-22, 23, 25). |
+| REQ-INP-26 | WHEN conditions or levels are mirrored from Call to Put, THE builder SHALL swap R1↔S1, R2↔S2, R3↔S3, TC↔BC and opening-range high↔low, and highlight them for review. |
 ## 3. Acceptance criteria
 
 | AC | Req. | Given / When / Then |
@@ -100,6 +109,11 @@ Implements [`product.md`](../../product.md) §6.1–§6.5 (inputs, advanced opti
 | AC-INP-13 | 18, 19 | **Given** Advanced, **then** every option is off; turning on "SL cap" shows an empty required field; turning it off removes it from the draft; VIX sizing with a gap between bands shows SEM-12's message. |
 | AC-INP-14 | 20 | **Given** 2 legs (sell CE ATM, sell PE ATM) at 09:20, **then** the draft matches the short straddle template and the combined stop-loss note is shown. |
 | AC-INP-15 | 21 | **Given** MACD fast 26 and slow 12, **then** the SEM-05 message appears beside the MACD fields. |
+| AC-INP-16 | 22 | **Given** the indicator picker, **then** Opening range (minutes empty) and Daily pivots / CPR can be added, "Opening range 15 high" and "Pivots TC" appear in the value lists, and candle range is offered. |
+| AC-INP-17 | 23 | **Given** "Exit when" with "Close crosses below EMA 20" for calls, **then** the draft has `exit.exit_when.ce` with that condition and review shows it in words. |
+| AC-INP-18 | 24 | **Given** Move stop to cost with "after 25 premium points", **then** the draft has `trail_to_cost_at_pts` 25 and not `trail_to_cost_at_r`. |
+| AC-INP-19 | 25 | **Given** one SIGNAL leg, a 50% partial exit at Pivots R1 (calls) / S1 (puts) then trail to the partial-exit candle, and a target at R2 / S2, **then** the draft matches the shared ORB + CPR fixture; **given** 2 legs, **then** these choices are disabled with the reason. |
+| AC-INP-20 | 26 | **Given** call conditions using Pivots TC and opening-range high, **when** mirrored, **then** the put conditions use BC and opening-range low, highlighted. |
 
 ## 4. Edge cases
 

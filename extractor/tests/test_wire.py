@@ -52,3 +52,13 @@ def test_not_stated_and_unparsable_numbers_become_missing():
     assert out.basics.lots is None and out.basics.lot_size is None  # asked, never guessed
     assert out.basics.distance_pts == 1000 and out.basics.action is None
     assert out.exit.hold_to_expiry is False
+
+
+def test_an_item_with_a_question_is_vague():
+    """A reply that marks an item FOUND but asks a question about it (seen live) is still asked."""
+    draft = ExtractionDraft.model_validate(json.loads(RECORDINGS[0].read_text())["output"])
+    w = to_wire(draft)
+    asked = next(i for i in w.items if i.question_kind != "NONE")
+    asked.status = "FOUND"
+    out = from_wire(w)
+    assert next(i for i in out.items if i.id == asked.id).status == "VAGUE"

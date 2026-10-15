@@ -1,0 +1,2200 @@
+{
+ "request": {
+  "strategy": {
+   "schema_version": "1.0",
+   "name": "Nifty 15-min ORB + CPR (sample, with example answers to its vague rules)",
+   "origin": "UPLOAD",
+   "underlying": "NIFTY50",
+   "timeframe_min": 15,
+   "holding": "INTRADAY",
+   "position": {
+    "lots": 2,
+    "lot_size": 65
+   },
+   "indicators": {
+    "or15": {
+     "type": "OPENING_RANGE",
+     "minutes": 15
+    },
+    "piv": {
+     "type": "PIVOTS"
+    },
+    "ema20": {
+     "type": "EMA",
+     "period": 20,
+     "source": "close"
+    }
+   },
+   "legs": [
+    {
+     "action": "BUY",
+     "option_type": "SIGNAL",
+     "expiry": "CURRENT_WEEKLY",
+     "strike": {
+      "method": "MONEYNESS",
+      "moneyness": "ITM",
+      "distance_pts": 100
+     }
+    }
+   ],
+   "entry": {
+    "ce": {
+     "type": "all",
+     "conditions": [
+      {
+       "type": "compare",
+       "left": {
+        "ind": "or15",
+        "output": "low"
+       },
+       "op": "gt",
+       "right": {
+        "ind": "piv",
+        "output": "tc"
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "price": "open"
+       },
+       "op": "gt",
+       "right": {
+        "ind": "or15",
+        "output": "high"
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "price": "close"
+       },
+       "op": "gt",
+       "right": {
+        "ind": "or15",
+        "output": "high"
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "candle": "range"
+       },
+       "op": "lte",
+       "right": {
+        "const": 70
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "ind": "piv",
+        "output": "cpr_width_pct"
+       },
+       "op": "lte",
+       "right": {
+        "const": 0.4
+       }
+      }
+     ]
+    },
+    "pe": {
+     "type": "all",
+     "conditions": [
+      {
+       "type": "compare",
+       "left": {
+        "ind": "or15",
+        "output": "high"
+       },
+       "op": "lt",
+       "right": {
+        "ind": "piv",
+        "output": "bc"
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "price": "open"
+       },
+       "op": "lt",
+       "right": {
+        "ind": "or15",
+        "output": "low"
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "price": "close"
+       },
+       "op": "lt",
+       "right": {
+        "ind": "or15",
+        "output": "low"
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "candle": "range"
+       },
+       "op": "lte",
+       "right": {
+        "const": 70
+       }
+      },
+      {
+       "type": "compare",
+       "left": {
+        "ind": "piv",
+        "output": "cpr_width_pct"
+       },
+       "op": "lte",
+       "right": {
+        "const": 0.4
+       }
+      }
+     ]
+    }
+   },
+   "exit": {
+    "stop_loss": {
+     "type": "TRIGGER_CANDLE"
+    },
+    "target": {
+     "type": "SPOT_LEVEL",
+     "ce": {
+      "ind": "piv",
+      "output": "r2"
+     },
+     "pe": {
+      "ind": "piv",
+      "output": "s2"
+     }
+    },
+    "exit_when": {
+     "ce": {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "ema20",
+       "output": "value"
+      }
+     },
+     "pe": {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "ema20",
+       "output": "value"
+      }
+     }
+    }
+   },
+   "advanced": {
+    "sl_cap_pts": 25,
+    "trail_to_cost_at_pts": 25,
+    "partial_exit": {
+     "percent": 50,
+     "when": {
+      "type": "SPOT_LEVEL",
+      "ce": {
+       "ind": "piv",
+       "output": "r1"
+      },
+      "pe": {
+       "ind": "piv",
+       "output": "s1"
+      }
+     },
+     "then_stop": "PARTIAL_CANDLE"
+    },
+    "entry_windows": [
+     {
+      "from": "09:15",
+      "to": "11:30"
+     }
+    ],
+    "daily": {
+     "max_trades": 1
+    }
+   }
+  },
+  "settings": {
+   "period": {
+    "start": "2024-01-01",
+    "end": "2024-12-31"
+   },
+   "costs": {
+    "brokerage_per_order": 20,
+    "stt_sell_pct": 0.15,
+    "stt_exercise_pct": 0.15,
+    "exchange_txn_pct": 0.03553,
+    "sebi_per_crore": 10,
+    "stamp_buy_pct": 0.003,
+    "gst_pct": 18,
+    "slippage_pts": 0.5
+   }
+  }
+ },
+ "report": {
+  "engine_version": "fixture",
+  "generated_at": "2026-10-15T12:00",
+  "instrument": {
+   "symbol": "NIFTY50",
+   "name": "Nifty 50"
+  },
+  "period": {
+   "start": "2024-01-01",
+   "end": "2024-12-31",
+   "trading_days": 246
+  },
+  "metrics": {
+   "trades": 41,
+   "wins": 9,
+   "losses": 32,
+   "win_rate_pct": 21.95,
+   "net_pnl": -19516.28,
+   "gross_pnl": -15317.25,
+   "total_costs": 4199.03,
+   "total_slippage": 5330.0,
+   "avg_win": 2852.29,
+   "avg_loss": -1412.09,
+   "expectancy": -476.01,
+   "largest_win": 6738.26,
+   "largest_loss": -3433.67,
+   "max_drawdown": 24438.8,
+   "max_drawdown_pct": null,
+   "return_pct": null,
+   "worst_losing_streak": 9
+  },
+  "equity_curve": [
+   {
+    "t": "2024-01-09T10:57",
+    "equity": -2370.84,
+    "drawdown": 2370.84
+   },
+   {
+    "t": "2024-01-12T15:15",
+    "equity": 2650.22,
+    "drawdown": 0.0
+   },
+   {
+    "t": "2024-01-29T10:20",
+    "equity": 2047.43,
+    "drawdown": 602.79
+   },
+   {
+    "t": "2024-02-16T10:40",
+    "equity": -130.32,
+    "drawdown": 2780.54
+   },
+   {
+    "t": "2024-02-19T11:25",
+    "equity": -583.46,
+    "drawdown": 3233.68
+   },
+   {
+    "t": "2024-02-26T10:59",
+    "equity": -227.76,
+    "drawdown": 2877.98
+   },
+   {
+    "t": "2024-03-01T10:09",
+    "equity": 133.57,
+    "drawdown": 2516.65
+   },
+   {
+    "t": "2024-03-19T10:34",
+    "equity": -26.63,
+    "drawdown": 2676.85
+   },
+   {
+    "t": "2024-03-21T10:30",
+    "equity": -228.73,
+    "drawdown": 2878.95
+   },
+   {
+    "t": "2024-03-27T10:00",
+    "equity": 57.07,
+    "drawdown": 2593.15
+   },
+   {
+    "t": "2024-03-28T15:09",
+    "equity": -87.19,
+    "drawdown": 2737.41
+   },
+   {
+    "t": "2024-04-08T15:15",
+    "equity": 4922.52,
+    "drawdown": 0.0
+   },
+   {
+    "t": "2024-04-12T10:32",
+    "equity": 3822.19,
+    "drawdown": 1100.33
+   },
+   {
+    "t": "2024-04-24T13:11",
+    "equity": 3676.07,
+    "drawdown": 1246.45
+   },
+   {
+    "t": "2024-04-30T10:08",
+    "equity": 273.1,
+    "drawdown": 4649.42
+   },
+   {
+    "t": "2024-05-29T12:46",
+    "equity": -2739.7,
+    "drawdown": 7662.22
+   },
+   {
+    "t": "2024-05-30T10:22",
+    "equity": -2890.49,
+    "drawdown": 7813.01
+   },
+   {
+    "t": "2024-06-28T10:48",
+    "equity": -3530.65,
+    "drawdown": 8453.17
+   },
+   {
+    "t": "2024-07-04T10:12",
+    "equity": -6088.05,
+    "drawdown": 11010.57
+   },
+   {
+    "t": "2024-07-09T11:01",
+    "equity": -6597.76,
+    "drawdown": 11520.28
+   },
+   {
+    "t": "2024-07-16T11:11",
+    "equity": -7660.07,
+    "drawdown": 12582.59
+   },
+   {
+    "t": "2024-07-26T10:00",
+    "equity": -6570.85,
+    "drawdown": 11493.37
+   },
+   {
+    "t": "2024-08-08T11:17",
+    "equity": -9690.57,
+    "drawdown": 14613.09
+   },
+   {
+    "t": "2024-08-12T10:15",
+    "equity": -10997.43,
+    "drawdown": 15919.95
+   },
+   {
+    "t": "2024-08-20T10:00",
+    "equity": -11141.95,
+    "drawdown": 16064.47
+   },
+   {
+    "t": "2024-08-26T10:51",
+    "equity": -11310.15,
+    "drawdown": 16232.67
+   },
+   {
+    "t": "2024-09-06T10:30",
+    "equity": -11624.12,
+    "drawdown": 16546.64
+   },
+   {
+    "t": "2024-09-16T10:04",
+    "equity": -12178.08,
+    "drawdown": 17100.6
+   },
+   {
+    "t": "2024-09-26T14:09",
+    "equity": -12918.24,
+    "drawdown": 17840.76
+   },
+   {
+    "t": "2024-09-27T10:58",
+    "equity": -14336.78,
+    "drawdown": 19259.3
+   },
+   {
+    "t": "2024-09-30T10:08",
+    "equity": -17749.59,
+    "drawdown": 22672.11
+   },
+   {
+    "t": "2024-10-09T11:24",
+    "equity": -11011.33,
+    "drawdown": 15933.85
+   },
+   {
+    "t": "2024-10-14T10:13",
+    "equity": -11850.46,
+    "drawdown": 16772.98
+   },
+   {
+    "t": "2024-11-19T10:25",
+    "equity": -7371.49,
+    "drawdown": 12294.01
+   },
+   {
+    "t": "2024-12-03T12:25",
+    "equity": -9361.28,
+    "drawdown": 14283.8
+   },
+   {
+    "t": "2024-12-04T10:13",
+    "equity": -10204.87,
+    "drawdown": 15127.39
+   },
+   {
+    "t": "2024-12-13T10:02",
+    "equity": -11598.53,
+    "drawdown": 16521.05
+   },
+   {
+    "t": "2024-12-17T10:20",
+    "equity": -9267.93,
+    "drawdown": 14190.45
+   },
+   {
+    "t": "2024-12-18T10:25",
+    "equity": -12669.43,
+    "drawdown": 17591.95
+   },
+   {
+    "t": "2024-12-27T11:04",
+    "equity": -16103.1,
+    "drawdown": 21025.62
+   },
+   {
+    "t": "2024-12-30T09:50",
+    "equity": -19516.28,
+    "drawdown": 24438.8
+   }
+  ],
+  "breakdowns": {
+   "by_year": [
+    {
+     "key": "2024",
+     "label": "2024",
+     "trades": 41,
+     "wins": 9,
+     "win_rate_pct": 21.95,
+     "net_pnl": -19516.28,
+     "expectancy": -476.01
+    }
+   ],
+   "by_month": [
+    {
+     "key": "2024-01",
+     "label": "Jan 2024",
+     "trades": 3,
+     "wins": 1,
+     "win_rate_pct": 33.33,
+     "net_pnl": 2047.43,
+     "expectancy": 682.48
+    },
+    {
+     "key": "2024-02",
+     "label": "Feb 2024",
+     "trades": 3,
+     "wins": 1,
+     "win_rate_pct": 33.33,
+     "net_pnl": -2275.19,
+     "expectancy": -758.4
+    },
+    {
+     "key": "2024-03",
+     "label": "Mar 2024",
+     "trades": 5,
+     "wins": 2,
+     "win_rate_pct": 40.0,
+     "net_pnl": 140.57,
+     "expectancy": 28.11
+    },
+    {
+     "key": "2024-04",
+     "label": "Apr 2024",
+     "trades": 4,
+     "wins": 1,
+     "win_rate_pct": 25.0,
+     "net_pnl": 360.29,
+     "expectancy": 90.07
+    },
+    {
+     "key": "2024-05",
+     "label": "May 2024",
+     "trades": 2,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -3163.59,
+     "expectancy": -1581.8
+    },
+    {
+     "key": "2024-06",
+     "label": "Jun 2024",
+     "trades": 1,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -640.16,
+     "expectancy": -640.16
+    },
+    {
+     "key": "2024-07",
+     "label": "Jul 2024",
+     "trades": 4,
+     "wins": 1,
+     "win_rate_pct": 25.0,
+     "net_pnl": -3040.2,
+     "expectancy": -760.05
+    },
+    {
+     "key": "2024-08",
+     "label": "Aug 2024",
+     "trades": 4,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -4739.3,
+     "expectancy": -1184.82
+    },
+    {
+     "key": "2024-09",
+     "label": "Sep 2024",
+     "trades": 5,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -6439.44,
+     "expectancy": -1287.89
+    },
+    {
+     "key": "2024-10",
+     "label": "Oct 2024",
+     "trades": 2,
+     "wins": 1,
+     "win_rate_pct": 50.0,
+     "net_pnl": 5899.13,
+     "expectancy": 2949.57
+    },
+    {
+     "key": "2024-11",
+     "label": "Nov 2024",
+     "trades": 1,
+     "wins": 1,
+     "win_rate_pct": 100.0,
+     "net_pnl": 4478.97,
+     "expectancy": 4478.97
+    },
+    {
+     "key": "2024-12",
+     "label": "Dec 2024",
+     "trades": 7,
+     "wins": 1,
+     "win_rate_pct": 14.29,
+     "net_pnl": -12144.79,
+     "expectancy": -1734.97
+    }
+   ],
+   "by_vol_band": [
+    {
+     "key": "band_0",
+     "label": "India VIX below 12",
+     "trades": 4,
+     "wins": 1,
+     "win_rate_pct": 25.0,
+     "net_pnl": 2344.72,
+     "expectancy": 586.18
+    },
+    {
+     "key": "band_1",
+     "label": "India VIX 12–18",
+     "trades": 35,
+     "wins": 8,
+     "win_rate_pct": 22.86,
+     "net_pnl": -18697.41,
+     "expectancy": -534.21
+    },
+    {
+     "key": "band_2",
+     "label": "India VIX 18–25",
+     "trades": 2,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -3163.59,
+     "expectancy": -1581.8
+    }
+   ],
+   "by_regime": [
+    {
+     "key": "TRENDING",
+     "label": "Trending days",
+     "trades": 12,
+     "wins": 3,
+     "win_rate_pct": 25.0,
+     "net_pnl": -2086.05,
+     "expectancy": -173.84
+    },
+    {
+     "key": "MIXED",
+     "label": "Mixed days",
+     "trades": 5,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -3899.17,
+     "expectancy": -779.83
+    },
+    {
+     "key": "SIDEWAYS",
+     "label": "Sideways days",
+     "trades": 24,
+     "wins": 6,
+     "win_rate_pct": 25.0,
+     "net_pnl": -13531.06,
+     "expectancy": -563.79
+    }
+   ],
+   "by_weekday": [
+    {
+     "key": "monday",
+     "label": "Monday",
+     "trades": 10,
+     "wins": 2,
+     "win_rate_pct": 20.0,
+     "net_pnl": -5384.66,
+     "expectancy": -538.47
+    },
+    {
+     "key": "tuesday",
+     "label": "Tuesday",
+     "trades": 9,
+     "wins": 2,
+     "win_rate_pct": 22.22,
+     "net_pnl": -2830.77,
+     "expectancy": -314.53
+    },
+    {
+     "key": "wednesday",
+     "label": "Wednesday",
+     "trades": 6,
+     "wins": 2,
+     "win_rate_pct": 33.33,
+     "net_pnl": -379.95,
+     "expectancy": -63.32
+    },
+    {
+     "key": "thursday",
+     "label": "Thursday",
+     "trades": 6,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -6914.43,
+     "expectancy": -1152.41
+    },
+    {
+     "key": "friday",
+     "label": "Friday",
+     "trades": 10,
+     "wins": 3,
+     "win_rate_pct": 30.0,
+     "net_pnl": -4006.47,
+     "expectancy": -400.65
+    }
+   ],
+   "by_expiry_day": [
+    {
+     "key": "expiry_day",
+     "label": "Expiry day",
+     "trades": 6,
+     "wins": 0,
+     "win_rate_pct": 0.0,
+     "net_pnl": -6914.43,
+     "expectancy": -1152.41
+    },
+    {
+     "key": "other_days",
+     "label": "Other days",
+     "trades": 35,
+     "wins": 9,
+     "win_rate_pct": 25.71,
+     "net_pnl": -12601.85,
+     "expectancy": -360.05
+    }
+   ],
+   "by_side": [
+    {
+     "key": "CE",
+     "label": "Call (CE)",
+     "trades": 28,
+     "wins": 7,
+     "win_rate_pct": 25.0,
+     "net_pnl": -1416.76,
+     "expectancy": -50.6
+    },
+    {
+     "key": "PE",
+     "label": "Put (PE)",
+     "trades": 13,
+     "wins": 2,
+     "win_rate_pct": 15.38,
+     "net_pnl": -18099.52,
+     "expectancy": -1392.27
+    }
+   ]
+  },
+  "overfit": {
+   "status": "NOT_APPLICABLE",
+   "status_text": "This period doesn't include both the earlier tuning years and the unseen recent years, so overfitting can't be checked. Choose a longer period to see this check.",
+   "out_of_sample": {
+    "period": {
+     "start": "2024-01-01",
+     "end": "2024-12-31"
+    },
+    "metrics": {
+     "trades": 41,
+     "wins": 9,
+     "losses": 32,
+     "win_rate_pct": 21.95,
+     "net_pnl": -19516.28,
+     "gross_pnl": -15317.25,
+     "total_costs": 4199.03,
+     "total_slippage": 5330.0,
+     "avg_win": 2852.29,
+     "avg_loss": -1412.09,
+     "expectancy": -476.01,
+     "largest_win": 6738.26,
+     "largest_loss": -3433.67,
+     "max_drawdown": 24438.8,
+     "max_drawdown_pct": null,
+     "return_pct": null,
+     "worst_losing_streak": 9
+    }
+   }
+  },
+  "sensitivity": [
+   {
+    "vol_shift_pts": -2.0,
+    "metrics": {
+     "trades": 41,
+     "wins": 9,
+     "losses": 32,
+     "win_rate_pct": 21.95,
+     "net_pnl": -16671.47,
+     "gross_pnl": -12645.75,
+     "total_costs": 4025.72,
+     "total_slippage": 5330.0,
+     "avg_win": 3013.16,
+     "avg_loss": -1368.44,
+     "expectancy": -406.62,
+     "largest_win": 7081.73,
+     "largest_loss": -3426.52,
+     "max_drawdown": 22884.31,
+     "max_drawdown_pct": null,
+     "return_pct": null,
+     "worst_losing_streak": 9
+    }
+   },
+   {
+    "vol_shift_pts": 2.0,
+    "metrics": {
+     "trades": 41,
+     "wins": 10,
+     "losses": 31,
+     "win_rate_pct": 24.39,
+     "net_pnl": -2464.94,
+     "gross_pnl": 1950.0,
+     "total_costs": 4414.94,
+     "total_slippage": 5330.0,
+     "avg_win": 3895.22,
+     "avg_loss": -1336.04,
+     "expectancy": -60.12,
+     "largest_win": 14448.06,
+     "largest_loss": -3440.97,
+     "max_drawdown": 19114.75,
+     "max_drawdown_pct": null,
+     "return_pct": null,
+     "worst_losing_streak": 9
+    }
+   }
+  ],
+  "skipped": {
+   "data_days": [],
+   "data_minutes": {
+    "missing_underlying": 6,
+    "missing_volatility": 6
+   },
+   "signals": [
+    {
+     "reason": "POSITION_OPEN",
+     "reason_text": "A trade was already open",
+     "count": 112
+    },
+    {
+     "reason": "OUTSIDE_ENTRY_WINDOW",
+     "reason_text": "Outside your entry windows",
+     "count": 498
+    },
+    {
+     "reason": "MAX_TRADES",
+     "reason_text": "Daily trade limit reached",
+     "count": 105
+    },
+    {
+     "reason": "AFTER_SQUAREOFF",
+     "reason_text": "Too late in the day (at or after the intraday square-off)",
+     "count": 15
+    }
+   ]
+  },
+  "settings_used": {
+   "quantity_text": "2 lots × 65 = 130 quantity per trade",
+   "holding_text": "Intraday (closed by 15:15)",
+   "timeframe_text": "15-minute candles",
+   "expiry_text": "Current weekly expiry",
+   "period_text": "1 Jan 2024 – 31 Dec 2024 (246 trading days)",
+   "costs": [
+    {
+     "label": "Brokerage",
+     "value_text": "₹20 per order",
+     "source": "Typical flat discount-broker fee (Nikasha assumption)"
+    },
+    {
+     "label": "Securities Transaction Tax",
+     "value_text": "0.15%",
+     "source": "Finance Act 2026, effective 1 Apr 2026"
+    },
+    {
+     "label": "STT on exercise",
+     "value_text": "0.15%",
+     "source": "Finance Act 2026, effective 1 Apr 2026"
+    },
+    {
+     "label": "Exchange transaction charges",
+     "value_text": "0.03553%",
+     "source": "NSE circular NSE/FA/73061 (27 Feb 2026) — to re-confirm"
+    },
+    {
+     "label": "SEBI turnover fee",
+     "value_text": "₹10 per crore",
+     "source": "SEBI regulatory fee"
+    },
+    {
+     "label": "Stamp duty",
+     "value_text": "0.003%",
+     "source": "Indian Stamp Act, as amended by Finance Act 2019"
+    },
+    {
+     "label": "GST",
+     "value_text": "18%",
+     "source": "CGST/IGST Acts, 2017"
+    },
+    {
+     "label": "Slippage",
+     "value_text": "0.5 points per fill",
+     "source": "Nikasha assumption (no order-book data)"
+    }
+   ],
+   "risk_free_rate_pct": 6.5,
+   "capital_text": "Not entered",
+   "advanced": [
+    {
+     "label": "SL cap",
+     "used": true,
+     "value_text": "Stop no more than 25 points from entry"
+    },
+    {
+     "label": "Trigger-candle stop-loss",
+     "used": true,
+     "value_text": "Stop at the signal candle's premium low (bought options) or high (sold options)"
+    },
+    {
+     "label": "Risk-reward target",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Trail stop to cost",
+     "used": true,
+     "value_text": "Stop moves to the entry price after a gain of 25 points"
+    },
+    {
+     "label": "Exit after N candles",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Exit conditions",
+     "used": true,
+     "value_text": "Exit at the next minute's open when the exit conditions are true on a candle close"
+    },
+    {
+     "label": "Index-level target",
+     "used": true,
+     "value_text": "Exit when the index reaches Pivots R2 (calls) / Pivots S2 (puts)"
+    },
+    {
+     "label": "Partial exit",
+     "used": true,
+     "value_text": "Close 50% of the lots when the index reaches Pivots R1 (calls) / Pivots S1 (puts); the rest exits if the index breaks back past that candle's low (or high)"
+    },
+    {
+     "label": "Volatility (VIX) sizing",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Entry windows",
+     "used": true,
+     "value_text": "New entries only 09:15–11:30"
+    },
+    {
+     "label": "No-entry windows",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Expiry-day cutoff",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Daily limits",
+     "used": true,
+     "value_text": "At most 1 trade a day"
+    },
+    {
+     "label": "Multiple legs",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Strike by delta or premium",
+     "used": false,
+     "value_text": "Not used"
+    }
+   ],
+   "no_effect_rules": []
+  },
+  "summary": [
+   "Over 1 Jan 2024 – 31 Dec 2024 (246 trading days), this strategy took 41 trades. Its largest fall from a peak was ₹24,439, its longest run of losing trades was 9 trades, and its single biggest loss was −₹3,434.",
+   "In total it would have lost ₹19,516 after ₹4,199 in costs. 22.0% of trades made money; the average winning trade made ₹2,852 and the average losing trade lost ₹1,412.",
+   "This period doesn't include both the earlier tuning years and the unseen recent years, so overfitting can't be checked. Choose a longer period to see this check.",
+   "If volatility had been 2 points lower, the result would have been −₹16,671; 2 points higher, −₹2,465."
+  ],
+  "simulation_notes": [
+   "Entries fill at the open of the minute after the signal candle closes (or at the fixed entry time).",
+   "Stop-loss and target are checked every minute; if both are reached in the same minute, the stop-loss is assumed to come first.",
+   "Intraday positions are closed at 15:15.",
+   "Positions still open at expiry are settled at intrinsic value, using the expiry day's last minute.",
+   "Strikes are chosen from the index level at the signal, rounded to 50 points.",
+   "Option premiums are modelled with Black-Scholes using India VIX as the volatility (each minute's range uses that minute's closing India VIX) and a 6.5% risk-free rate.",
+   "Slippage of 0.5 points is applied to every fill.",
+   "Charges are applied at today's rates for the whole period.",
+   "Only one position is open at a time.",
+   "Missing market data is never filled in; minutes and days without data are skipped."
+  ],
+  "disclosures": {
+   "modelled_premiums_text": "Premiums modelled, not actual. Nikasha has no historical option prices, so every option price in this report is calculated from the index level and India VIX. Real prices, and so real results, would differ.",
+   "volatility_limitation_text": "India VIX measures expected 30-day volatility for near-the-money options. It doesn't capture how far-from-the-money options or options close to expiry are priced, so results for expiry-day trades and far strikes are the least reliable.",
+   "costs_note_text": "Costs use the rates you confirmed, which are today's rates. Charges were different in earlier years, and that change isn't modelled."
+  },
+  "data_source": {
+   "name": "Kaggle: NSE - Nifty 50 Index Minute data (2015 to 2026)",
+   "url": "https://www.kaggle.com/datasets/debashis74017/nifty-50-minute-data",
+   "note": "Collected by the uploader from internet sources for research purposes; not an official NSE data feed. Used for non-commercial, educational purposes only.",
+   "first": "2015-01-09",
+   "last": "2026-05-14"
+  },
+  "trades": [
+   {
+    "n": 1,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 21600.0,
+      "expiry": "2024-01-11",
+      "entry_premium": 158.55,
+      "exit_premium": 140.1
+     }
+    ],
+    "signal_time": "2024-01-09T10:44",
+    "entry_time": "2024-01-09T10:45",
+    "exit_time": "2024-01-09T10:57",
+    "spot_at_entry": 21707.6,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -2255.5,
+    "costs": 115.34,
+    "net_pnl": -2370.84,
+    "vol_at_entry": 13.15,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false,
+    "partial_exit": {
+     "time": "2024-01-09T10:55",
+     "quantity": 65,
+     "exit_premiums": [
+      142.3
+     ],
+     "reason_text": "Partial exit"
+    }
+   },
+   {
+    "n": 2,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 21700.0,
+      "expiry": "2024-01-18",
+      "entry_premium": 226.65,
+      "exit_premium": 266.25
+     }
+    ],
+    "signal_time": "2024-01-12T10:29",
+    "entry_time": "2024-01-12T10:30",
+    "exit_time": "2024-01-12T15:15",
+    "spot_at_entry": 21817.55,
+    "exit_reason": "SQUARE_OFF",
+    "exit_reason_text": "Intraday square-off",
+    "quantity": 130,
+    "gross_pnl": 5148.0,
+    "costs": 126.94,
+    "net_pnl": 5021.06,
+    "vol_at_entry": 12.77,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 3,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 21450.0,
+      "expiry": "2024-02-01",
+      "entry_premium": 202.9,
+      "exit_premium": 199.1
+     }
+    ],
+    "signal_time": "2024-01-29T10:14",
+    "entry_time": "2024-01-29T10:15",
+    "exit_time": "2024-01-29T10:20",
+    "spot_at_entry": 21573.3,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": -494.0,
+    "costs": 108.79,
+    "net_pnl": -602.79,
+    "vol_at_entry": 15.25,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 4,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 21950.0,
+      "expiry": "2024-02-22",
+      "entry_premium": 240.1,
+      "exit_premium": 224.25
+     }
+    ],
+    "signal_time": "2024-02-16T10:29",
+    "entry_time": "2024-02-16T10:30",
+    "exit_time": "2024-02-16T10:40",
+    "spot_at_entry": 22038.95,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -2060.5,
+    "costs": 117.25,
+    "net_pnl": -2177.75,
+    "vol_at_entry": 15.5,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 5,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22050.0,
+      "expiry": "2024-02-22",
+      "entry_premium": 180.5,
+      "exit_premium": 177.8
+     }
+    ],
+    "signal_time": "2024-02-19T11:14",
+    "entry_time": "2024-02-19T11:15",
+    "exit_time": "2024-02-19T11:25",
+    "spot_at_entry": 22125.65,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": -351.0,
+    "costs": 102.14,
+    "net_pnl": -453.14,
+    "vol_at_entry": 15.97,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 6,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 22200.0,
+      "expiry": "2024-02-29",
+      "entry_premium": 166.2,
+      "exit_premium": 169.7
+     }
+    ],
+    "signal_time": "2024-02-26T10:44",
+    "entry_time": "2024-02-26T10:45",
+    "exit_time": "2024-02-26T10:59",
+    "spot_at_entry": 22122.5,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 455.0,
+    "costs": 99.3,
+    "net_pnl": 355.7,
+    "vol_at_entry": 15.8,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 7,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22100.0,
+      "expiry": "2024-03-07",
+      "entry_premium": 232.1,
+      "exit_premium": 235.8
+     }
+    ],
+    "signal_time": "2024-03-01T09:59",
+    "entry_time": "2024-03-01T10:00",
+    "exit_time": "2024-03-01T10:09",
+    "spot_at_entry": 22177.8,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 481.0,
+    "costs": 119.67,
+    "net_pnl": 361.33,
+    "vol_at_entry": 15.24,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 8,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 22000.0,
+      "expiry": "2024-03-21",
+      "entry_premium": 156.15,
+      "exit_premium": 155.65
+     }
+    ],
+    "signal_time": "2024-03-19T10:14",
+    "entry_time": "2024-03-19T10:15",
+    "exit_time": "2024-03-19T10:34",
+    "spot_at_entry": 21891.2,
+    "exit_reason": "TRAIL_TO_COST",
+    "exit_reason_text": "Stop moved to entry price, then hit",
+    "quantity": 130,
+    "gross_pnl": -65.0,
+    "costs": 95.2,
+    "net_pnl": -160.2,
+    "vol_at_entry": 14.29,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 9,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 21950.0,
+      "expiry": "2024-03-21",
+      "entry_premium": 102.65,
+      "exit_premium": 101.7
+     }
+    ],
+    "signal_time": "2024-03-21T10:29",
+    "entry_time": "2024-03-21T10:30",
+    "exit_time": "2024-03-21T10:30",
+    "spot_at_entry": 22049.3,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -123.5,
+    "costs": 78.6,
+    "net_pnl": -202.1,
+    "vol_at_entry": 12.84,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": true
+   },
+   {
+    "n": 10,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22050.0,
+      "expiry": "2024-03-28",
+      "entry_premium": 119.3,
+      "exit_premium": 122.15
+     }
+    ],
+    "signal_time": "2024-03-27T09:59",
+    "entry_time": "2024-03-27T10:00",
+    "exit_time": "2024-03-27T10:00",
+    "spot_at_entry": 22133.1,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 370.5,
+    "costs": 84.7,
+    "net_pnl": 285.8,
+    "vol_at_entry": 12.84,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 11,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22200.0,
+      "expiry": "2024-03-28",
+      "entry_premium": 104.45,
+      "exit_premium": 103.95
+     }
+    ],
+    "signal_time": "2024-03-28T09:59",
+    "entry_time": "2024-03-28T10:00",
+    "exit_time": "2024-03-28T15:09",
+    "spot_at_entry": 22300.6,
+    "exit_reason": "TRAIL_TO_COST",
+    "exit_reason_text": "Stop moved to entry price, then hit",
+    "quantity": 130,
+    "gross_pnl": -65.0,
+    "costs": 79.26,
+    "net_pnl": -144.26,
+    "vol_at_entry": 12.72,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": true
+   },
+   {
+    "n": 12,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22500.0,
+      "expiry": "2024-04-10",
+      "entry_premium": 158.2,
+      "exit_premium": 197.55
+     }
+    ],
+    "signal_time": "2024-04-08T10:29",
+    "entry_time": "2024-04-08T10:30",
+    "exit_time": "2024-04-08T15:15",
+    "spot_at_entry": 22614.85,
+    "exit_reason": "SQUARE_OFF",
+    "exit_reason_text": "Intraday square-off",
+    "quantity": 130,
+    "gross_pnl": 5115.5,
+    "costs": 105.79,
+    "net_pnl": 5009.71,
+    "vol_at_entry": 11.62,
+    "vol_band": "India VIX below 12",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 13,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 22750.0,
+      "expiry": "2024-04-18",
+      "entry_premium": 175.4,
+      "exit_premium": 167.7
+     }
+    ],
+    "signal_time": "2024-04-12T09:59",
+    "entry_time": "2024-04-12T10:00",
+    "exit_time": "2024-04-12T10:32",
+    "spot_at_entry": 22650.8,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -1001.0,
+    "costs": 99.33,
+    "net_pnl": -1100.33,
+    "vol_at_entry": 11.39,
+    "vol_band": "India VIX below 12",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 14,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22350.0,
+      "expiry": "2024-04-25",
+      "entry_premium": 110.5,
+      "exit_premium": 110.0
+     }
+    ],
+    "signal_time": "2024-04-24T10:14",
+    "entry_time": "2024-04-24T10:15",
+    "exit_time": "2024-04-24T13:11",
+    "spot_at_entry": 22436.4,
+    "exit_reason": "TRAIL_TO_COST",
+    "exit_reason_text": "Stop moved to entry price, then hit",
+    "quantity": 130,
+    "gross_pnl": -65.0,
+    "costs": 81.12,
+    "net_pnl": -146.12,
+    "vol_at_entry": 10.1,
+    "vol_band": "India VIX below 12",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 15,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 22650.0,
+      "expiry": "2024-05-02",
+      "entry_premium": 152.95,
+      "exit_premium": 127.45
+     }
+    ],
+    "signal_time": "2024-04-30T09:59",
+    "entry_time": "2024-04-30T10:00",
+    "exit_time": "2024-04-30T10:08",
+    "spot_at_entry": 22745.15,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -3315.0,
+    "costs": 87.97,
+    "net_pnl": -3402.97,
+    "vol_at_entry": 12.87,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 16,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 22850.0,
+      "expiry": "2024-05-30",
+      "entry_premium": 192.1,
+      "exit_premium": 169.7
+     }
+    ],
+    "signal_time": "2024-05-29T10:29",
+    "entry_time": "2024-05-29T10:30",
+    "exit_time": "2024-05-29T12:46",
+    "spot_at_entry": 22733.4,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -2912.0,
+    "costs": 100.8,
+    "net_pnl": -3012.8,
+    "vol_at_entry": 24.49,
+    "vol_band": "India VIX 18–25",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 17,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 22700.0,
+      "expiry": "2024-05-30",
+      "entry_premium": 125.6,
+      "exit_premium": 125.1
+     }
+    ],
+    "signal_time": "2024-05-30T09:59",
+    "entry_time": "2024-05-30T10:00",
+    "exit_time": "2024-05-30T10:22",
+    "spot_at_entry": 22590.8,
+    "exit_reason": "TRAIL_TO_COST",
+    "exit_reason_text": "Stop moved to entry price, then hit",
+    "quantity": 130,
+    "gross_pnl": -65.0,
+    "costs": 85.79,
+    "net_pnl": -150.79,
+    "vol_at_entry": 24.18,
+    "vol_band": "India VIX 18–25",
+    "regime": "SIDEWAYS",
+    "expiry_day": true
+   },
+   {
+    "n": 18,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24050.0,
+      "expiry": "2024-07-04",
+      "entry_premium": 239.95,
+      "exit_premium": 235.95
+     }
+    ],
+    "signal_time": "2024-06-28T10:44",
+    "entry_time": "2024-06-28T10:45",
+    "exit_time": "2024-06-28T10:48",
+    "spot_at_entry": 24138.7,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -520.0,
+    "costs": 120.16,
+    "net_pnl": -640.16,
+    "vol_at_entry": 14.05,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 19,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24300.0,
+      "expiry": "2024-07-04",
+      "entry_premium": 103.75,
+      "exit_premium": 84.65
+     }
+    ],
+    "signal_time": "2024-07-04T09:59",
+    "entry_time": "2024-07-04T10:00",
+    "exit_time": "2024-07-04T10:12",
+    "spot_at_entry": 24398.15,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -2483.0,
+    "costs": 74.4,
+    "net_pnl": -2557.4,
+    "vol_at_entry": 13.1,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": true
+   },
+   {
+    "n": 20,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24300.0,
+      "expiry": "2024-07-11",
+      "entry_premium": 153.5,
+      "exit_premium": 150.3
+     }
+    ],
+    "signal_time": "2024-07-09T10:59",
+    "entry_time": "2024-07-09T11:00",
+    "exit_time": "2024-07-09T11:01",
+    "spot_at_entry": 24375.55,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -416.0,
+    "costs": 93.71,
+    "net_pnl": -509.71,
+    "vol_at_entry": 13.98,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 21,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24550.0,
+      "expiry": "2024-07-18",
+      "entry_premium": 178.3,
+      "exit_premium": 170.9
+     }
+    ],
+    "signal_time": "2024-07-16T10:59",
+    "entry_time": "2024-07-16T11:00",
+    "exit_time": "2024-07-16T11:11",
+    "spot_at_entry": 24656.0,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -962.0,
+    "costs": 100.31,
+    "net_pnl": -1062.31,
+    "vol_at_entry": 14.55,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 22,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24450.0,
+      "expiry": "2024-08-01",
+      "entry_premium": 227.95,
+      "exit_premium": 237.25
+     }
+    ],
+    "signal_time": "2024-07-26T09:59",
+    "entry_time": "2024-07-26T10:00",
+    "exit_time": "2024-07-26T10:00",
+    "spot_at_entry": 24548.65,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 1209.0,
+    "costs": 119.78,
+    "net_pnl": 1089.22,
+    "vol_at_entry": 12.27,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 23,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 24300.0,
+      "expiry": "2024-08-08",
+      "entry_premium": 117.95,
+      "exit_premium": 94.55
+     }
+    ],
+    "signal_time": "2024-08-08T11:14",
+    "entry_time": "2024-08-08T11:15",
+    "exit_time": "2024-08-08T11:17",
+    "spot_at_entry": 24186.05,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -3042.0,
+    "costs": 77.72,
+    "net_pnl": -3119.72,
+    "vol_at_entry": 16.65,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": true
+   },
+   {
+    "n": 24,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 24350.0,
+      "expiry": "2024-08-14",
+      "entry_premium": 171.9,
+      "exit_premium": 162.6
+     }
+    ],
+    "signal_time": "2024-08-12T10:14",
+    "entry_time": "2024-08-12T10:15",
+    "exit_time": "2024-08-12T10:15",
+    "spot_at_entry": 24252.8,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -1209.0,
+    "costs": 97.86,
+    "net_pnl": -1306.86,
+    "vol_at_entry": 16.23,
+    "vol_band": "India VIX 12–18",
+    "regime": "MIXED",
+    "expiry_day": false
+   },
+   {
+    "n": 25,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24600.0,
+      "expiry": "2024-08-22",
+      "entry_premium": 168.45,
+      "exit_premium": 168.1
+     }
+    ],
+    "signal_time": "2024-08-20T09:59",
+    "entry_time": "2024-08-20T10:00",
+    "exit_time": "2024-08-20T10:00",
+    "spot_at_entry": 24695.3,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": -45.5,
+    "costs": 99.02,
+    "net_pnl": -144.52,
+    "vol_at_entry": 13.97,
+    "vol_band": "India VIX 12–18",
+    "regime": "MIXED",
+    "expiry_day": false
+   },
+   {
+    "n": 26,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24900.0,
+      "expiry": "2024-08-29",
+      "entry_premium": 182.15,
+      "exit_premium": 181.65
+     }
+    ],
+    "signal_time": "2024-08-26T09:59",
+    "entry_time": "2024-08-26T10:00",
+    "exit_time": "2024-08-26T10:51",
+    "spot_at_entry": 24980.6,
+    "exit_reason": "TRAIL_TO_COST",
+    "exit_reason_text": "Stop moved to entry price, then hit",
+    "quantity": 130,
+    "gross_pnl": -65.0,
+    "costs": 103.2,
+    "net_pnl": -168.2,
+    "vol_at_entry": 13.75,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 27,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 25050.0,
+      "expiry": "2024-09-12",
+      "entry_premium": 234.1,
+      "exit_premium": 232.6
+     }
+    ],
+    "signal_time": "2024-09-06T10:29",
+    "entry_time": "2024-09-06T10:30",
+    "exit_time": "2024-09-06T10:30",
+    "spot_at_entry": 24948.55,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -195.0,
+    "costs": 118.97,
+    "net_pnl": -313.97,
+    "vol_at_entry": 14.96,
+    "vol_band": "India VIX 12–18",
+    "regime": "MIXED",
+    "expiry_day": false
+   },
+   {
+    "n": 28,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 25300.0,
+      "expiry": "2024-09-19",
+      "entry_premium": 199.45,
+      "exit_premium": 193.55
+     }
+    ],
+    "signal_time": "2024-09-16T09:59",
+    "entry_time": "2024-09-16T10:00",
+    "exit_time": "2024-09-16T10:04",
+    "spot_at_entry": 25417.8,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -422.5,
+    "costs": 131.46,
+    "net_pnl": -553.96,
+    "vol_at_entry": 12.77,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false,
+    "partial_exit": {
+     "time": "2024-09-16T10:00",
+     "quantity": 65,
+     "exit_premiums": [
+      198.85
+     ],
+     "reason_text": "Partial exit"
+    }
+   },
+   {
+    "n": 29,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 25950.0,
+      "expiry": "2024-09-26",
+      "entry_premium": 119.45,
+      "exit_premium": 103.4
+     }
+    ],
+    "signal_time": "2024-09-26T10:29",
+    "entry_time": "2024-09-26T10:30",
+    "exit_time": "2024-09-26T14:09",
+    "spot_at_entry": 26065.95,
+    "exit_reason": "TRAILING_STOP",
+    "exit_reason_text": "Index broke back past the partial-exit candle",
+    "quantity": 130,
+    "gross_pnl": -633.75,
+    "costs": 106.41,
+    "net_pnl": -740.16,
+    "vol_at_entry": 12.24,
+    "vol_band": "India VIX 12–18",
+    "regime": "MIXED",
+    "expiry_day": true,
+    "partial_exit": {
+     "time": "2024-09-26T10:34",
+     "quantity": 65,
+     "exit_premiums": [
+      125.75
+     ],
+     "reason_text": "Partial exit"
+    }
+   },
+   {
+    "n": 30,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 26150.0,
+      "expiry": "2024-10-03",
+      "entry_premium": 239.6,
+      "exit_premium": 229.6
+     }
+    ],
+    "signal_time": "2024-09-27T10:14",
+    "entry_time": "2024-09-27T10:15",
+    "exit_time": "2024-09-27T10:58",
+    "spot_at_entry": 26262.2,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -1300.0,
+    "costs": 118.54,
+    "net_pnl": -1418.54,
+    "vol_at_entry": 11.63,
+    "vol_band": "India VIX below 12",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 31,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 26100.0,
+      "expiry": "2024-10-03",
+      "entry_premium": 184.9,
+      "exit_premium": 159.4
+     }
+    ],
+    "signal_time": "2024-09-30T09:59",
+    "entry_time": "2024-09-30T10:00",
+    "exit_time": "2024-09-30T10:08",
+    "spot_at_entry": 25981.0,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -3315.0,
+    "costs": 97.81,
+    "net_pnl": -3412.81,
+    "vol_at_entry": 12.86,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 32,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 25000.0,
+      "expiry": "2024-10-10",
+      "entry_premium": 156.45,
+      "exit_premium": 248.9
+     }
+    ],
+    "signal_time": "2024-10-09T10:29",
+    "entry_time": "2024-10-09T10:30",
+    "exit_time": "2024-10-09T11:24",
+    "spot_at_entry": 25117.65,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 6870.5,
+    "costs": 132.24,
+    "net_pnl": 6738.26,
+    "vol_at_entry": 13.87,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false,
+    "partial_exit": {
+     "time": "2024-10-09T10:31",
+     "quantity": 65,
+     "exit_premiums": [
+      169.7
+     ],
+     "reason_text": "Partial exit"
+    }
+   },
+   {
+    "n": 33,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 25000.0,
+      "expiry": "2024-10-17",
+      "entry_premium": 191.0,
+      "exit_premium": 185.35
+     }
+    ],
+    "signal_time": "2024-10-14T09:59",
+    "entry_time": "2024-10-14T10:00",
+    "exit_time": "2024-10-14T10:13",
+    "spot_at_entry": 25099.5,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -734.5,
+    "costs": 104.63,
+    "net_pnl": -839.13,
+    "vol_at_entry": 13.35,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 34,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 23600.0,
+      "expiry": "2024-11-21",
+      "entry_premium": 154.25,
+      "exit_premium": 189.5
+     }
+    ],
+    "signal_time": "2024-11-19T09:59",
+    "entry_time": "2024-11-19T10:00",
+    "exit_time": "2024-11-19T10:25",
+    "spot_at_entry": 23675.8,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 4582.5,
+    "costs": 103.53,
+    "net_pnl": 4478.97,
+    "vol_at_entry": 14.35,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 35,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24300.0,
+      "expiry": "2024-12-05",
+      "entry_premium": 177.6,
+      "exit_premium": 163.05
+     }
+    ],
+    "signal_time": "2024-12-03T10:44",
+    "entry_time": "2024-12-03T10:45",
+    "exit_time": "2024-12-03T12:25",
+    "spot_at_entry": 24407.75,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -1891.5,
+    "costs": 98.29,
+    "net_pnl": -1989.79,
+    "vol_at_entry": 14.4,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 36,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 24450.0,
+      "expiry": "2024-12-05",
+      "entry_premium": 142.2,
+      "exit_premium": 136.4
+     }
+    ],
+    "signal_time": "2024-12-04T09:59",
+    "entry_time": "2024-12-04T10:00",
+    "exit_time": "2024-12-04T10:13",
+    "spot_at_entry": 24545.5,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -754.0,
+    "costs": 89.59,
+    "net_pnl": -843.59,
+    "vol_at_entry": 14.38,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 37,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 24500.0,
+      "expiry": "2024-12-19",
+      "entry_premium": 221.95,
+      "exit_premium": 212.1
+     }
+    ],
+    "signal_time": "2024-12-13T09:59",
+    "entry_time": "2024-12-13T10:00",
+    "exit_time": "2024-12-13T10:02",
+    "spot_at_entry": 24382.45,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -1280.5,
+    "costs": 113.16,
+    "net_pnl": -1393.66,
+    "vol_at_entry": 13.55,
+    "vol_band": "India VIX 12–18",
+    "regime": "MIXED",
+    "expiry_day": false
+   },
+   {
+    "n": 38,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 24650.0,
+      "expiry": "2024-12-19",
+      "entry_premium": 178.5,
+      "exit_premium": 197.25
+     }
+    ],
+    "signal_time": "2024-12-17T09:59",
+    "entry_time": "2024-12-17T10:00",
+    "exit_time": "2024-12-17T10:20",
+    "spot_at_entry": 24524.85,
+    "exit_reason": "SPOT_TARGET",
+    "exit_reason_text": "Index reached the target level",
+    "quantity": 130,
+    "gross_pnl": 2437.5,
+    "costs": 106.9,
+    "net_pnl": 2330.6,
+    "vol_at_entry": 14.47,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 39,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 24350.0,
+      "expiry": "2024-12-19",
+      "entry_premium": 148.15,
+      "exit_premium": 122.65
+     }
+    ],
+    "signal_time": "2024-12-18T10:14",
+    "entry_time": "2024-12-18T10:15",
+    "exit_time": "2024-12-18T10:25",
+    "spot_at_entry": 24236.75,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -3315.0,
+    "costs": 86.5,
+    "net_pnl": -3401.5,
+    "vol_at_entry": 14.77,
+    "vol_band": "India VIX 12–18",
+    "regime": "SIDEWAYS",
+    "expiry_day": false
+   },
+   {
+    "n": 40,
+    "side": "CE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "CE",
+      "strike": 23800.0,
+      "expiry": "2025-01-02",
+      "entry_premium": 252.55,
+      "exit_premium": 227.05
+     }
+    ],
+    "signal_time": "2024-12-27T09:59",
+    "entry_time": "2024-12-27T10:00",
+    "exit_time": "2024-12-27T11:04",
+    "spot_at_entry": 23919.05,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -3315.0,
+    "costs": 118.67,
+    "net_pnl": -3433.67,
+    "vol_at_entry": 13.64,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   },
+   {
+    "n": 41,
+    "side": "PE",
+    "legs": [
+     {
+      "action": "BUY",
+      "option_type": "PE",
+      "strike": 23850.0,
+      "expiry": "2025-01-02",
+      "entry_premium": 186.05,
+      "exit_premium": 160.55
+     }
+    ],
+    "signal_time": "2024-12-30T09:44",
+    "entry_time": "2024-12-30T09:45",
+    "exit_time": "2024-12-30T09:50",
+    "spot_at_entry": 23724.55,
+    "exit_reason": "STOP_LOSS",
+    "exit_reason_text": "Stop-loss hit",
+    "quantity": 130,
+    "gross_pnl": -3315.0,
+    "costs": 98.18,
+    "net_pnl": -3413.18,
+    "vol_at_entry": 13.61,
+    "vol_band": "India VIX 12–18",
+    "regime": "TRENDING",
+    "expiry_day": false
+   }
+  ]
+ }
+}

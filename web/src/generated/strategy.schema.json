@@ -3,7 +3,7 @@
   "$id": "https://nikasha.local/contracts/strategy.schema.json",
   "title": "Strategy",
   "description": "Internal strategy format. Never shown to users (constitution §4). Structural rules live here; rules JSON Schema cannot express are in strategy-rules.md (SEM-xx) and are enforced identically by the web app and the engine. Mandatory inputs (product.md §6.1) are the required top-level fields. Every advanced option (product.md §6.2) is OFF when absent and has no default.",
-  "$comment": "Advanced options and where they live: SL cap → advanced.sl_cap_pts; trigger-candle SL → exit.stop_loss.type TRIGGER_CANDLE; R:R target → exit.target.type RR; trail to cost → advanced.trail_to_cost_at_r; exit after N candles → advanced.exit_after_candles; VIX sizing → advanced.vix_sizing; entry/no-entry windows → advanced.entry_windows / advanced.no_entry_windows; expiry-day cutoff → advanced.expiry_day_cutoff; daily limits → advanced.daily; 1–4 legs → legs (more than one leg); strike by delta/premium → legs[].strike.method DELTA / PREMIUM.",
+  "$comment": "Advanced options and where they live: SL cap → advanced.sl_cap_pts; trigger-candle SL → exit.stop_loss.type TRIGGER_CANDLE; R:R target → exit.target.type RR; trail to cost → advanced.trail_to_cost_at_r or advanced.trail_to_cost_at_pts; exit conditions → exit.exit_when; index-level target → exit.target.type SPOT_LEVEL; partial exit → advanced.partial_exit; exit after N candles → advanced.exit_after_candles; VIX sizing → advanced.vix_sizing; entry/no-entry windows → advanced.entry_windows / advanced.no_entry_windows; expiry-day cutoff → advanced.expiry_day_cutoff; daily limits → advanced.daily; 1–4 legs → legs (more than one leg); strike by delta/premium → legs[].strike.method DELTA / PREMIUM.",
   "type": "object",
   "additionalProperties": false,
   "required": ["schema_version", "underlying", "timeframe_min", "holding", "position", "indicators", "legs", "entry", "exit"],
@@ -136,6 +136,27 @@
             "stddev": { "type": "number", "exclusiveMinimum": 0, "maximum": 5 },
             "source": { "$ref": "#/$defs/PriceField" }
           }
+        },
+        {
+          "title": "Opening range",
+          "description": "Outputs: high, low — of the session's first `minutes` minutes; empty on candles that close before the range ends (REQ-ENG-48).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type", "minutes"],
+          "properties": {
+            "type": { "const": "OPENING_RANGE" },
+            "minutes": { "type": "integer", "minimum": 5, "maximum": 120 }
+          }
+        },
+        {
+          "title": "Daily pivots and CPR",
+          "description": "Outputs: p, tc, bc, r1, r2, r3, s1, s2, s3, cpr_width (points), cpr_width_pct — classic floor pivots from the previous trading day's session high, low and close (REQ-ENG-49).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["type"],
+          "properties": {
+            "type": { "const": "PIVOTS" }
+          }
         }
       ]
     },
@@ -167,7 +188,7 @@
           "required": ["ind", "output"],
           "properties": {
             "ind": { "$ref": "#/$defs/IndicatorId" },
-            "output": { "enum": ["value", "signal", "hist", "upper", "middle", "lower", "plus_di", "minus_di"] },
+            "output": { "enum": ["value", "signal", "hist", "upper", "middle", "lower", "plus_di", "minus_di", "high", "low", "p", "tc", "bc", "r1", "r2", "r3", "s1", "s2", "s3", "cpr_width", "cpr_width_pct"] },
             "offset": { "$ref": "#/$defs/Offset" }
           }
         },
@@ -188,6 +209,15 @@
           "required": ["vix"],
           "properties": {
             "vix": { "enum": ["open", "close"] }
+          }
+        },
+        {
+          "title": "Candle size in index points: range = high − low, body = |close − open| (REQ-ENG-50)",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["candle"],
+          "properties": {
+            "candle": { "enum": ["range", "body"] }
           }
         },
         {
@@ -414,8 +444,30 @@
                 "type": { "const": "RR" },
                 "value": { "type": "number", "exclusiveMinimum": 0, "maximum": 20 }
               }
+            },
+            {
+              "title": "Index level (advanced, single leg): exit when the index reaches the level for the trade's side (REQ-ENG-53, 54; SEM-22, 23)",
+              "type": "object",
+              "additionalProperties": false,
+              "required": ["type"],
+              "properties": {
+                "type": { "const": "SPOT_LEVEL" },
+                "ce": { "$ref": "#/$defs/Operand" },
+                "pe": { "$ref": "#/$defs/Operand" }
+              }
             }
           ]
+        },
+        "exit_when": {
+          "description": "Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24).",
+          "type": "object",
+          "additionalProperties": false,
+          "minProperties": 1,
+          "properties": {
+            "ce": { "$ref": "#/$defs/Condition" },
+            "pe": { "$ref": "#/$defs/Condition" },
+            "all_legs": { "$ref": "#/$defs/Condition" }
+          }
         },
         "time_exit": {
           "type": "object",
@@ -440,6 +492,50 @@
       "properties": {
         "sl_cap_pts": { "description": "Maximum stop distance in premium points.", "type": "number", "exclusiveMinimum": 0 },
         "trail_to_cost_at_r": { "description": "Move stop to entry price once profit reaches this multiple of the initial risk.", "type": "number", "exclusiveMinimum": 0, "maximum": 20 },
+        "trail_to_cost_at_pts": { "description": "Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21).", "type": "number", "exclusiveMinimum": 0, "maximum": 100000 },
+        "partial_exit": {
+          "description": "Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25).",
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["percent", "when", "then_stop"],
+          "properties": {
+            "percent": { "description": "Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept).", "type": "integer", "minimum": 1, "maximum": 99 },
+            "when": {
+              "oneOf": [
+                {
+                  "title": "Premium gain",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["type", "gain"],
+                  "properties": {
+                    "type": { "const": "PREMIUM_GAIN" },
+                    "gain": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["type", "value"],
+                      "properties": {
+                        "type": { "enum": ["PCT_PREMIUM", "POINTS", "RR"] },
+                        "value": { "type": "number", "exclusiveMinimum": 0 }
+                      }
+                    }
+                  }
+                },
+                {
+                  "title": "Index level (single leg)",
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": ["type"],
+                  "properties": {
+                    "type": { "const": "SPOT_LEVEL" },
+                    "ce": { "$ref": "#/$defs/Operand" },
+                    "pe": { "$ref": "#/$defs/Operand" }
+                  }
+                }
+              ]
+            },
+            "then_stop": { "description": "UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg).", "enum": ["UNCHANGED", "COST", "PARTIAL_CANDLE"] }
+          }
+        },
         "exit_after_candles": { "description": "Exit if neither stop nor target is hit within N candles after entry.", "type": "integer", "minimum": 1, "maximum": 500 },
         "vix_sizing": {
           "description": "Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot.",

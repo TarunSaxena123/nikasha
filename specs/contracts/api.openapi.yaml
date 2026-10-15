@@ -423,9 +423,24 @@ components:
         exit_time: { $ref: "#/components/schemas/Timestamp" }
         spot_at_entry: { type: number }
         exit_reason:
-          enum: [STOP_LOSS, TARGET, TRAIL_TO_COST, TIME_EXIT, SQUARE_OFF, N_CANDLES, EXPIRY_SETTLEMENT]
+          enum: [STOP_LOSS, TARGET, TRAIL_TO_COST, TIME_EXIT, SQUARE_OFF, N_CANDLES, EXPIRY_SETTLEMENT,
+                 SIGNAL_EXIT, SPOT_TARGET, TRAILING_STOP]
         exit_reason_text: { type: string }
         quantity: { type: integer }
+        partial_exit:
+          description: Present when part of the lots was closed earlier (REQ-ENG-55, REQ-RPT-22). Final exit fields describe the rest.
+          type: object
+          additionalProperties: false
+          required: [time, quantity, exit_premiums, reason_text]
+          properties:
+            time: { $ref: "#/components/schemas/Timestamp" }
+            quantity: { type: integer, minimum: 1 }
+            exit_premiums:
+              description: One per leg, in the order of `legs`.
+              type: array
+              minItems: 1
+              items: { type: number }
+            reason_text: { type: string }
         gross_pnl: { $ref: "#/components/schemas/Rupees" }
         costs: { $ref: "#/components/schemas/Rupees" }
         net_pnl: { $ref: "#/components/schemas/Rupees" }

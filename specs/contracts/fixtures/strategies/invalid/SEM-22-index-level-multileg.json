@@ -1,0 +1,82 @@
+{
+  "description": "Index-level target on a two-leg position",
+  "expect": {
+    "kind": "SEM",
+    "rules": [
+      "SEM-22"
+    ]
+  },
+  "strategy": {
+    "schema_version": "1.0",
+    "name": "Nifty 15-min ORB + CPR (sample, with example answers to its vague rules)",
+    "origin": "UPLOAD",
+    "underlying": "NIFTY50",
+    "timeframe_min": 15,
+    "holding": "INTRADAY",
+    "position": {
+      "lots": 2,
+      "lot_size": 65
+    },
+    "indicators": {
+      "or15": {
+        "type": "OPENING_RANGE",
+        "minutes": 15
+      },
+      "piv": {
+        "type": "PIVOTS"
+      },
+      "ema20": {
+        "type": "EMA",
+        "period": 20,
+        "source": "close"
+      }
+    },
+    "legs": [
+      {
+        "action": "BUY",
+        "option_type": "CE",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ATM",
+          "distance_pts": 0
+        }
+      },
+      {
+        "action": "BUY",
+        "option_type": "PE",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ATM",
+          "distance_pts": 0
+        }
+      }
+    ],
+    "entry": {
+      "at_time": "09:30"
+    },
+    "exit": {
+      "stop_loss": {
+        "type": "PCT_PREMIUM",
+        "value": 30
+      },
+      "target": {
+        "type": "SPOT_LEVEL",
+        "ce": {
+          "ind": "piv",
+          "output": "r2"
+        },
+        "pe": {
+          "ind": "piv",
+          "output": "s2"
+        }
+      }
+    },
+    "advanced": {
+      "daily": {
+        "max_trades": 1
+      }
+    }
+  }
+}

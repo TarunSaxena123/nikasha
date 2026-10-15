@@ -9,9 +9,9 @@ import { RichText } from "@/components/ui/Glossary";
 import { number } from "@/lib/format";
 import { getAt } from "@/lib/patch";
 import type { Draft, StrategyDraft } from "@/strategy/draft";
-import { mirror } from "@/strategy/mirror";
+import { mirror, mirrorOperand } from "@/strategy/mirror";
 import { moneynessStrike } from "@/strategy/strikes";
-import { ConditionGroup, IndicatorManager, usedIndicatorIds } from "./conditions";
+import { ConditionGroup, IndicatorManager, LevelSides, levelSidesFor, usedIndicatorIds } from "./conditions";
 import { Field, NumberInput, Segmented, TimeInput } from "./fields";
 
 type AnyRec = Record<string, unknown>;
@@ -180,7 +180,8 @@ export function Entry({ draft, update, problem }: StepProps) {
   };
   const doMirror = () => {
     if (!entry.ce) return;
-    if (entry.pe && !window.confirm("Replace the put conditions with a mirror of the call conditions?")) return;
+    const peHasRules = !!entry.pe && (!["all", "any"].includes(String((entry.pe as AnyRec).type)) || (((entry.pe as AnyRec).conditions as unknown[] | undefined) ?? []).length > 0);
+    if (peHasRules && !window.confirm("Replace the put conditions with a mirror of the call conditions?")) return;
     const r = mirror(entry.ce as AnyRec);
     setHighlights(r.needsReview);
     update((x) => { (x.entry as AnyRec).pe = r.tree; });
@@ -206,7 +207,7 @@ export function Entry({ draft, update, problem }: StepProps) {
       {(mode === "conditions" || mode === "time_if") && (
         <>
           <Field id="indicators" label="Indicators" problem={problem("Indicator settings")}>
-            <IndicatorManager indicators={indicators} usedIds={usedIndicatorIds(entry)} onChange={(n) => update((x) => (x.indicators = n))} />
+            <IndicatorManager indicators={indicators} usedIds={usedIndicatorIds({ entry, exit: s.exit, advanced: s.advanced })} onChange={(n) => update((x) => (x.indicators = n))} />
           </Field>
           <Field id="conditions" label="Conditions" problem={problem("Entry conditions")}>
             <div className="space-y-4">
@@ -241,6 +242,15 @@ export function Entry({ draft, update, problem }: StepProps) {
 export function Exit({ draft, update, inst, problem }: StepProps) {
   const s = draft.strategy as AnyRec;
   const ex = (s.exit ?? {}) as AnyRec;
+  const [exitHighlights, setExitHighlights] = useState<string[]>([]);
+  const indicators = ((s.indicators ?? {}) as Record<string, AnyRec>);
+  const leg0 = (legs(s)[0] ?? {}) as AnyRec;
+  const exitWhen = ex.exit_when as Record<string, AnyRec> | undefined;
+  // Exit-condition sides follow the legs, as entry sides do (SEM-24).
+  const exitSides: { key: "ce" | "pe" | "all_legs"; label: string }[] = legs(s).length > 1
+    ? [{ key: "all_legs", label: "Exit all legs when" }]
+    : leg0.option_type === "SIGNAL" ? [{ key: "ce", label: "Exit a call when" }, { key: "pe", label: "Exit a put when" }]
+    : leg0.option_type === "PE" ? [{ key: "pe", label: "Exit when" }] : [{ key: "ce", label: "Exit when" }];
   const sl = (ex.stop_loss ?? {}) as AnyRec;
   const tgt = ex.target as AnyRec | undefined;
   const te = ex.time_exit as AnyRec | undefined;
@@ -249,7 +259,7 @@ export function Exit({ draft, update, inst, problem }: StepProps) {
   const positional = s.holding === "POSITIONAL";
   const multi = legs(s).length > 1;
   const setExit = (fn: (e: AnyRec) => void) => update((x) => { const e = { ...((x.exit ?? {}) as AnyRec) }; fn(e); x.exit = e; });
-  const needsQuestion = positional && !tgt && !te && !ex.hold_to_expiry && adv.exit_after_candles === undefined && draft.pendingExit !== "CANDLES";
+  const needsQuestion = positional && !tgt && !te && !ex.hold_to_expiry && !exitWhen && adv.exit_after_candles === undefined && draft.pendingExit !== "CANDLES";
   return (
     <div className="space-y-5">
       <Field id="stop_loss" label={multi ? "Stop-loss (combined position)" : "Stop-loss"} problem={problem("Stop-loss")}>
@@ -268,12 +278,54 @@ export function Exit({ draft, update, inst, problem }: StepProps) {
       <Field id="target" label="Target (optional)" problem={problem("Target")}>
         {tgt?.type === "RR" ? <p className="text-sm">Risk-reward target, set under Advanced options.</p> : (
           <div className="flex flex-wrap items-center gap-2">
-            <select aria-label="Target type" className="rounded-md border border-line px-2 py-1 text-sm" value={(tgt?.type as string) ?? ""} onChange={(e) => setExit((x) => { if (e.target.value) x.target = { type: e.target.value, value: tgt?.value }; else delete x.target; })}>
+            <select aria-label="Target type" className="rounded-md border border-line px-2 py-1 text-sm" value={(tgt?.type as string) ?? ""}
+              onChange={(e) => setExit((x) => {
+                const v = e.target.value;
+                if (!v) delete x.target;
+                else x.target = v === "SPOT_LEVEL" ? { type: v } : { type: v, value: tgt?.type === "SPOT_LEVEL" ? undefined : tgt?.value };
+              })}>
               <option value="">No target</option>
               <option value="PCT_PREMIUM">% of premium</option>
               <option value="POINTS">Premium points</option>
+              <option value="SPOT_LEVEL" disabled={multi}>When the index reaches a level</option>
             </select>
-            {!!tgt?.type && <NumberInput label="Target value" min={0.05} value={tgt.value as number | undefined} onChange={(v) => setExit((x) => (x.target = { ...tgt, value: v }))} />}
+            {!!tgt?.type && tgt.type !== "SPOT_LEVEL" && <NumberInput label="Target value" min={0.05} value={tgt.value as number | undefined} onChange={(v) => setExit((x) => (x.target = { ...tgt, value: v }))} />}
+          </div>
+        )}
+        {multi && <p className="mt-1 text-xs text-ink-muted">Index-level exits work with one leg only.</p>}
+        {tgt?.type === "SPOT_LEVEL" && (
+          <div className="mt-2">
+            <p className="mb-1 text-xs text-ink-muted">The whole position exits when the index reaches this level (from the last closed candle).</p>
+            <LevelSides label="Target" spec={tgt} sides={levelSidesFor(leg0.option_type)} indicators={indicators}
+              onChange={(n) => setExit((x) => (x.target = n))}
+              onMirror={() => setExit((x) => (x.target = { ...tgt, pe: mirrorOperand(tgt.ce as AnyRec) }))} />
+            {problem("Exit levels") && <p className="text-xs text-risk" role="alert">{problem("Exit levels")}</p>}
+          </div>
+        )}
+      </Field>
+      <Field id="exit_when" label="Exit when… (optional)" problem={problem("Exit conditions")}>
+        <label className="flex items-center gap-2 text-sm">
+          <input type="checkbox" checked={!!exitWhen} onChange={(e) => setExit((x) => {
+            if (e.target.checked) x.exit_when = Object.fromEntries(exitSides.map((sd) => [sd.key, { type: "all", conditions: [] }]));
+            else delete x.exit_when;
+          })} />
+          Exit at the next minute&apos;s open when conditions are true on a candle close
+        </label>
+        {exitWhen && (
+          <div className="mt-3 space-y-4">
+            <p className="text-xs text-ink-muted">Use indicators added in the Entry step (add any you need there, e.g. EMA 20).</p>
+            {exitSides.map((sd) => (
+              <div key={sd.key}>
+                <div className="mb-1 flex items-center justify-between">
+                  <p className="text-sm font-medium">{sd.label}</p>
+                  {sd.key === "pe" && <Button variant="quiet" disabled={!exitWhen.ce}
+                    onClick={() => { const r = mirror(exitWhen.ce!); setExitHighlights(r.needsReview); setExit((x) => (x.exit_when = { ...exitWhen, pe: r.tree })); }}>Mirror from Call</Button>}
+                </div>
+                {sd.key === "pe" && exitHighlights.length > 0 && <p className="mb-1 text-xs text-accent">Highlighted values were copied or swapped from the call side. Please check them.</p>}
+                <ConditionGroup node={asGroup(exitWhen[sd.key])} indicators={indicators} highlights={sd.key === "pe" ? exitHighlights : []}
+                  onChange={(n) => setExit((x) => (x.exit_when = { ...(x.exit_when as AnyRec), [sd.key]: n }))} />
+              </div>
+            ))}
           </div>
         )}
       </Field>

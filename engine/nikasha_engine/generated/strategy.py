@@ -86,10 +86,41 @@ class Indicator5(BaseModel):
     source: PriceField
 
 
+class Indicator6(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["OPENING_RANGE"]
+    minutes: Annotated[int, Field(ge=5, le=120)]
+
+
+class Indicator7(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["PIVOTS"]
+
+
 class Indicator(
-    RootModel[Indicator1 | Indicator2 | Indicator3 | Indicator4 | Indicator5]
+    RootModel[
+        Indicator1
+        | Indicator2
+        | Indicator3
+        | Indicator4
+        | Indicator5
+        | Indicator6
+        | Indicator7
+    ]
 ):
-    root: Indicator1 | Indicator2 | Indicator3 | Indicator4 | Indicator5
+    root: (
+        Indicator1
+        | Indicator2
+        | Indicator3
+        | Indicator4
+        | Indicator5
+        | Indicator6
+        | Indicator7
+    )
 
 
 class Offset1(BaseModel):
@@ -121,7 +152,27 @@ class Operand1(BaseModel):
     )
     ind: IndicatorId
     output: Literal[
-        "value", "signal", "hist", "upper", "middle", "lower", "plus_di", "minus_di"
+        "value",
+        "signal",
+        "hist",
+        "upper",
+        "middle",
+        "lower",
+        "plus_di",
+        "minus_di",
+        "high",
+        "low",
+        "p",
+        "tc",
+        "bc",
+        "r1",
+        "r2",
+        "r3",
+        "s1",
+        "s2",
+        "s3",
+        "cpr_width",
+        "cpr_width_pct",
     ]
     offset: Offset | None = None
 
@@ -145,11 +196,18 @@ class Operand4(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
+    candle: Literal["range", "body"]
+
+
+class Operand5(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
     const: float
 
 
-class Operand(RootModel[Operand1 | Operand2 | Operand3 | Operand4]):
-    root: Operand1 | Operand2 | Operand3 | Operand4
+class Operand(RootModel[Operand1 | Operand2 | Operand3 | Operand4 | Operand5]):
+    root: Operand1 | Operand2 | Operand3 | Operand4 | Operand5
 
 
 class Compare(BaseModel):
@@ -270,6 +328,15 @@ class Target1(BaseModel):
     value: Annotated[float, Field(gt=0.0, le=20.0)]
 
 
+class Target2(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["SPOT_LEVEL"]
+    ce: Operand | None = None
+    pe: Operand | None = None
+
+
 class TimeExit(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
@@ -278,19 +345,50 @@ class TimeExit(BaseModel):
     on: Literal["ENTRY_DAY", "EXPIRY_DAY"]
 
 
-class Exit(BaseModel):
+class Gain(BaseModel):
     model_config = ConfigDict(
         extra="forbid",
     )
-    stop_loss: StopLoss | StopLoss1 | StopLoss2
-    target: Target | Target1 | None = None
-    time_exit: TimeExit | None = None
-    hold_to_expiry: Annotated[
-        Literal[True] | None,
+    type: Literal["PCT_PREMIUM", "POINTS", "RR"]
+    value: Annotated[float, Field(gt=0.0)]
+
+
+class When(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["PREMIUM_GAIN"]
+    gain: Gain
+
+
+class When1(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    type: Literal["SPOT_LEVEL"]
+    ce: Operand | None = None
+    pe: Operand | None = None
+
+
+class PartialExit(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    percent: Annotated[
+        int,
         Field(
-            description="Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen."
+            description="Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept).",
+            ge=1,
+            le=99,
         ),
-    ] = None
+    ]
+    when: When | When1
+    then_stop: Annotated[
+        Literal["UNCHANGED", "COST", "PARTIAL_CANDLE"],
+        Field(
+            description="UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg)."
+        ),
+    ]
 
 
 class Band(BaseModel):
@@ -344,6 +442,20 @@ class Advanced(BaseModel):
             description="Move stop to entry price once profit reaches this multiple of the initial risk.",
             gt=0.0,
             le=20.0,
+        ),
+    ] = None
+    trail_to_cost_at_pts: Annotated[
+        float | None,
+        Field(
+            description="Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21).",
+            gt=0.0,
+            le=100000.0,
+        ),
+    ] = None
+    partial_exit: Annotated[
+        PartialExit | None,
+        Field(
+            description="Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25)."
         ),
     ] = None
     exit_after_candles: Annotated[
@@ -503,6 +615,36 @@ class Entry(BaseModel):
     ] = None
 
 
+class ExitWhen(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    ce: Condition | None = None
+    pe: Condition | None = None
+    all_legs: Condition | None = None
+
+
+class Exit(BaseModel):
+    model_config = ConfigDict(
+        extra="forbid",
+    )
+    stop_loss: StopLoss | StopLoss1 | StopLoss2
+    target: Target | Target1 | Target2 | None = None
+    exit_when: Annotated[
+        ExitWhen | None,
+        Field(
+            description="Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24)."
+        ),
+    ] = None
+    time_exit: TimeExit | None = None
+    hold_to_expiry: Annotated[
+        Literal[True] | None,
+        Field(
+            description="Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen."
+        ),
+    ] = None
+
+
 class Condition(
     RootModel[AllGroup | AnyGroup | Compare | Cross | State | Turns | Slope]
 ):
@@ -518,3 +660,4 @@ Strategy.model_rebuild()
 AllGroup.model_rebuild()
 AnyGroup.model_rebuild()
 Entry.model_rebuild()
+ExitWhen.model_rebuild()

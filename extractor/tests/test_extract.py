@@ -142,3 +142,41 @@ def test_cycle_in_conditions_fails():
     bad["conditions"] = [row("c1", "CE", "all", parent="c2"), row("c2", "CE", "all", parent="c1")]
     with pytest.raises(ExtractError):
         validate_draft(ExtractionDraft.model_validate(bad))
+
+
+def test_orb_cpr_sample_extracts_every_rule_ac_upl_16(replay):
+    """AC-UPL-16 (live recording, prompt upl-3): no rule unsupported; vague expiry and CPR width asked;
+    with example answers the draft is a complete, schema-valid strategy using the 2026-10-15 vocabulary."""
+    from jsonschema import Draft202012Validator
+
+    text = (SAMPLES / "nifty_15min_orb_cpr_strategy.txt").read_text(encoding="utf-8")
+    status, out = api.dispatch("POST", "/v1/extract", json.dumps({"text": text}).encode(), "application/json")
+    assert status == 200
+    assert not [i for i in out["items"] if i["status"] == "UNSUPPORTED"]
+    qs = {frozenset(_paths(q)): q for q in out["questions"]}
+    expiry = qs[frozenset({"/legs/0/expiry"})]
+    width_paths = {"/entry/ce/conditions/4/right/const", "/entry/pe/conditions/4/right/const"}
+    width = qs[frozenset(width_paths)]
+    assert width["kind"] == "NUMBER" and len(out["questions"]) == 2
+    d = out["draft"]
+    assert d["exit"]["target"] == {
+        "type": "SPOT_LEVEL",
+        "ce": {"ind": "piv", "output": "r2"},
+        "pe": {"ind": "piv", "output": "s2"},
+    }
+    assert d["exit"]["exit_when"]["ce"]["conditions"][0]["right"] == {"ind": "ema20", "output": "value"}
+    assert d["advanced"]["partial_exit"] == {
+        "percent": 50,
+        "when": {"type": "SPOT_LEVEL", "ce": {"ind": "piv", "output": "r1"}, "pe": {"ind": "piv", "output": "s1"}},
+        "then_stop": "PARTIAL_CANDLE",
+    }
+    assert d["advanced"]["trail_to_cost_at_pts"] == 25 and d["advanced"]["daily"] == {"max_trades": 1}
+    assert {"type": "compare", "left": {"candle": "range"}, "op": "lte", "right": {"const": 70}} in d["entry"]["ce"][
+        "conditions"
+    ]
+    d = apply_patch(d, next(o["patch"] for o in expiry["options"] if o["patch"][0]["value"] == "CURRENT_WEEKLY"))
+    d = answer_number(d, width, 30)
+    d["holding"] = "INTRADAY"
+    d["position"] = {"lots": 2, "lot_size": 65}
+    schema = load(CONTRACTS / "strategy.schema.json")
+    assert not list(Draft202012Validator(schema).iter_errors(d))

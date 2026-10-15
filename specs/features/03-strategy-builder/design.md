@@ -159,6 +159,14 @@ The builder edits `draft` in the store (`frontend.md` §4). There is no persiste
 - SEM problems carry their rule id → field id and message from `strategy-rules.md`.
 - Messages render beside the field and in the step's "still needed" list. Unknown paths fall back to the step-level list with a generic message, never a path.
 
+### 1.13 Vocabulary extensions (INP-22…26; added 2026-10-15)
+- Indicator picker: "Opening range" (minutes: empty, chips 15 and 30) and "Daily pivots / CPR" (no settings). Value lists show "Opening range 15 high/low", "Pivots P / TC / BC / R1 … S3 / CPR width / CPR width %", plus "Candle range (high − low)" and "Candle body".
+- Exit step: "Exit when… (optional)" switch; when on, the same condition editor as Entry, per side (SEM-24), with Mirror from Call.
+- Advanced: "Move stop to cost" asks "after × risk" or "after premium points" (one number field each).
+- Single leg only (otherwise disabled with "Index-level exits work with one leg only"): target type "When the index reaches a level" with a level per side; advanced "Partial exit": percent of lots, trigger (premium gain: % / points / × risk, or index level per side), then (keep the stop / move the stop to cost / trail to the partial-exit candle).
+- Level pickers list indicator outputs (pivots, opening range, moving averages…) and "a number".
+- Mirror swaps r1↔s1, r2↔s2, r3↔s3, tc↔bc and opening-range high↔low (in conditions and levels) and highlights them.
+
 ## 2. Backend
 
 **Not applicable.** The engine re-validates every request with the same schema and SEM rules (feature 01 T-ENG-07). The shared fixtures prove both sides agree.

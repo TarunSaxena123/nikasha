@@ -253,6 +253,28 @@ If R ≤ 0 (SL not on the losing side of P), or a sold option's target ≤ one t
 - Premiums are computed only for minutes a position holds (≤ 375 per intraday trade).
 - Benchmarks (`engine/tests/perf/`) cover the budget cases and run in CI on the reference machine. After deploy they are timed once on Lambda.
 
+### 2.18 Vocabulary extensions (ENG-48…57, added 2026-10-15)
+
+**Contract shapes** (`strategy.schema.json`):
+- Indicators: `{"type":"OPENING_RANGE","minutes":5–120}` → outputs `high`, `low`; `{"type":"PIVOTS"}` → outputs `p, tc, bc, r1, r2, r3, s1, s2, s3, cpr_width, cpr_width_pct`.
+- Operand: `{"candle":"range"|"body"}`.
+- `exit.exit_when`: `{ce?, pe?, all_legs?}`, each a condition tree (SEM-03, 04, 15, 24 apply).
+- `exit.target`: new branch `{"type":"SPOT_LEVEL","ce"?: Operand,"pe"?: Operand}` (SEM-22, 23).
+- `advanced.trail_to_cost_at_pts` (> 0; SEM-21).
+- `advanced.partial_exit`: `{"percent": 1–99, "when": {"type":"PREMIUM_GAIN","gain":{"type":PCT_PREMIUM|POINTS|RR,"value">0}} | {"type":"SPOT_LEVEL","ce"?,"pe"?}, "then_stop": UNCHANGED|COST|PARTIAL_CANDLE}` (SEM-22, 23, 25).
+
+**Indicators** (`indicators/levels.py`): opening range from the minute arrays (session first bar + N − 1 is the range's last minute; per-day max/min of present minutes; broadcast to candles of that day whose `end_tod` ≥ the last minute). Pivots from per-day session H/L/C of the underlying (the previous day in `MarketData.days`), broadcast to every candle of the day. Candle size in `conditions/evaluator.py`.
+
+**Exit search** (`backtest/exits.py`), all as positions in the trade's priceable window:
+1. Exit conditions: boolean per candle from the side's tree (computed once per strategy in `prepare`); the first candle with `end_minute` ≥ the fill minute where it is true gives the minute `end_minute + 1` → candidate `SIGNAL_EXIT`, priority before the stop at the same position.
+2. Index levels: per window minute, the level from the last candle with `end_minute` < minute (searchsorted); direction fixed by level vs index at the fill minute open; touched where `high ≥ level` (up) or `low ≤ level` (down); NaN never touches. Fill: gapped when the minute's open is already beyond → open premium; otherwise premium at index = level, closing VIX.
+3. `SPOT_TARGET` joins the candidate list with the target's priority (stop first).
+4. Partial exit: trigger position from the premium gain (best P&L ≥ gain amount, like a target) or the index level; applied only when strictly before the whole-position exit position and `lots_used ≥ 2`. Lots closed = clamp(floor(lots × percent / 100), 1, lots − 1). Fill as a target (level or gapped open) or as an index level.
+5. After the partial: `UNCHANGED` → the whole-position search stands; `COST` → stop hits recomputed from the next position with level 0 (`TRAIL_TO_COST`); `PARTIAL_CANDLE` → the old stop and trail apply until the partial candle's `end_minute`, then the index stop (candle low for an upward level, high otherwise) replaces them (`TRAILING_STOP`, filled like an index level). The final exit is the earliest remaining candidate.
+6. `TradePath.partial` holds the position, minute, lots closed, reason and each leg's exit premium after slippage.
+
+**Runner and costs:** volatility sizing moves before `simulate_trade`, which receives `lots_used`. `_finish` charges the entry for the full quantity, the partial exit for its quantity and the final exit (or settlement) for the rest; slippage cost counts each fill with its own quantity. A partial rule that could not split a 1-lot trade adds the no-effect line "Partial exit: the trade used 1 lot, so nothing could be split off (the rule had no effect on these trades)".
+
 ## 3. Contract
 
 | Item | Use |

@@ -16,8 +16,30 @@ class _Strict(BaseModel):
     model_config = ConfigDict(extra="forbid")
 
 
-IndType = Literal["EMA", "SMA", "RSI", "ADX", "SUPERTREND", "MACD", "BBANDS"]
-Output = Literal["value", "signal", "hist", "upper", "middle", "lower", "plus_di", "minus_di"]
+IndType = Literal["EMA", "SMA", "RSI", "ADX", "SUPERTREND", "MACD", "BBANDS", "OPENING_RANGE", "PIVOTS"]
+Output = Literal[
+    "value",
+    "signal",
+    "hist",
+    "upper",
+    "middle",
+    "lower",
+    "plus_di",
+    "minus_di",
+    "high",
+    "low",
+    "p",
+    "tc",
+    "bc",
+    "r1",
+    "r2",
+    "r3",
+    "s1",
+    "s2",
+    "s3",
+    "cpr_width",
+    "cpr_width_pct",
+]
 PriceField = Literal["open", "high", "low", "close"]
 
 FieldKey = Literal[
@@ -52,17 +74,22 @@ FieldKey = Literal[
     "slope_lookback",
     "expiry_weekday_term",
     "premarket_time",
+    "exit_condition",
+    "partial_exit",
+    "condition_value",
+    "trail_to_cost_at_pts",
     "other",
 ]
 
 
 class Operand(_Strict):
-    kind: Literal["indicator", "price", "vix", "const"]
+    kind: Literal["indicator", "price", "vix", "const", "candle"]
     ind: str | None
     output: Output | None
     price: PriceField | None
     vix: Literal["open", "close"] | None
     const: float | None
+    candle: Literal["range", "body"] | None = None
     offset_pts: float | None
     offset_pct: float | None
 
@@ -77,12 +104,13 @@ class Indicator(_Strict):
     slow: int | None
     signal: int | None
     stddev: float | None
+    minutes: int | None = None
 
 
 class ConditionRow(_Strict):
     id: str
     parent_id: str | None
-    side: Literal["CE", "PE", "ALL_LEGS"]
+    side: Literal["CE", "PE", "ALL_LEGS", "EXIT_CE", "EXIT_PE", "EXIT_ALL_LEGS"]
     kind: Literal["all", "any", "compare", "cross", "state", "turns", "slope", "state_or_turns"]
     left: Operand | None
     op: Literal["gt", "gte", "lt", "lte"] | None
@@ -109,11 +137,13 @@ class Basics(_Strict):
 class ExitSpec(_Strict):
     sl_type: Literal["PCT_PREMIUM", "POINTS", "TRIGGER_CANDLE"] | None
     sl_value: float | None
-    target_type: Literal["PCT_PREMIUM", "POINTS", "RR"] | None
+    target_type: Literal["PCT_PREMIUM", "POINTS", "RR", "SPOT_LEVEL"] | None
     target_value: float | None
     time_exit_at: str | None
     time_exit_on: Literal["ENTRY_DAY", "EXPIRY_DAY"] | None
     hold_to_expiry: bool | None
+    target_ce: Operand | None = None  # SPOT_LEVEL target levels (feature 04 design §2.5b)
+    target_pe: Operand | None = None
 
 
 class Window(_Strict):
@@ -143,6 +173,14 @@ class AdvancedSpec(_Strict):
     daily_max_trades: int | None
     daily_stop_after_sl_hits: int | None
     daily_max_loss_rupees: float | None
+    trail_to_cost_at_pts: float | None = None
+    partial_percent: int | None = None
+    partial_when: Literal["PREMIUM_GAIN", "SPOT_LEVEL"] | None = None
+    partial_gain_type: Literal["PCT_PREMIUM", "POINTS", "RR"] | None = None
+    partial_gain_value: float | None = None
+    partial_ce: Operand | None = None
+    partial_pe: Operand | None = None
+    partial_then: Literal["UNCHANGED", "COST", "PARTIAL_CANDLE"] | None = None
 
 
 class QuestionOption(_Strict):

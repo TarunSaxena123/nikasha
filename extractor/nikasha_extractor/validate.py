@@ -23,12 +23,14 @@ def validate_draft(d: ExtractionDraft) -> ExtractionDraft:
     if len(ids) != len(set(ids)):
         raise ExtractError("EXTRACTION_FAILED")
     by_id = {r.id: r for r in d.conditions}
+    # A comparison may lack its right side only while a vague-value question asks for it.
+    asked = {t[5:] for i in d.items if i.status == "VAGUE" and i.field == "condition_value" for t in i.targets}
     for r in d.conditions:
         if r.parent_id is not None:
             parent = by_id.get(r.parent_id)
             if parent is None or parent.kind not in ("all", "any") or parent.side != r.side:
                 raise ExtractError("EXTRACTION_FAILED")
-        if r.kind in ("compare", "cross") and (r.left is None or r.right is None):
+        if r.kind in ("compare", "cross") and (r.left is None or (r.right is None and r.id not in asked)):
             raise ExtractError("EXTRACTION_FAILED")
         if r.kind in ("state", "turns", "state_or_turns") and not r.ind:
             raise ExtractError("EXTRACTION_FAILED")

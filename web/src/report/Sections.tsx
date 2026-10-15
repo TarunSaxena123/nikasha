@@ -189,7 +189,7 @@ export function TradesTable({ report }: { report: Report }) {
       <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-surface">
         <table className="num w-full min-w-[900px] text-sm">
           <thead><tr className="border-b border-line text-left text-xs uppercase text-ink-muted">
-            <th className="p-2">#</th><th>Option</th><th>Entry time</th><th>Exit time</th><th className="text-right">Entry premium</th><th className="text-right">Exit premium</th><th className="text-right">Quantity</th><th className="text-right">Net P&amp;L</th><th className="pl-3">Exit reason</th>
+            <th className="p-2">#</th><th>Option</th><th>Entry time</th><th>Exit time</th><th className="text-right">Entry premium</th><th className="text-right">Exit premium</th><th className="text-right">Quantity</th><th className="pl-3">Partial exit</th><th className="text-right">Net P&amp;L</th><th className="pl-3">Exit reason</th>
           </tr></thead>
           <tbody>
             {slice.map((t) => (
@@ -201,6 +201,9 @@ export function TradesTable({ report }: { report: Report }) {
                 <td className="text-right">{t.legs.map((l) => l.entry_premium.toFixed(2)).join(" / ")}</td>
                 <td className="text-right">{t.legs.map((l) => l.exit_premium.toFixed(2)).join(" / ")}</td>
                 <td className="text-right">{t.quantity}</td>
+                <td className="pl-3" data-testid="partial-exit">
+                  {t.partial_exit ? `${dateTime(t.partial_exit.time)} · ${t.partial_exit.quantity} qty · ${t.partial_exit.exit_premiums.map((p) => p.toFixed(2)).join(" / ")}` : "—"}
+                </td>
                 <td className="text-right">{rupees(t.net_pnl, 2, "always")}</td>
                 <td className="pl-3">{t.exit_reason_text}</td>
               </tr>

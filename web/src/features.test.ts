@@ -180,3 +180,18 @@ describe("progress (REQ-EVL-09)", () => {
     expect(estimateMs(15, "2019-02-11", "2026-05-14")).toBeGreaterThan(4000);
   });
 });
+
+describe("partial exits in downloads (AC-RPT-16)", () => {
+  it("CSV has the partial exit columns, filled only for trades that had one", async () => {
+    const { tradesCsv, CSV_COLUMNS } = await import("@/report/csv");
+    const report = reportFixture("orb-cpr-2024").report;
+    expect(CSV_COLUMNS).toEqual(expect.arrayContaining(["Partial exit time", "Partial exit quantity", "Partial exit premium(s)"]));
+    const lines = tradesCsv(report, meta()).split("\r\n");
+    const header = lines.findIndex((l) => l.startsWith("Trade #"));
+    const col = CSV_COLUMNS.indexOf("Partial exit quantity");
+    const rows = lines.slice(header + 1).filter(Boolean).map((l) => l.split(","));
+    const withPartial = report.trades.filter((t) => t.partial_exit).map((t) => String(t.n));
+    expect(withPartial.length).toBeGreaterThan(0);
+    for (const r of rows) expect(r[col] !== "").toBe(withPartial.includes(r[0]!));
+  });
+});

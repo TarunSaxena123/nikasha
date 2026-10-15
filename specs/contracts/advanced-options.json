@@ -1,11 +1,14 @@
 {
-  "$comment": "The 12 advanced options in display order (feature 02 design §1.7). Read by the web app's describeStrategy and the engine's settings_used, so both show the same labels in the same order (T-RPT-01).",
+  "$comment": "The 15 advanced options (3 added 2026-10-15) in display order (feature 02 design §1.7). Read by the web app's describeStrategy and the engine's settings_used, so both show the same labels in the same order (T-RPT-01).",
   "options": [
     { "key": "sl_cap", "label": "SL cap", "where": "advanced.sl_cap_pts" },
     { "key": "trigger_candle_sl", "label": "Trigger-candle stop-loss", "where": "exit.stop_loss.type = TRIGGER_CANDLE" },
     { "key": "rr_target", "label": "Risk-reward target", "where": "exit.target.type = RR" },
-    { "key": "trail_to_cost", "label": "Trail stop to cost", "where": "advanced.trail_to_cost_at_r" },
+    { "key": "trail_to_cost", "label": "Trail stop to cost", "where": "advanced.trail_to_cost_at_r or advanced.trail_to_cost_at_pts" },
     { "key": "exit_after_candles", "label": "Exit after N candles", "where": "advanced.exit_after_candles" },
+    { "key": "exit_conditions", "label": "Exit conditions", "where": "exit.exit_when" },
+    { "key": "index_target", "label": "Index-level target", "where": "exit.target.type = SPOT_LEVEL" },
+    { "key": "partial_exit", "label": "Partial exit", "where": "advanced.partial_exit" },
     { "key": "vix_sizing", "label": "Volatility (VIX) sizing", "where": "advanced.vix_sizing" },
     { "key": "entry_windows", "label": "Entry windows", "where": "advanced.entry_windows" },
     { "key": "no_entry_windows", "label": "No-entry windows", "where": "advanced.no_entry_windows" },

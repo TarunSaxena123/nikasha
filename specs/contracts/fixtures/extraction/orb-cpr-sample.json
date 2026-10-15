@@ -1,0 +1,387 @@
+{
+ "items": [
+  {
+   "id": "i1",
+   "status": "FOUND",
+   "field_label": "Candle timeframe",
+   "text": "Use the 15-minute timeframe.",
+   "mandatory": true,
+   "quote": "Set the NIFTY 50 Spot Index chart strictly to the 15-Minute interval."
+  },
+  {
+   "id": "i2",
+   "status": "FOUND",
+   "field_label": "Entry conditions",
+   "text": "For calls the first candle's low must be above the CPR top (TC); for puts its high must be below the CPR bottom (BC).",
+   "mandatory": true,
+   "quote": "The first 15-min candle must open and trade completely above the daily CPR lines."
+  },
+  {
+   "id": "i3",
+   "status": "FOUND",
+   "field_label": "Entry conditions",
+   "text": "Calls need a candle with open and close above the opening range high; puts need open and close below the opening range low.",
+   "mandatory": true,
+   "quote": "A subsequent 15-min candle must close its body completely above the Opening Range High line."
+  },
+  {
+   "id": "i4",
+   "status": "VAGUE",
+   "field_label": "Expiry",
+   "text": "Weekly expiry, 100 points ITM; which weekly expiry is not stated.",
+   "mandatory": true,
+   "quote": "Buy the weekly contract exactly 100 points In-The-Money (ITM)"
+  },
+  {
+   "id": "i5",
+   "status": "FOUND",
+   "field_label": "Stop-loss",
+   "text": "Stop at the trigger candle's low on the option premium, capped at 25 premium points.",
+   "mandatory": true,
+   "quote": "Placed at the trigger candle's low/high on the option premium chart. Hard-capped at a maximum of 25 premium points."
+  },
+  {
+   "id": "i6",
+   "status": "FOUND",
+   "field_label": "Exit conditions",
+   "text": "Exit calls when a candle closes below the 20 EMA and puts when it closes above.",
+   "mandatory": true,
+   "quote": "Exit immediately at market price if a 15-min candle closes below the 20 EMA (for CE) or above the 20 EMA (for PE)"
+  },
+  {
+   "id": "i7",
+   "status": "FOUND",
+   "field_label": "Trail stop to cost",
+   "text": "Move the stop to entry after a 25-point premium gain.",
+   "mandatory": false,
+   "quote": "The exact second your option premium gains +25 points in profit, ... move it directly to your Entry Price"
+  },
+  {
+   "id": "i8",
+   "status": "FOUND",
+   "field_label": "Partial exit",
+   "text": "Close 50% at R1/S1; the rest exits if the index breaks back through the low/high of that candle.",
+   "mandatory": false,
+   "quote": "When Nifty Spot hits the daily R1 line (for CE) or S1 line (for PE), instantly book and close exactly 50%... Trail the remaining 50% to the high/low of the candle that broke R1/S1."
+  },
+  {
+   "id": "i9",
+   "status": "FOUND",
+   "field_label": "Target",
+   "text": "Exit everything when the index reaches R2 (calls) or S2 (puts).",
+   "mandatory": true,
+   "quote": "until the spot index touches R2 (for CE) or S2 (for PE) to exit completely."
+  },
+  {
+   "id": "i10",
+   "status": "FOUND",
+   "field_label": "Entry windows",
+   "text": "No entries after 11:30; window starts at market data start 09:15.",
+   "mandatory": false,
+   "quote": "Only enter triggers occurring before 11:30 AM."
+  },
+  {
+   "id": "i11",
+   "status": "VAGUE",
+   "field_label": "Entry conditions",
+   "text": "Skip when the CPR width is wide; the width threshold is not stated.",
+   "mandatory": true,
+   "quote": "If the daily printed TC and BC lines have a wide horizontal gap, skip trading."
+  },
+  {
+   "id": "i12",
+   "status": "FOUND",
+   "field_label": "Entry conditions",
+   "text": "Only enter if the candle range is 70 points or less.",
+   "mandatory": true,
+   "quote": "If the breakout candle moves Nifty more than 70 points in a single 15-minute frame... Skip the entry."
+  },
+  {
+   "id": "i13",
+   "status": "FOUND",
+   "field_label": "Daily limits",
+   "text": "Maximum 1 trade per day.",
+   "mandatory": false,
+   "quote": "Strictly 1 trade per day."
+  }
+ ],
+ "draft": {
+  "schema_version": "1.0",
+  "name": "Uploaded strategy",
+  "origin": "UPLOAD",
+  "underlying": "NIFTY50",
+  "timeframe_min": 15,
+  "indicators": {
+   "piv": {
+    "type": "PIVOTS"
+   },
+   "or15": {
+    "type": "OPENING_RANGE",
+    "minutes": 15
+   },
+   "ema20": {
+    "type": "EMA",
+    "period": 20,
+    "source": "close"
+   }
+  },
+  "legs": [
+   {
+    "action": "BUY",
+    "strike": {
+     "method": "MONEYNESS",
+     "moneyness": "ITM",
+     "distance_pts": 100
+    },
+    "option_type": "SIGNAL"
+   }
+  ],
+  "entry": {
+   "ce": {
+    "type": "all",
+    "conditions": [
+     {
+      "type": "compare",
+      "left": {
+       "ind": "or15",
+       "output": "low"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "piv",
+       "output": "tc"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "open"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "or15",
+       "output": "high"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "or15",
+       "output": "high"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "candle": "range"
+      },
+      "op": "lte",
+      "right": {
+       "const": 70
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "ind": "piv",
+       "output": "cpr_width"
+      },
+      "op": "lte",
+      "right": {}
+     }
+    ]
+   },
+   "pe": {
+    "type": "all",
+    "conditions": [
+     {
+      "type": "compare",
+      "left": {
+       "ind": "or15",
+       "output": "high"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "piv",
+       "output": "bc"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "open"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "or15",
+       "output": "low"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "or15",
+       "output": "low"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "candle": "range"
+      },
+      "op": "lte",
+      "right": {
+       "const": 70
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "ind": "piv",
+       "output": "cpr_width"
+      },
+      "op": "lte",
+      "right": {}
+     }
+    ]
+   }
+  },
+  "exit": {
+   "stop_loss": {
+    "type": "TRIGGER_CANDLE"
+   },
+   "target": {
+    "type": "SPOT_LEVEL",
+    "ce": {
+     "ind": "piv",
+     "output": "r2"
+    },
+    "pe": {
+     "ind": "piv",
+     "output": "s2"
+    }
+   },
+   "exit_when": {
+    "ce": {
+     "type": "all",
+     "conditions": [
+      {
+       "type": "compare",
+       "left": {
+        "price": "close"
+       },
+       "op": "lt",
+       "right": {
+        "ind": "ema20",
+        "output": "value"
+       }
+      }
+     ]
+    },
+    "pe": {
+     "type": "all",
+     "conditions": [
+      {
+       "type": "compare",
+       "left": {
+        "price": "close"
+       },
+       "op": "gt",
+       "right": {
+        "ind": "ema20",
+        "output": "value"
+       }
+      }
+     ]
+    }
+   }
+  },
+  "advanced": {
+   "sl_cap_pts": 25,
+   "trail_to_cost_at_pts": 25,
+   "entry_windows": [
+    {
+     "from": "09:15",
+     "to": "11:30"
+    }
+   ],
+   "daily": {
+    "max_trades": 1
+   },
+   "partial_exit": {
+    "percent": 50,
+    "when": {
+     "type": "SPOT_LEVEL",
+     "ce": {
+      "ind": "piv",
+      "output": "r1"
+     },
+     "pe": {
+      "ind": "piv",
+      "output": "s1"
+     }
+    },
+    "then_stop": "PARTIAL_CANDLE"
+   }
+  }
+ },
+ "questions": [
+  {
+   "id": "q1",
+   "item_id": "i4",
+   "prompt": "Which weekly expiry should be used?",
+   "kind": "CHOICE",
+   "options": [
+    {
+     "label": "Current weekly",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/legs/0/expiry",
+       "value": "CURRENT_WEEKLY"
+      }
+     ]
+    },
+    {
+     "label": "Next weekly",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/legs/0/expiry",
+       "value": "NEXT_WEEKLY"
+      }
+     ]
+    }
+   ],
+   "recommended_option_index": null
+  },
+  {
+   "id": "q2",
+   "item_id": "i11",
+   "prompt": "Skip when CPR width is above how many points?",
+   "kind": "NUMBER",
+   "number": {
+    "unit_label": "points",
+    "min": 0,
+    "step": 0.05,
+    "targets": [
+     {
+      "path": "/entry/ce/conditions/4/right/const"
+     },
+     {
+      "path": "/entry/pe/conditions/4/right/const"
+     }
+    ]
+   }
+  }
+ ],
+ "ignored_text_found": true
+}

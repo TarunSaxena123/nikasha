@@ -978,6 +978,21 @@
      "value_text": "Not used"
     },
     {
+     "label": "Exit conditions",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Index-level target",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
+     "label": "Partial exit",
+     "used": false,
+     "value_text": "Not used"
+    },
+    {
      "label": "Volatility (VIX) sizing",
      "used": false,
      "value_text": "Not used"

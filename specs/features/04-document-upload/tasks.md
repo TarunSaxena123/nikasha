@@ -33,6 +33,7 @@ Rules: [CONTRACT] first, then [BE] and [FE] independently. **Build step 7** (`pr
 | T-UPL-13 | [FE] Unsupported acknowledgement; `draft.leftOut[]`; shown on review and in the PDF (with feature 02 T-EVL-01, T-RPT-17) | 16 | AC-UPL-12 |
 | T-UPL-14 | [FE] Hand-off to review (origin UPLOAD, confirmations per REQ-UPL-17) | 17 | AC-UPL-13 |
 | T-UPL-15 | [FE] Error messages for every code and network failure (design §1.7) | 19 | AC-UPL-14 |
+| T-UPL-16 | [BE] Prompt `upl-3`, wire choices and conversion for the extensions; live recording of the ORB + CPR sample | UPL-22, 23 | AC-UPL-16 (replay) | 11 (added 2026-10-15) |
 
 ## Order of work (step 7)
 

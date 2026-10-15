@@ -1,13 +1,19 @@
 // Generated from specs/contracts by web/scripts/codegen.mjs. Do not edit by hand.
 
-export type Indicator = MovingAverageEMAOrSMA | RSIOrADX | Supertrend | MACD | BollingerBands;
+export type Indicator =
+  MovingAverageEMAOrSMA | RSIOrADX | Supertrend | MACD | BollingerBands | OpeningRange | DailyPivotsAndCPR;
 export type PriceField = "open" | "high" | "low" | "close";
 export type StrikeSelection = ByMoneynessMandatoryInputs4And5 | ByDeltaAdvanced | ByPremiumAdvanced;
 /**
  * Evaluated on each candle close. Groups nest (max depth 4, SEM-15).
  */
 export type Condition = AllGroup | AnyGroup | Compare | Cross | State | Turns | Slope;
-export type Operand = IndicatorOutput | UnderlyingCandlePrice | VolatilityIndexValueOnTheCandle | ConstantNumber;
+export type Operand =
+  | IndicatorOutput
+  | UnderlyingCandlePrice
+  | VolatilityIndexValueOnTheCandle
+  | CandleSizeInIndexPointsRangeHighLowBodyCloseOpenREQENG50
+  | ConstantNumber;
 export type IndicatorId = string;
 /**
  * Shifts an operand, e.g. EMA 21 + 10 points, to express thresholds such as 'closes decisively above'.
@@ -108,6 +114,19 @@ export interface BollingerBands {
   period: number;
   stddev: number;
   source: PriceField;
+}
+/**
+ * Outputs: high, low — of the session's first `minutes` minutes; empty on candles that close before the range ends (REQ-ENG-48).
+ */
+export interface OpeningRange {
+  type: "OPENING_RANGE";
+  minutes: number;
+}
+/**
+ * Outputs: p, tc, bc, r1, r2, r3, s1, s2, s3, cpr_width (points), cpr_width_pct — classic floor pivots from the previous trading day's session high, low and close (REQ-ENG-49).
+ */
+export interface DailyPivotsAndCPR {
+  type: "PIVOTS";
 }
 export interface Leg {
   /**
@@ -557,7 +576,28 @@ export interface Compare {
 }
 export interface IndicatorOutput {
   ind: IndicatorId;
-  output: "value" | "signal" | "hist" | "upper" | "middle" | "lower" | "plus_di" | "minus_di";
+  output:
+    | "value"
+    | "signal"
+    | "hist"
+    | "upper"
+    | "middle"
+    | "lower"
+    | "plus_di"
+    | "minus_di"
+    | "high"
+    | "low"
+    | "p"
+    | "tc"
+    | "bc"
+    | "r1"
+    | "r2"
+    | "r3"
+    | "s1"
+    | "s2"
+    | "s3"
+    | "cpr_width"
+    | "cpr_width_pct";
   offset?: Offset;
 }
 export interface UnderlyingCandlePrice {
@@ -566,6 +606,9 @@ export interface UnderlyingCandlePrice {
 }
 export interface VolatilityIndexValueOnTheCandle {
   vix: "open" | "close";
+}
+export interface CandleSizeInIndexPointsRangeHighLowBodyCloseOpenREQENG50 {
+  candle: "range" | "body";
 }
 export interface ConstantNumber {
   const: number;
@@ -617,7 +660,16 @@ export interface Exit {
         type: "PCT_PREMIUM" | "POINTS";
         value: number;
       }
-    | RiskRewardAdvancedTargetDistanceValueStopDistance;
+    | RiskRewardAdvancedTargetDistanceValueStopDistance
+    | IndexLevelAdvancedSingleLegExitWhenTheIndexReachesTheLevelForTheTradeSSideREQENG5354SEM2223;
+  /**
+   * Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24).
+   */
+  exit_when?: {
+    ce?: Condition;
+    pe?: Condition;
+    all_legs?: Condition;
+  };
   time_exit?: {
     at: Time;
     on: "ENTRY_DAY" | "EXPIRY_DAY";
@@ -642,6 +694,11 @@ export interface RiskRewardAdvancedTargetDistanceValueStopDistance {
   type: "RR";
   value: number;
 }
+export interface IndexLevelAdvancedSingleLegExitWhenTheIndexReachesTheLevelForTheTradeSSideREQENG5354SEM2223 {
+  type: "SPOT_LEVEL";
+  ce?: Operand;
+  pe?: Operand;
+}
 /**
  * Every property is OFF when absent. No property has a default (constitution §3).
  */
@@ -654,6 +711,24 @@ export interface Advanced {
    * Move stop to entry price once profit reaches this multiple of the initial risk.
    */
   trail_to_cost_at_r?: number;
+  /**
+   * Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21).
+   */
+  trail_to_cost_at_pts?: number;
+  /**
+   * Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25).
+   */
+  partial_exit?: {
+    /**
+     * Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept).
+     */
+    percent: number;
+    when: PremiumGain | IndexLevelSingleLeg;
+    /**
+     * UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg).
+     */
+    then_stop: "UNCHANGED" | "COST" | "PARTIAL_CANDLE";
+  };
   /**
    * Exit if neither stop nor target is hit within N candles after entry.
    */
@@ -950,6 +1025,18 @@ export interface Advanced {
     stop_after_sl_hits?: number;
     max_daily_loss_rupees?: number;
   };
+}
+export interface PremiumGain {
+  type: "PREMIUM_GAIN";
+  gain: {
+    type: "PCT_PREMIUM" | "POINTS" | "RR";
+    value: number;
+  };
+}
+export interface IndexLevelSingleLeg {
+  type: "SPOT_LEVEL";
+  ce?: Operand;
+  pe?: Operand;
 }
 export interface TimeWindow {
   from: Time;

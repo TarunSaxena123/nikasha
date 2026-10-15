@@ -172,7 +172,7 @@ def test_settings_used_ac_rpt_08(nifty):
     su = rep["settings_used"]
     assert su["quantity_text"].startswith("2 lots × 65 = 130 quantity per trade")
     labels = [o["label"] for o in load_json(CONTRACTS / "advanced-options.json")["options"]]
-    assert [a["label"] for a in su["advanced"]] == labels and len(labels) == 12
+    assert [a["label"] for a in su["advanced"]] == labels and len(labels) == 15
     used = {a["label"]: a["used"] for a in su["advanced"]}
     assert used["Volatility (VIX) sizing"] and not used["SL cap"]
     assert all(a["value_text"] == "Not used" for a in su["advanced"] if not a["used"])
@@ -289,3 +289,31 @@ def test_report_fixtures_current():
     if "Parquet" in out.stderr or "No such file" in out.stderr:
         pytest.skip("real data not built")
     assert out.returncode == 0, out.stdout[-500:]
+
+
+@pytest.mark.realdata
+def test_partial_exits_and_new_exit_reasons_in_the_report_ac_rpt_16_17(real_md):
+    """AC-RPT-16, 17: the ORB + CPR sample's report validates, carries partial exits, plain texts and settings."""
+    from nikasha_engine.core import api
+
+    strat = load_json(CONTRACTS / "fixtures" / "strategies" / "valid" / "orb-cpr-sample-with-answers.json")
+    sett = {"period": {"start": "2024-01-01", "end": "2025-12-31"}, "costs": default_costs(real_md.instrument)}
+    status, body = api.dispatch("POST", "/v1/evaluate", json.dumps({"strategy": strat, "settings": sett}).encode())
+    assert status == 200
+    assert_valid("Report", body)
+    partials = [t for t in body["trades"] if "partial_exit" in t]
+    assert partials
+    for t in partials:
+        pe = t["partial_exit"]
+        assert (
+            pe["quantity"] == 65 and len(pe["exit_premiums"]) == 1 and t["entry_time"] <= pe["time"] <= t["exit_time"]
+        )
+    texts = {t["exit_reason"]: t["exit_reason_text"] for t in body["trades"]}
+    assert texts.get("SPOT_TARGET") == "Index reached the target level"
+    used = {a["label"]: a["value_text"] for a in body["settings_used"]["advanced"] if a["used"]}
+    assert used["Partial exit"].startswith(
+        "Close 50% of the lots when the index reaches Pivots R1 (calls) / Pivots S1 (puts)"
+    )
+    assert used["Index-level target"] == "Exit when the index reaches Pivots R2 (calls) / Pivots S2 (puts)"
+    assert used["Trail stop to cost"] == "Stop moves to the entry price after a gain of 25 points"
+    assert "Exit conditions" in used

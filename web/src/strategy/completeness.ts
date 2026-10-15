@@ -38,6 +38,7 @@ function operandUnfinished(o: AnyRec | undefined): boolean {
   if ("price" in o) return !o.price;
   if ("vix" in o) return !o.vix;
   if ("const" in o) return !finite(o.const);
+  if ("candle" in o) return !o.candle;
   return true;
 }
 
@@ -199,6 +200,16 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
 
   const ex = (s.exit ?? {}) as AnyRec;
   const sl = ex.stop_loss as AnyRec | undefined;
+  if (Object.values((ex.exit_when ?? {}) as Record<string, AnyRec>).some((t) => unfinished(t))) {
+    out.push({ key: "exit_conditions", label: "Exit conditions", step: "exit", question: null });
+  }
+  const tgtLevel = ex.target as AnyRec | undefined;
+  if (tgtLevel?.type === "SPOT_LEVEL") {
+    const need = types[0] === "CE" ? ["ce"] : types[0] === "PE" ? ["pe"] : ["ce", "pe"];
+    if (need.some((k) => { const o = tgtLevel[k] as AnyRec | undefined; return !o || ("const" in o && !finite(o.const)); })) {
+      out.push({ key: "target_levels", label: "Target", step: "exit", question: null });
+    }
+  }
   if (!sl || !sl.type) {
     out.push({
       key: "stop_loss", label: "Stop-loss", step: "exit",
@@ -221,7 +232,7 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
   const adv = (s.advanced ?? {}) as AnyRec;
   const tgt = ex.target as AnyRec | undefined;
   const te = ex.time_exit as AnyRec | undefined;
-  if (tgt && (tgt.value === undefined || tgt.value === null)) {
+  if (tgt && tgt.type !== "SPOT_LEVEL" && (tgt.value === undefined || tgt.value === null)) {
     out.push({
       key: "target_value", label: "Target", step: "exit",
       question: {

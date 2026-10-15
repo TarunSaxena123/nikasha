@@ -38,6 +38,13 @@
    "rule": "SEM-03"
   }
  ],
+ "SEM-03-pivot-output-not-available": [
+  {
+   "field_label": "Entry conditions",
+   "message": "A condition uses an indicator that hasn't been set up: piv.",
+   "rule": "SEM-03"
+  }
+ ],
  "SEM-03-undefined-indicator": [
   {
    "field_label": "Entry conditions",
@@ -188,6 +195,41 @@
    "field_label": "Position size",
    "message": "That position size is too large to simulate.",
    "rule": "SEM-20"
+  }
+ ],
+ "SEM-21-two-trail-triggers": [
+  {
+   "field_label": "Trail to cost",
+   "message": "Choose one way to move the stop to cost: a multiple of the risk, or premium points.",
+   "rule": "SEM-21"
+  }
+ ],
+ "SEM-22-index-level-multileg": [
+  {
+   "field_label": "Exit levels",
+   "message": "Index-level exits work with one leg only.",
+   "rule": "SEM-22"
+  }
+ ],
+ "SEM-23-level-missing-for-puts": [
+  {
+   "field_label": "Exit levels",
+   "message": "Give the index level for each side you trade (calls and puts), using an indicator value or a number.",
+   "rule": "SEM-23"
+  }
+ ],
+ "SEM-24-exit-sides-mismatch": [
+  {
+   "field_label": "Exit conditions",
+   "message": "The exit conditions don't match the option type: use call and put conditions for one signal leg, or one set for all legs.",
+   "rule": "SEM-24"
+  }
+ ],
+ "SEM-25-partial-with-one-lot": [
+  {
+   "field_label": "Partial exit",
+   "message": "A partial exit needs at least 2 lots, so part of the position can be closed and part kept.",
+   "rule": "SEM-25"
   }
  ]
 }

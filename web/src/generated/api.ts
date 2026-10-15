@@ -248,9 +248,17 @@ export interface components {
             exit_time: components["schemas"]["Timestamp"];
             spot_at_entry?: number;
             /** @enum {unknown} */
-            exit_reason: "STOP_LOSS" | "TARGET" | "TRAIL_TO_COST" | "TIME_EXIT" | "SQUARE_OFF" | "N_CANDLES" | "EXPIRY_SETTLEMENT";
+            exit_reason: "STOP_LOSS" | "TARGET" | "TRAIL_TO_COST" | "TIME_EXIT" | "SQUARE_OFF" | "N_CANDLES" | "EXPIRY_SETTLEMENT" | "SIGNAL_EXIT" | "SPOT_TARGET" | "TRAILING_STOP";
             exit_reason_text: string;
             quantity: number;
+            /** @description Present when part of the lots was closed earlier (REQ-ENG-55, REQ-RPT-22). Final exit fields describe the rest. */
+            partial_exit?: {
+                time: components["schemas"]["Timestamp"];
+                quantity: number;
+                /** @description One per leg, in the order of `legs`. */
+                exit_premiums: number[];
+                reason_text: string;
+            };
             gross_pnl: components["schemas"]["Rupees"];
             costs: components["schemas"]["Rupees"];
             net_pnl: components["schemas"]["Rupees"];
@@ -487,7 +495,7 @@ export interface components {
         Operand: {
             ind: components["schemas"]["IndicatorId"];
             /** @enum {unknown} */
-            output: "value" | "signal" | "hist" | "upper" | "middle" | "lower" | "plus_di" | "minus_di";
+            output: "value" | "signal" | "hist" | "upper" | "middle" | "lower" | "plus_di" | "minus_di" | "high" | "low" | "p" | "tc" | "bc" | "r1" | "r2" | "r3" | "s1" | "s2" | "s3" | "cpr_width" | "cpr_width_pct";
             offset?: components["schemas"]["Offset"];
         } | {
             price: components["schemas"]["PriceField"];
@@ -495,6 +503,9 @@ export interface components {
         } | {
             /** @enum {unknown} */
             vix: "open" | "close";
+        } | {
+            /** @enum {unknown} */
+            candle: "range" | "body";
         } | {
             const: number;
         };
@@ -585,6 +596,13 @@ export interface components {
             period: number;
             stddev: number;
             source: components["schemas"]["PriceField"];
+        } | {
+            /** @constant */
+            type: "OPENING_RANGE";
+            minutes: number;
+        } | {
+            /** @constant */
+            type: "PIVOTS";
         };
         Leg: {
             /**
@@ -637,6 +655,17 @@ export interface components {
                 /** @constant */
                 type: "RR";
                 value: number;
+            } | {
+                /** @constant */
+                type: "SPOT_LEVEL";
+                ce?: components["schemas"]["Operand"];
+                pe?: components["schemas"]["Operand"];
+            };
+            /** @description Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24). */
+            exit_when?: {
+                ce?: components["schemas"]["Condition"];
+                pe?: components["schemas"]["Condition"];
+                all_legs?: components["schemas"]["Condition"];
             };
             time_exit?: {
                 at: components["schemas"]["$defs-Time"];
@@ -655,6 +684,32 @@ export interface components {
             sl_cap_pts?: number;
             /** @description Move stop to entry price once profit reaches this multiple of the initial risk. */
             trail_to_cost_at_r?: number;
+            /** @description Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21). */
+            trail_to_cost_at_pts?: number;
+            /** @description Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25). */
+            partial_exit?: {
+                /** @description Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept). */
+                percent: number;
+                when: {
+                    /** @constant */
+                    type: "PREMIUM_GAIN";
+                    gain: {
+                        /** @enum {unknown} */
+                        type: "PCT_PREMIUM" | "POINTS" | "RR";
+                        value: number;
+                    };
+                } | {
+                    /** @constant */
+                    type: "SPOT_LEVEL";
+                    ce?: components["schemas"]["Operand"];
+                    pe?: components["schemas"]["Operand"];
+                };
+                /**
+                 * @description UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg).
+                 * @enum {unknown}
+                 */
+                then_stop: "UNCHANGED" | "COST" | "PARTIAL_CANDLE";
+            };
             /** @description Exit if neither stop nor target is hit within N candles after entry. */
             exit_after_candles?: number;
             /** @description Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot. */
@@ -1187,6 +1242,13 @@ export interface components {
                     period: number;
                     stddev: number;
                     source: components["schemas"]["PriceField"];
+                } | {
+                    /** @constant */
+                    type: "OPENING_RANGE";
+                    minutes: number;
+                } | {
+                    /** @constant */
+                    type: "PIVOTS";
                 };
                 /** @description Shifts an operand, e.g. EMA 21 + 10 points, to express thresholds such as 'closes decisively above'. */
                 Offset: {
@@ -1197,7 +1259,7 @@ export interface components {
                 Operand: {
                     ind: components["schemas"]["IndicatorId"];
                     /** @enum {unknown} */
-                    output: "value" | "signal" | "hist" | "upper" | "middle" | "lower" | "plus_di" | "minus_di";
+                    output: "value" | "signal" | "hist" | "upper" | "middle" | "lower" | "plus_di" | "minus_di" | "high" | "low" | "p" | "tc" | "bc" | "r1" | "r2" | "r3" | "s1" | "s2" | "s3" | "cpr_width" | "cpr_width_pct";
                     offset?: components["schemas"]["Offset"];
                 } | {
                     price: components["schemas"]["PriceField"];
@@ -1205,6 +1267,9 @@ export interface components {
                 } | {
                     /** @enum {unknown} */
                     vix: "open" | "close";
+                } | {
+                    /** @enum {unknown} */
+                    candle: "range" | "body";
                 } | {
                     const: number;
                 };
@@ -1330,6 +1395,17 @@ export interface components {
                         /** @constant */
                         type: "RR";
                         value: number;
+                    } | {
+                        /** @constant */
+                        type: "SPOT_LEVEL";
+                        ce?: components["schemas"]["Operand"];
+                        pe?: components["schemas"]["Operand"];
+                    };
+                    /** @description Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24). */
+                    exit_when?: {
+                        ce?: components["schemas"]["Condition"];
+                        pe?: components["schemas"]["Condition"];
+                        all_legs?: components["schemas"]["Condition"];
                     };
                     time_exit?: {
                         at: components["schemas"]["$defs-Time"];
@@ -1348,6 +1424,32 @@ export interface components {
                     sl_cap_pts?: number;
                     /** @description Move stop to entry price once profit reaches this multiple of the initial risk. */
                     trail_to_cost_at_r?: number;
+                    /** @description Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21). */
+                    trail_to_cost_at_pts?: number;
+                    /** @description Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25). */
+                    partial_exit?: {
+                        /** @description Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept). */
+                        percent: number;
+                        when: {
+                            /** @constant */
+                            type: "PREMIUM_GAIN";
+                            gain: {
+                                /** @enum {unknown} */
+                                type: "PCT_PREMIUM" | "POINTS" | "RR";
+                                value: number;
+                            };
+                        } | {
+                            /** @constant */
+                            type: "SPOT_LEVEL";
+                            ce?: components["schemas"]["Operand"];
+                            pe?: components["schemas"]["Operand"];
+                        };
+                        /**
+                         * @description UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg).
+                         * @enum {unknown}
+                         */
+                        then_stop: "UNCHANGED" | "COST" | "PARTIAL_CANDLE";
+                    };
                     /** @description Exit if neither stop nor target is hit within N candles after entry. */
                     exit_after_candles?: number;
                     /** @description Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot. */

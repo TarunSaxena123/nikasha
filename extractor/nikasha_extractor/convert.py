@@ -48,6 +48,10 @@ FIELD_LABELS: dict[str, str] = {
     "slope_lookback": "Entry conditions",
     "expiry_weekday_term": "Expiry-day cutoff",
     "premarket_time": "Volatility (VIX) sizing",
+    "exit_condition": "Exit conditions",
+    "partial_exit": "Partial exit",
+    "condition_value": "Entry conditions",
+    "trail_to_cost_at_pts": "Trail stop to cost",
     "other": "Other rule",
 }
 MANDATORY = {
@@ -69,6 +73,8 @@ MANDATORY = {
     "condition_offset",
     "condition_kind",
     "slope_lookback",
+    "condition_value",
+    "exit_condition",
 }
 PARAMS = {
     "EMA": ("period", "source"),
@@ -78,6 +84,8 @@ PARAMS = {
     "SUPERTREND": ("period", "multiplier"),
     "MACD": ("fast", "slow", "signal"),
     "BBANDS": ("period", "stddev", "source"),
+    "OPENING_RANGE": ("minutes",),
+    "PIVOTS": (),
 }
 TIME = re.compile(r"^([01][0-9]|2[0-3]):[0-5][0-9]$")
 
@@ -120,6 +128,8 @@ def _operand(o: Operand | None) -> dict[str, Any] | None:
         out = {"price": o.price}
     elif o.kind == "vix":
         out = {"vix": o.vix or "close"}
+    elif o.kind == "candle":
+        return {"candle": o.candle or "range"}
     else:
         return {"const": _num(o.const)}
     if o.offset_pts is not None:
@@ -134,7 +144,8 @@ def _node(r: ConditionRow, children: list[dict[str, Any]]) -> dict[str, Any]:
     if k in ("all", "any"):
         return {"type": k, "conditions": children}
     if k == "compare":
-        return {"type": "compare", "left": _operand(r.left), "op": r.op or "gt", "right": _operand(r.right)}
+        # A missing right side is a vague threshold still to be asked (condition_value): an empty slot.
+        return {"type": "compare", "left": _operand(r.left), "op": r.op or "gt", "right": _operand(r.right) or {}}
     if k == "cross":
         return {
             "type": "cross",
@@ -158,8 +169,18 @@ def _node(r: ConditionRow, children: list[dict[str, Any]]) -> dict[str, Any]:
 
 
 def build_tree(rows: list[ConditionRow]) -> tuple[dict[str, dict[str, Any]], dict[str, str]]:
-    """Per side, the condition tree; and each row id's JSON Pointer in the strategy."""
-    sides = {"CE": "ce", "PE": "pe", "ALL_LEGS": "all_legs"}
+    """Per side, the condition tree; and each row id's JSON Pointer in the strategy.
+
+    Entry sides are keyed ce / pe / all_legs; exit-condition sides exit_ce / exit_pe / exit_all_legs.
+    """
+    sides = {
+        "CE": "ce",
+        "PE": "pe",
+        "ALL_LEGS": "all_legs",
+        "EXIT_CE": "exit_ce",
+        "EXIT_PE": "exit_pe",
+        "EXIT_ALL_LEGS": "exit_all_legs",
+    }
     trees: dict[str, dict[str, Any]] = {}
     pointers: dict[str, str] = {}
 
@@ -172,7 +193,7 @@ def build_tree(rows: list[ConditionRow]) -> tuple[dict[str, dict[str, Any]], dic
         roots = [r for r in rows if r.side == side and r.parent_id is None]
         if not roots:
             continue
-        base = f"/entry/{key}"
+        base = f"/exit/exit_when/{key[5:]}" if key.startswith("exit_") else f"/entry/{key}"
         if len(roots) == 1 and roots[0].kind in ("all", "any"):
             trees[key] = build(roots[0], base)
         else:
@@ -229,7 +250,8 @@ def build_strategy(d: ExtractionDraft) -> tuple[dict[str, Any], dict[str, str]]:
     elif leg:
         s["legs"] = [leg]
     trees, pointers = build_tree(d.conditions)
-    entry: dict[str, Any] = dict(trees)
+    entry: dict[str, Any] = {k: v for k, v in trees.items() if not k.startswith("exit_")}
+    exit_when = {k[5:]: v for k, v in trees.items() if k.startswith("exit_")}
     if b.fixed_entry_time:
         entry["at_time"] = b.fixed_entry_time
     if entry:
@@ -241,11 +263,16 @@ def build_strategy(d: ExtractionDraft) -> tuple[dict[str, Any], dict[str, str]]:
             "type": e.sl_type,
             **({"value": _num(e.sl_value)} if e.sl_value is not None and e.sl_type != "TRIGGER_CANDLE" else {}),
         }
-    if e.target_type:
+    if e.target_type == "SPOT_LEVEL":
+        levels = {k: _operand(o) for k, o in (("ce", e.target_ce), ("pe", e.target_pe)) if o is not None}
+        ex["target"] = {"type": "SPOT_LEVEL", **levels}
+    elif e.target_type:
         ex["target"] = {
             "type": e.target_type,
             **({"value": _num(e.target_value)} if e.target_value is not None else {}),
         }
+    if exit_when:
+        ex["exit_when"] = exit_when
     if e.time_exit_at or e.time_exit_on:
         ex["time_exit"] = {k: v for k, v in (("at", e.time_exit_at), ("on", e.time_exit_on)) if v}
     if e.hold_to_expiry:
@@ -254,7 +281,7 @@ def build_strategy(d: ExtractionDraft) -> tuple[dict[str, Any], dict[str, str]]:
         s["exit"] = ex
     a = d.advanced
     adv: dict[str, Any] = {}
-    for key in ("sl_cap_pts", "trail_to_cost_at_r", "exit_after_candles", "expiry_day_cutoff"):
+    for key in ("sl_cap_pts", "trail_to_cost_at_r", "trail_to_cost_at_pts", "exit_after_candles", "expiry_day_cutoff"):
         v = getattr(a, key)
         if v is not None:
             adv[key] = _num(v) if isinstance(v, float | int) else v
@@ -287,6 +314,21 @@ def build_strategy(d: ExtractionDraft) -> tuple[dict[str, Any], dict[str, str]]:
     }
     if daily:
         adv["daily"] = daily
+    if a.partial_percent is not None or a.partial_when or a.partial_then:
+        pe: dict[str, Any] = {}
+        if a.partial_percent is not None:
+            pe["percent"] = a.partial_percent
+        if a.partial_when == "PREMIUM_GAIN":
+            gain = {
+                k: v for k, v in (("type", a.partial_gain_type), ("value", _num(a.partial_gain_value))) if v is not None
+            }
+            pe["when"] = {"type": "PREMIUM_GAIN", "gain": gain}
+        elif a.partial_when == "SPOT_LEVEL":
+            levels = {k: _operand(o) for k, o in (("ce", a.partial_ce), ("pe", a.partial_pe)) if o is not None}
+            pe["when"] = {"type": "SPOT_LEVEL", **levels}
+        if a.partial_then:
+            pe["then_stop"] = a.partial_then
+        adv["partial_exit"] = pe
     if adv:
         s["advanced"] = adv
     return s, pointers
@@ -329,7 +371,9 @@ def _patches(item: Item, value: Any, strategy: dict[str, Any], pointers: dict[st
         return [{"op": "add", "path": f"/legs/{i}/action", "value": value} for i in range(len(legs))]
     if f == "timeframe_min" and isinstance(value, int):
         return [{"op": "add", "path": "/timeframe_min", "value": value}]
-    if f in ("sl_cap_pts", "trail_to_cost_at_r", "exit_after_candles") and isinstance(value, int | float):
+    if f in ("sl_cap_pts", "trail_to_cost_at_r", "trail_to_cost_at_pts", "exit_after_candles") and isinstance(
+        value, int | float
+    ):
         return [{"op": "add", "path": f"/advanced/{f}", "value": value}]
     if f in ("expiry_day_cutoff", "expiry_weekday_term") and isinstance(value, str) and TIME.match(value):
         return [{"op": "add", "path": "/advanced/expiry_day_cutoff", "value": value}]
@@ -356,7 +400,7 @@ def _patches(item: Item, value: Any, strategy: dict[str, Any], pointers: dict[st
         return [{"op": "add", "path": f"/exit/{f}/value", "value": value}]
     if f == "vix_band_size" and isinstance(value, int | float):
         return [{"op": "add", "path": p, "value": value} for p in _vix_band_paths(item)] or None
-    if f in ("condition_offset", "slope_lookback") and isinstance(value, int | float):
+    if f in ("condition_offset", "slope_lookback", "condition_value") and isinstance(value, int | float):
         targets = _number_targets(item, pointers, strategy)
         return [{"op": "add", "path": t["path"], "value": value * t.get("multiplier", 1)} for t in targets] or None
     if f == "fixed_entry_time" and isinstance(value, str) and TIME.match(value):
@@ -390,6 +434,8 @@ def _number_targets(item: Item, pointers: dict[str, str], strategy: dict[str, An
         node = _get(strategy, p) or {}
         if item.field == "slope_lookback":
             out.append({"path": f"{p}/lookback"})
+        elif item.field == "condition_value":
+            out.append({"path": f"{p}/right/const"})
         else:
             # "decisively above" adds points; "decisively below" subtracts them (one answer, several places).
             sign = -1 if node.get("op") in ("lt", "lte") or node.get("direction") == "below" else 1
@@ -409,6 +455,8 @@ NUMBER_LIMITS: dict[str, tuple[float, float | None, float]] = {
     "target": (0.05, None, 0.05),
     "exit_after_candles": (1, 500, 1),
     "trail_to_cost_at_r": (0.1, 20, 0.1),
+    "trail_to_cost_at_pts": (0.05, None, 0.05),
+    "condition_value": (0, None, 0.05),
     "distance_pts": (50, None, 50),
 }
 
@@ -436,7 +484,7 @@ def build_question(item: Item, strategy: dict[str, Any], pointers: dict[str, str
     if q.kind == "NUMBER":
         if item.field == "vix_band_size":
             targets: list[dict[str, Any]] = [{"path": p} for p in _vix_band_paths(item)]
-        elif item.field in ("condition_offset", "slope_lookback"):
+        elif item.field in ("condition_offset", "slope_lookback", "condition_value"):
             targets = _number_targets(item, pointers, strategy)
         else:
             path = {
@@ -445,6 +493,7 @@ def build_question(item: Item, strategy: dict[str, Any], pointers: dict[str, str
                 "target": "/exit/target/value",
                 "exit_after_candles": "/advanced/exit_after_candles",
                 "trail_to_cost_at_r": "/advanced/trail_to_cost_at_r",
+                "trail_to_cost_at_pts": "/advanced/trail_to_cost_at_pts",
                 "lots": "/position/lots",
                 "lot_size": "/position/lot_size",
                 "timeframe_min": "/timeframe_min",

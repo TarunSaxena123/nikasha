@@ -96,6 +96,18 @@ def build_report(
                 "vol_band": band_labels[band],
                 "regime": regime,
                 "expiry_day": t.expiry_day,
+                **(
+                    {
+                        "partial_exit": {
+                            "time": timestamp(t.partial["minute"]),
+                            "quantity": t.partial["quantity"],
+                            "exit_premiums": t.partial["exit_premiums"],
+                            "reason_text": t.partial["reason_text"],
+                        }
+                    }
+                    if t.partial
+                    else {}
+                ),
             }
         )
     bd = breakdowns(groups, band_labels)

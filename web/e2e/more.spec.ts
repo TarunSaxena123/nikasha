@@ -64,7 +64,7 @@ test("advanced options: all off, empty when on, removed when off, VIX band gap m
   await page.getByRole("button", { name: /Advanced options/ }).first().click();
   await expect(page).toHaveURL(/step=advanced/);
   const switches = page.getByRole("switch");
-  await expect(switches).toHaveCount(12);
+  await expect(switches).toHaveCount(13);
   await expect(page.getByRole("switch", { name: "SL cap" })).not.toBeChecked();
   await expect(page.getByRole("switch", { name: /^Entry windows/ })).toBeChecked(); // the template uses it
   await page.getByRole("switch", { name: "SL cap" }).click();

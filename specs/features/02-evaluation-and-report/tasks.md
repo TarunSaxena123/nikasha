@@ -50,6 +50,7 @@ Rules: [CONTRACT] first, then [BE] and [FE] independently against the contracts.
 | T-RPT-16 | [FE] Settings used, how this was simulated, data source and gaps, skipped signals; empty state for zero trades (no empty charts) | RPT-11–14 | AC-RPT-10 (zero-trade fixture) | 6 |
 | T-RPT-17 | [FE] PDF generation (design §1.6): off-screen chart render → svg2pdf, autotable tables, legal blocks on every page, trade summary / "No trades" | RPT-19, 21 | AC-RPT-13 (no network request; text checks per page); file name | 9 |
 | T-RPT-18 | [FE] CSV generation: preamble, columns, RFC 4180, UTF-8 BOM; button hidden at zero trades; file-name slug | RPT-20, 21 | AC-RPT-14, AC-RPT-15 | 9 |
+| T-RPT-19 | [BE+FE] Report: `partial_exit` on trades, new exit texts, settings lines; trade table, CSV and PDF columns | RPT-22, 23 | AC-RPT-16, 17 | 11 (added 2026-10-15) |
 
 ## Order of work
 

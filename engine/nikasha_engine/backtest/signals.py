@@ -79,7 +79,7 @@ def generate_signals(
     multi = len(legs) > 1
     leg_type = legs[0]["option_type"]
 
-    ctx = Context(candles, strategy["indicators"])
+    ctx = Context(candles, strategy["indicators"], md)
     n = len(candles)
     true = np.ones(n, dtype=bool)
 

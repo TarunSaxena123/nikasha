@@ -13,6 +13,7 @@ import numpy as np
 import numpy.typing as npt
 
 from nikasha_engine.candles.resample import Candles
+from nikasha_engine.data.loader import MarketData
 from nikasha_engine.indicators import compute
 
 FloatArr = npt.NDArray[np.float64]
@@ -20,14 +21,15 @@ BoolArr = npt.NDArray[np.bool_]
 
 
 class Context:
-    def __init__(self, candles: Candles, indicators: dict[str, dict[str, Any]]) -> None:
+    def __init__(self, candles: Candles, indicators: dict[str, dict[str, Any]], md: MarketData | None = None) -> None:
         self.c = candles
         self.specs = indicators
+        self.md = md
         self._values: dict[str, dict[str, FloatArr]] = {}
 
     def outputs(self, ind_id: str) -> dict[str, FloatArr]:
         if ind_id not in self._values:
-            self._values[ind_id] = compute(self.c, self.specs[ind_id])
+            self._values[ind_id] = compute(self.c, self.specs[ind_id], self.md)
         return self._values[ind_id]
 
 
@@ -47,6 +49,8 @@ def operand(node: dict[str, Any], ctx: Context) -> FloatArr:
         v = {"open": c.open, "high": c.high, "low": c.low, "close": c.close}[node["price"]]
     elif "vix" in node:
         v = c.v_open if node["vix"] == "open" else c.v_close
+    elif "candle" in node:  # candle size in index points (REQ-ENG-50)
+        v = c.high - c.low if node["candle"] == "range" else np.abs(c.close - c.open)
     else:
         return np.full(len(c), float(node["const"]))
     off = node.get("offset")

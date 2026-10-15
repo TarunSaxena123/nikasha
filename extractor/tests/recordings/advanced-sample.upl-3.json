@@ -25,7 +25,8 @@
     "fast": null,
     "slow": null,
     "signal": null,
-    "stddev": null
+    "stddev": null,
+    "minutes": null
    },
    {
     "id": "ema9",
@@ -36,7 +37,8 @@
     "fast": null,
     "slow": null,
     "signal": null,
-    "stddev": null
+    "stddev": null,
+    "minutes": null
    },
    {
     "id": "ema21",
@@ -47,7 +49,8 @@
     "fast": null,
     "slow": null,
     "signal": null,
-    "stddev": null
+    "stddev": null,
+    "minutes": null
    },
    {
     "id": "rsi14",
@@ -58,7 +61,8 @@
     "fast": null,
     "slow": null,
     "signal": null,
-    "stddev": null
+    "stddev": null,
+    "minutes": null
    },
    {
     "id": "adx14",
@@ -69,7 +73,8 @@
     "fast": null,
     "slow": null,
     "signal": null,
-    "stddev": null
+    "stddev": null,
+    "minutes": null
    }
   ],
   "conditions": [
@@ -98,6 +103,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -109,6 +115,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -129,6 +136,7 @@
      "price": "close",
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -140,6 +148,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -160,6 +169,7 @@
      "price": "close",
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -171,6 +181,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -191,6 +202,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -202,6 +214,7 @@
      "price": null,
      "vix": null,
      "const": 55.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -248,6 +261,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -259,6 +273,7 @@
      "price": null,
      "vix": null,
      "const": 20.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -279,6 +294,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -301,6 +317,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -312,6 +329,7 @@
      "price": null,
      "vix": null,
      "const": 30.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -345,6 +363,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -356,6 +375,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -376,6 +396,7 @@
      "price": "close",
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -387,6 +408,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -407,6 +429,7 @@
      "price": "close",
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -418,6 +441,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -438,6 +462,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -449,6 +474,7 @@
      "price": null,
      "vix": null,
      "const": 45.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -495,6 +521,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -506,6 +533,7 @@
      "price": null,
      "vix": null,
      "const": 20.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -526,6 +554,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -548,6 +577,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -559,6 +589,7 @@
      "price": null,
      "vix": null,
      "const": 30.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -575,7 +606,9 @@
    "target_value": 1.5,
    "time_exit_at": null,
    "time_exit_on": null,
-   "hold_to_expiry": null
+   "hold_to_expiry": null,
+   "target_ce": null,
+   "target_pe": null
   },
   "advanced": {
    "sl_cap_pts": null,
@@ -611,72 +644,27 @@
    "expiry_day_cutoff": null,
    "daily_max_trades": 2,
    "daily_stop_after_sl_hits": 2,
-   "daily_max_loss_rupees": null
+   "daily_max_loss_rupees": null,
+   "trail_to_cost_at_pts": null,
+   "partial_percent": null,
+   "partial_when": null,
+   "partial_gain_type": null,
+   "partial_gain_value": null,
+   "partial_ce": null,
+   "partial_pe": null,
+   "partial_then": null
   },
   "items": [
    {
     "id": "i1",
     "status": "VAGUE",
-    "field": "premarket_time",
-    "quote": "Pre-Market Routine (09:00 AM) Check India VIX to determine risk allocation before market open",
-    "understood": "VIX is read at 09:00, but market data starts at 09:15, so it is unclear when VIX should be measured.",
-    "reason": null,
-    "targets": [],
-    "question": {
-     "prompt": "Data starts at 09:15. Read VIX at the day's open or at entry time?",
-     "kind": "CONFIRM",
-     "unit_label": null,
-     "options": [
-      {
-       "label": "Day open (09:15 value)",
-       "value_text": "DAY_OPEN"
-      },
-      {
-       "label": "At entry",
-       "value_text": "ENTRY"
-      }
-     ],
-     "recommended_option": 0
-    }
-   },
-   {
-    "id": "i2",
-    "status": "FOUND",
-    "field": "vix_sizing",
-    "quote": "VIX < 12: ... Cut normal position size by 50%. VIX 12–18: ... Trade standard position size.",
-    "understood": "Size is 50% when VIX is below 12 and 100% when VIX is between 12 and 18.",
-    "reason": null,
-    "targets": [],
-    "question": null
-   },
-   {
-    "id": "i3",
-    "status": "VAGUE",
-    "field": "vix_band_size",
-    "quote": "VIX > 18: High premium volatility. Reduce position size significantly.",
-    "understood": "Above 18 the size is reduced 'significantly', but the percentage of normal size is not stated.",
-    "reason": null,
-    "targets": [
-     "vix_band:2"
-    ],
-    "question": {
-     "prompt": "What % of normal size should be traded when VIX is above 18?",
-     "kind": "NUMBER",
-     "unit_label": "%",
-     "options": [],
-     "recommended_option": null
-    }
-   },
-   {
-    "id": "i4",
-    "status": "VAGUE",
     "field": "expiry",
-    "quote": "NIFTY 15-MIN WEEKLY OPTION BUYING STRATEGY",
-    "understood": "'Weekly' appears only in the title, so which expiry to trade is not stated.",
+    "quote": "NIFTY 15-MIN WEEKLY OPTION BUYING",
+    "understood": "The word weekly appears only in the title, so the expiry needs to be chosen.",
     "reason": null,
     "targets": [],
     "question": {
-     "prompt": "Which expiry should be traded?",
+     "prompt": "Which expiry should the options use?",
      "kind": "CHOICE",
      "unit_label": null,
      "options": [
@@ -697,27 +685,90 @@
     }
    },
    {
+    "id": "i2",
+    "status": "VAGUE",
+    "field": "premarket_time",
+    "quote": "Pre-Market Routine (09:00 AM) Check India VIX",
+    "understood": "VIX is read at 09:00, before data starts at 09:15; the reading point must be chosen.",
+    "reason": null,
+    "targets": [],
+    "question": {
+     "prompt": "Data starts at 09:15. Read VIX at the day's open or at entry?",
+     "kind": "CONFIRM",
+     "unit_label": null,
+     "options": [
+      {
+       "label": "Day open (09:15)",
+       "value_text": "DAY_OPEN"
+      },
+      {
+       "label": "At entry",
+       "value_text": "ENTRY"
+      }
+     ],
+     "recommended_option": 0
+    }
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "vix_sizing",
+    "quote": "VIX < 12: High sideways risk. Cut normal position size by 50%. VIX 12–18: Ideal environment. Trade standard position size.",
+    "understood": "Below 12 trade 50% size; 12 to 18 trade 100% size.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i4",
+    "status": "VAGUE",
+    "field": "vix_band_size",
+    "quote": "VIX > 18: High premium volatility. Reduce position size significantly.",
+    "understood": "Above 18 the size is reduced significantly, but no percentage is given.",
+    "reason": null,
+    "targets": [
+     "vix_band:2"
+    ],
+    "question": {
+     "prompt": "What % of normal size should be traded when VIX is above 18?",
+     "kind": "NUMBER",
+     "unit_label": "%",
+     "options": [],
+     "recommended_option": null
+    }
+   },
+   {
     "id": "i5",
+    "status": "FOUND",
+    "field": "indicator",
+    "quote": "Supertrend: Period = 10, Multiplier = 2 EMA 1 (Fast): 9-period EMA 2 (Slow): 21-period RSI: 14-period ADX: 14-period",
+    "understood": "Supertrend 10,2, EMA 9 and 21 on close, RSI 14 and ADX 14 on 15-minute candles.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i6",
     "status": "VAGUE",
     "field": "condition_kind",
     "quote": "Supertrend turns Green. / Supertrend turns Red.",
-    "understood": "Unclear whether to act only on the candle where Supertrend flips or on any candle while it is in that colour.",
+    "understood": "Unclear whether this means only the flip candle or any candle while Supertrend is green/red.",
     "reason": null,
     "targets": [
      "cond:c1",
      "cond:c11"
     ],
     "question": {
-     "prompt": "Only the candle where Supertrend flips, or any candle while it has that colour?",
+     "prompt": "Should Supertrend count only on the flip candle, or while it is green/red?",
      "kind": "CHOICE",
      "unit_label": null,
      "options": [
       {
-       "label": "Only the flip candle",
+       "label": "Only the candle it flips",
        "value_text": "turns"
       },
       {
-       "label": "Any candle while it is that colour",
+       "label": "Any candle while in that colour",
        "value_text": "state"
       }
      ],
@@ -725,21 +776,21 @@
     }
    },
    {
-    "id": "i6",
+    "id": "i7",
     "status": "FOUND",
     "field": "condition",
-    "quote": "9 EMA is completely above the 21 EMA. / 9 EMA is completely below the 21 EMA.",
-    "understood": "Call needs EMA 9 above EMA 21; put needs EMA 9 below EMA 21.",
+    "quote": "9 EMA is completely above the 21 EMA.",
+    "understood": "9 EMA above 21 EMA for calls; below for puts.",
     "reason": null,
     "targets": [],
     "question": null
    },
    {
-    "id": "i7",
+    "id": "i8",
     "status": "VAGUE",
     "field": "condition_offset",
     "quote": "The trigger candle closes decisively above both EMAs.",
-    "understood": "Close must be above (call) or below (put) both EMAs 'decisively', but the margin is not stated.",
+    "understood": "Close above both EMAs (below for puts) by an unquantified margin.",
     "reason": null,
     "targets": [
      "cond:c3",
@@ -748,7 +799,7 @@
      "cond:c14"
     ],
     "question": {
-     "prompt": "By how many points must the close be beyond each EMA?",
+     "prompt": "How many points beyond the EMAs counts as decisive?",
      "kind": "NUMBER",
      "unit_label": "points",
      "options": [],
@@ -756,28 +807,28 @@
     }
    },
    {
-    "id": "i8",
+    "id": "i9",
     "status": "FOUND",
     "field": "condition",
-    "quote": "RSI is strictly above 55. / RSI is strictly below 45.",
-    "understood": "Call needs RSI(14) above 55; put needs RSI(14) below 45.",
+    "quote": "RSI is strictly above 55.",
+    "understood": "RSI above 55 for calls and below 45 for puts.",
     "reason": null,
     "targets": [],
     "question": null
    },
    {
-    "id": "i9",
+    "id": "i10",
     "status": "VAGUE",
     "field": "slope_lookback",
     "quote": "ADX is above 20 (Must slope up if between 20–30; slope does not matter if > 30).",
-    "understood": "ADX above 20 and rising, or above 30; the look-back for 'slope up' is not stated.",
+    "understood": "ADX above 20 and rising, or above 30; the slope look-back is not stated.",
     "reason": null,
     "targets": [
      "cond:c9",
      "cond:c19"
     ],
     "question": {
-     "prompt": "Over how many candles must ADX be rising?",
+     "prompt": "Over how many candles should ADX be rising?",
      "kind": "NUMBER",
      "unit_label": "candles",
      "options": [],
@@ -785,21 +836,11 @@
     }
    },
    {
-    "id": "i10",
+    "id": "i11",
     "status": "FOUND",
     "field": "moneyness",
     "quote": "Buy In-The-Money (ITM) contract exactly 100 points below Nifty Spot.",
-    "understood": "Buy ITM options 100 points from spot (call below spot, put above spot).",
-    "reason": null,
-    "targets": [],
-    "question": null
-   },
-   {
-    "id": "i11",
-    "status": "FOUND",
-    "field": "stop_loss",
-    "quote": "Stop-Loss (SL): Low of the trigger candle on the Option Premium Chart.",
-    "understood": "Stop-loss at the trigger candle's extreme on the option premium chart.",
+    "understood": "Buy ITM options 100 points from spot (below for calls, above for puts).",
     "reason": null,
     "targets": [],
     "question": null
@@ -809,13 +850,13 @@
     "status": "VAGUE",
     "field": "sl_cap_pts",
     "quote": "Capped at a maximum of 30–35 premium points.",
-    "understood": "Stop distance is capped, but the cap is given as a range of 30 to 35 points.",
+    "understood": "Stop is the trigger candle extreme, with a cap given as a range of 30 to 35 points.",
     "reason": null,
     "targets": [],
     "question": {
      "prompt": "Which maximum stop distance should be used?",
      "kind": "CHOICE",
-     "unit_label": "points",
+     "unit_label": null,
      "options": [
       {
        "label": "30 points",
@@ -844,7 +885,7 @@
     "status": "FOUND",
     "field": "trail_to_cost_at_r",
     "quote": "Move SL to cost (break-even) once the premium gains a 1:1 risk-equivalent ratio.",
-    "understood": "Move the stop to entry after a gain equal to 1x the initial risk.",
+    "understood": "Move the stop to entry after a gain of 1 times the initial risk.",
     "reason": null,
     "targets": [],
     "question": null
@@ -853,7 +894,7 @@
     "id": "i15",
     "status": "FOUND",
     "field": "exit_after_candles",
-    "quote": "If neither SL nor Target is hit within 60 minutes (4 candles), exit at market price",
+    "quote": "If neither SL nor Target is hit within 60 minutes (4 candles), exit at market price instantly",
     "understood": "Exit after 4 candles if neither stop nor target is hit.",
     "reason": null,
     "targets": [],
@@ -874,11 +915,11 @@
     "status": "VAGUE",
     "field": "expiry_weekday_term",
     "quote": "Do not trade this strategy after 12:00 PM on Thursdays due to high Gamma risk.",
-    "understood": "Rule uses 'Thursdays', but Nifty expiry moved from Thursday to Tuesday in September 2025; unclear if it means expiry day.",
+    "understood": "Thursday is used for expiry; Nifty expiry moved to Tuesday in September 2025, so confirm whether it means expiry day.",
     "reason": null,
     "targets": [],
     "question": {
-     "prompt": "Does 'Thursday' mean expiry day (no new entries after 12:00)?",
+     "prompt": "Does Thursday mean expiry day (no new entries after 12:00)?",
      "kind": "CONFIRM",
      "unit_label": null,
      "options": [
@@ -1325,14 +1366,6 @@
   },
   "advanced": [
    {
-    "name": "trail_to_cost_at_r",
-    "value": "1"
-   },
-   {
-    "name": "exit_after_candles",
-    "value": "4"
-   },
-   {
     "name": "vix_band",
     "value": "-12=50"
    },
@@ -1343,6 +1376,14 @@
    {
     "name": "vix_band",
     "value": "18-="
+   },
+   {
+    "name": "trail_to_cost_at_r",
+    "value": "1"
+   },
+   {
+    "name": "exit_after_candles",
+    "value": "4"
    },
    {
     "name": "no_entry_window",
@@ -1360,63 +1401,13 @@
   "items": [
    {
     "id": "i1",
-    "status": "VAGUE",
-    "field": "premarket_time",
-    "quote": "Pre-Market Routine (09:00 AM) Check India VIX to determine risk allocation before market open",
-    "understood": "VIX is read at 09:00, but market data starts at 09:15, so it is unclear when VIX should be measured.",
-    "targets": [],
-    "question_kind": "CONFIRM",
-    "question": "Data starts at 09:15. Read VIX at the day's open or at entry time?",
-    "unit_label": "",
-    "options": [
-     {
-      "label": "Day open (09:15 value)",
-      "value_text": "DAY_OPEN"
-     },
-     {
-      "label": "At entry",
-      "value_text": "ENTRY"
-     }
-    ],
-    "recommended_option": "0"
-   },
-   {
-    "id": "i2",
     "status": "FOUND",
-    "field": "vix_sizing",
-    "quote": "VIX < 12: ... Cut normal position size by 50%. VIX 12–18: ... Trade standard position size.",
-    "understood": "Size is 50% when VIX is below 12 and 100% when VIX is between 12 and 18.",
-    "targets": [],
-    "question_kind": "NONE",
-    "question": "",
-    "unit_label": "",
-    "options": [],
-    "recommended_option": ""
-   },
-   {
-    "id": "i3",
-    "status": "VAGUE",
-    "field": "vix_band_size",
-    "quote": "VIX > 18: High premium volatility. Reduce position size significantly.",
-    "understood": "Above 18 the size is reduced 'significantly', but the percentage of normal size is not stated.",
-    "targets": [
-     "vix_band:2"
-    ],
-    "question_kind": "NUMBER",
-    "question": "What % of normal size should be traded when VIX is above 18?",
-    "unit_label": "%",
-    "options": [],
-    "recommended_option": ""
-   },
-   {
-    "id": "i4",
-    "status": "VAGUE",
     "field": "expiry",
-    "quote": "NIFTY 15-MIN WEEKLY OPTION BUYING STRATEGY",
-    "understood": "'Weekly' appears only in the title, so which expiry to trade is not stated.",
+    "quote": "NIFTY 15-MIN WEEKLY OPTION BUYING",
+    "understood": "The word weekly appears only in the title, so the expiry needs to be chosen.",
     "targets": [],
     "question_kind": "CHOICE",
-    "question": "Which expiry should be traded?",
+    "question": "Which expiry should the options use?",
     "unit_label": "",
     "options": [
      {
@@ -1435,36 +1426,33 @@
     "recommended_option": ""
    },
    {
-    "id": "i5",
+    "id": "i2",
     "status": "VAGUE",
-    "field": "condition_kind",
-    "quote": "Supertrend turns Green. / Supertrend turns Red.",
-    "understood": "Unclear whether to act only on the candle where Supertrend flips or on any candle while it is in that colour.",
-    "targets": [
-     "cond:c1",
-     "cond:c11"
-    ],
-    "question_kind": "CHOICE",
-    "question": "Only the candle where Supertrend flips, or any candle while it has that colour?",
+    "field": "premarket_time",
+    "quote": "Pre-Market Routine (09:00 AM) Check India VIX",
+    "understood": "VIX is read at 09:00, before data starts at 09:15; the reading point must be chosen.",
+    "targets": [],
+    "question_kind": "CONFIRM",
+    "question": "Data starts at 09:15. Read VIX at the day's open or at entry?",
     "unit_label": "",
     "options": [
      {
-      "label": "Only the flip candle",
-      "value_text": "turns"
+      "label": "Day open (09:15)",
+      "value_text": "DAY_OPEN"
      },
      {
-      "label": "Any candle while it is that colour",
-      "value_text": "state"
+      "label": "At entry",
+      "value_text": "ENTRY"
      }
     ],
-    "recommended_option": ""
+    "recommended_option": "0"
    },
    {
-    "id": "i6",
+    "id": "i3",
     "status": "FOUND",
-    "field": "condition",
-    "quote": "9 EMA is completely above the 21 EMA. / 9 EMA is completely below the 21 EMA.",
-    "understood": "Call needs EMA 9 above EMA 21; put needs EMA 9 below EMA 21.",
+    "field": "vix_sizing",
+    "quote": "VIX < 12: High sideways risk. Cut normal position size by 50%. VIX 12–18: Ideal environment. Trade standard position size.",
+    "understood": "Below 12 trade 50% size; 12 to 18 trade 100% size.",
     "targets": [],
     "question_kind": "NONE",
     "question": "",
@@ -1473,11 +1461,77 @@
     "recommended_option": ""
    },
    {
+    "id": "i4",
+    "status": "VAGUE",
+    "field": "vix_band_size",
+    "quote": "VIX > 18: High premium volatility. Reduce position size significantly.",
+    "understood": "Above 18 the size is reduced significantly, but no percentage is given.",
+    "targets": [
+     "vix_band:2"
+    ],
+    "question_kind": "NUMBER",
+    "question": "What % of normal size should be traded when VIX is above 18?",
+    "unit_label": "%",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i5",
+    "status": "FOUND",
+    "field": "indicator",
+    "quote": "Supertrend: Period = 10, Multiplier = 2 EMA 1 (Fast): 9-period EMA 2 (Slow): 21-period RSI: 14-period ADX: 14-period",
+    "understood": "Supertrend 10,2, EMA 9 and 21 on close, RSI 14 and ADX 14 on 15-minute candles.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i6",
+    "status": "VAGUE",
+    "field": "condition_kind",
+    "quote": "Supertrend turns Green. / Supertrend turns Red.",
+    "understood": "Unclear whether this means only the flip candle or any candle while Supertrend is green/red.",
+    "targets": [
+     "cond:c1",
+     "cond:c11"
+    ],
+    "question_kind": "CHOICE",
+    "question": "Should Supertrend count only on the flip candle, or while it is green/red?",
+    "unit_label": "",
+    "options": [
+     {
+      "label": "Only the candle it flips",
+      "value_text": "turns"
+     },
+     {
+      "label": "Any candle while in that colour",
+      "value_text": "state"
+     }
+    ],
+    "recommended_option": ""
+   },
+   {
     "id": "i7",
+    "status": "FOUND",
+    "field": "condition",
+    "quote": "9 EMA is completely above the 21 EMA.",
+    "understood": "9 EMA above 21 EMA for calls; below for puts.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i8",
     "status": "VAGUE",
     "field": "condition_offset",
     "quote": "The trigger candle closes decisively above both EMAs.",
-    "understood": "Close must be above (call) or below (put) both EMAs 'decisively', but the margin is not stated.",
+    "understood": "Close above both EMAs (below for puts) by an unquantified margin.",
     "targets": [
      "cond:c3",
      "cond:c4",
@@ -1485,59 +1539,46 @@
      "cond:c14"
     ],
     "question_kind": "NUMBER",
-    "question": "By how many points must the close be beyond each EMA?",
+    "question": "How many points beyond the EMAs counts as decisive?",
     "unit_label": "points",
     "options": [],
     "recommended_option": ""
    },
    {
-    "id": "i8",
+    "id": "i9",
     "status": "FOUND",
     "field": "condition",
-    "quote": "RSI is strictly above 55. / RSI is strictly below 45.",
-    "understood": "Call needs RSI(14) above 55; put needs RSI(14) below 45.",
+    "quote": "RSI is strictly above 55.",
+    "understood": "RSI above 55 for calls and below 45 for puts.",
     "targets": [],
     "question_kind": "NONE",
     "question": "",
     "unit_label": "",
-    "options": [],
-    "recommended_option": ""
-   },
-   {
-    "id": "i9",
-    "status": "VAGUE",
-    "field": "slope_lookback",
-    "quote": "ADX is above 20 (Must slope up if between 20–30; slope does not matter if > 30).",
-    "understood": "ADX above 20 and rising, or above 30; the look-back for 'slope up' is not stated.",
-    "targets": [
-     "cond:c9",
-     "cond:c19"
-    ],
-    "question_kind": "NUMBER",
-    "question": "Over how many candles must ADX be rising?",
-    "unit_label": "candles",
     "options": [],
     "recommended_option": ""
    },
    {
     "id": "i10",
-    "status": "FOUND",
-    "field": "moneyness",
-    "quote": "Buy In-The-Money (ITM) contract exactly 100 points below Nifty Spot.",
-    "understood": "Buy ITM options 100 points from spot (call below spot, put above spot).",
-    "targets": [],
-    "question_kind": "NONE",
-    "question": "",
-    "unit_label": "",
+    "status": "VAGUE",
+    "field": "slope_lookback",
+    "quote": "ADX is above 20 (Must slope up if between 20–30; slope does not matter if > 30).",
+    "understood": "ADX above 20 and rising, or above 30; the slope look-back is not stated.",
+    "targets": [
+     "cond:c9",
+     "cond:c19"
+    ],
+    "question_kind": "NUMBER",
+    "question": "Over how many candles should ADX be rising?",
+    "unit_label": "candles",
     "options": [],
     "recommended_option": ""
    },
    {
     "id": "i11",
     "status": "FOUND",
-    "field": "stop_loss",
-    "quote": "Stop-Loss (SL): Low of the trigger candle on the Option Premium Chart.",
-    "understood": "Stop-loss at the trigger candle's extreme on the option premium chart.",
+    "field": "moneyness",
+    "quote": "Buy In-The-Money (ITM) contract exactly 100 points below Nifty Spot.",
+    "understood": "Buy ITM options 100 points from spot (below for calls, above for puts).",
     "targets": [],
     "question_kind": "NONE",
     "question": "",
@@ -1550,11 +1591,11 @@
     "status": "VAGUE",
     "field": "sl_cap_pts",
     "quote": "Capped at a maximum of 30–35 premium points.",
-    "understood": "Stop distance is capped, but the cap is given as a range of 30 to 35 points.",
+    "understood": "Stop is the trigger candle extreme, with a cap given as a range of 30 to 35 points.",
     "targets": [],
     "question_kind": "CHOICE",
     "question": "Which maximum stop distance should be used?",
-    "unit_label": "points",
+    "unit_label": "",
     "options": [
      {
       "label": "30 points",
@@ -1585,7 +1626,7 @@
     "status": "FOUND",
     "field": "trail_to_cost_at_r",
     "quote": "Move SL to cost (break-even) once the premium gains a 1:1 risk-equivalent ratio.",
-    "understood": "Move the stop to entry after a gain equal to 1x the initial risk.",
+    "understood": "Move the stop to entry after a gain of 1 times the initial risk.",
     "targets": [],
     "question_kind": "NONE",
     "question": "",
@@ -1597,7 +1638,7 @@
     "id": "i15",
     "status": "FOUND",
     "field": "exit_after_candles",
-    "quote": "If neither SL nor Target is hit within 60 minutes (4 candles), exit at market price",
+    "quote": "If neither SL nor Target is hit within 60 minutes (4 candles), exit at market price instantly",
     "understood": "Exit after 4 candles if neither stop nor target is hit.",
     "targets": [],
     "question_kind": "NONE",
@@ -1624,10 +1665,10 @@
     "status": "VAGUE",
     "field": "expiry_weekday_term",
     "quote": "Do not trade this strategy after 12:00 PM on Thursdays due to high Gamma risk.",
-    "understood": "Rule uses 'Thursdays', but Nifty expiry moved from Thursday to Tuesday in September 2025; unclear if it means expiry day.",
+    "understood": "Thursday is used for expiry; Nifty expiry moved to Tuesday in September 2025, so confirm whether it means expiry day.",
     "targets": [],
     "question_kind": "CONFIRM",
-    "question": "Does 'Thursday' mean expiry day (no new entries after 12:00)?",
+    "question": "Does Thursday mean expiry day (no new entries after 12:00)?",
     "unit_label": "",
     "options": [
      {

@@ -68,24 +68,31 @@ test("upload one-line sample: exactly holding, expiry, lots, lot size; positiona
 });
 
 test("upload advanced sample: vague questions first, then missing; Back changes an answer (AC-UPL-09, 10, 15)", async ({ page }) => {
-  await mockServices(page, { extract: () => ({ status: 200, body: fixture("extraction", "advanced-sample.json") }) });
+  // Prompts and labels are worded by the model, so they come from the (live-recorded) fixture itself.
+  const result = fixture<{ questions: { prompt: string; kind: string; options?: { label: string }[] }[] }>("extraction", "advanced-sample.json");
+  const [first, second] = result.questions as [(typeof result.questions)[number], (typeof result.questions)[number]];
+  await mockServices(page, { extract: () => ({ status: 200, body: result }) });
   await page.goto("/upload");
   await acceptGate(page);
   await page.getByTestId("file-input").setInputFiles({ name: "plan.pdf", mimeType: "application/pdf", buffer: Buffer.from("%PDF-1.4 test") });
   await page.getByRole("button", { name: "Read my strategy" }).click();
   await expect(page.getByText("Some text that wasn't a trading rule was ignored.")).toBeVisible();
-  await page.getByRole("button", { name: /Answer 11 questions/ }).click();
+  const total = result.questions.length + 3; // the vague ones, then holding, lots and lot size
+  await page.getByRole("button", { name: `Answer ${total} questions` }).click();
   const q = page.getByTestId("question");
-  await expect(q).toContainText("Read VIX at the day's open or at entry time?");
-  await answerChoice(page, /^Day open \(09:15 value\)/);
-  await page.getByRole("button", { name: "Confirm" }).click();
+  const choose = async (label: string) => {
+    await q.getByRole("radio", { name: new RegExp(`^${label.replace(/[.*+?^${}()|[\]\\]/g, "\\$&")}`) }).check();
+    const confirm = q.getByRole("button", { name: "Confirm" });
+    if (await confirm.isVisible()) await confirm.click();
+  };
+  await expect(q).toContainText(first.prompt);
+  await choose(first.options![0]!.label);
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(q).toContainText("What % of normal size should be traded when VIX is above 18?");
+  await expect(q).toContainText(second.prompt);
   await page.getByRole("button", { name: "Back" }).click();
-  await answerChoice(page, /^At entry$/);
-  await page.getByRole("button", { name: "Confirm" }).click();
+  await choose(first.options![1]!.label);
   await page.getByRole("button", { name: "Next" }).click();
-  await expect(page.getByText("Question 2 of 11")).toBeVisible();
+  await expect(page.getByText(`Question 2 of ${total}`)).toBeVisible();
 });
 
 test("upload with VWAP: can't-be-tested list and acknowledgement, shown on review (AC-UPL-12)", async ({ page }) => {

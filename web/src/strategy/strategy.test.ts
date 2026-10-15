@@ -68,7 +68,7 @@ describe("describeStrategy (AC-INP-02)", () => {
     const rows = describeStrategy(validStrategy(name) as never, inst);
     expect(rows.slice(0, 13).map((r) => r.key)).toEqual(["instrument", "action", "option_type", "strike", "expiry", "timeframe", "holding", "lots", "lot_size", "entry", "stop_loss", "exit_rule"].concat(rows[12]!.key).slice(0, 13));
     const advanced = rows.filter((r) => r.advanced);
-    expect(advanced).toHaveLength(12);
+    expect(advanced).toHaveLength(15);
     for (const r of rows) {
       const text = [r.rule, r.setting, r.meaning, ...treeLines(r.tree ?? [])].join(" ");
       expect(text).not.toMatch(forbidden);
@@ -146,7 +146,7 @@ describe("strike examples (AC-INP-07)", () => {
 });
 
 describe("advanced options list", () => {
-  it("is the shared 12-label contract", () => {
+  it("is the shared 15-label contract", () => {
     const opts = readJson<{ options: { label: string }[] }>("advanced-options.json").options;
     expect(describeStrategy({}, inst).filter((r) => r.advanced).map((r) => r.rule)).toEqual(opts.map((o) => o.label));
   });
@@ -164,5 +164,46 @@ describe("unfinished conditions block the entry step", () => {
     expect(unfinished({ type: "turns", to: "up" })).toBe(true);
     expect(unfinished({ type: "all", conditions: [] })).toBe(true);
     expect(unfinished({ type: "any", conditions: [{ type: "state", ind: "st", is: "up" }] })).toBe(false);
+  });
+});
+
+describe("vocabulary extensions in words (REQ-INP-22, 25; REQ-RPT-23)", () => {
+  it("the ORB + CPR sample reads its levels, exits and partial exit in plain English", () => {
+    const rows = describeStrategy(validStrategy("orb-cpr-sample-with-answers") as never, inst);
+    const by = Object.fromEntries(rows.map((r) => [r.key, r]));
+    const entry = treeLines(by.entry!.tree ?? []).join("\n");
+    expect(entry).toContain("Opening range 15 min low is above Pivots TC");
+    expect(entry).toContain("Candle range is at or below 70");
+    expect(entry).toContain("Pivots CPR width % is at or below 0.4");
+    expect(by.exit_rule!.setting).toContain("Target when the index reaches Pivots R2 (calls) / Pivots S2 (puts)");
+    expect(by.partial_exit!.setting).toBe(
+      "Close 50% of the lots when the index reaches Pivots R1 (calls) / Pivots S1 (puts); the rest exits if the index breaks back past that candle's low (or high)",
+    );
+    expect(by.trail_to_cost!.setting).toBe("Stop moves to the entry price after a gain of 25 points");
+    expect(treeLines(by.exit_conditions!.tree ?? []).join("\n")).toContain("Exit a call when:");
+    expect(by.exit_conditions!.step).toBe("exit");
+  });
+});
+
+describe("mirror swaps pivot and opening-range sides (AC-INP-20)", () => {
+  it("TC↔BC, high↔low, flips direction, keeps direction-free filters and flags swaps", () => {
+    const or = (o: string) => ({ ind: "or15", output: o });
+    const piv = (o: string) => ({ ind: "piv", output: o });
+    const call = {
+      type: "all",
+      conditions: [
+        { type: "compare", left: or("low"), op: "gt", right: piv("tc") },
+        { type: "compare", left: { price: "close" }, op: "gt", right: or("high") },
+        { type: "compare", left: { candle: "range" }, op: "lte", right: { const: 70 } },
+        { type: "compare", left: piv("cpr_width_pct"), op: "lte", right: { const: 0.4 } },
+      ],
+    };
+    const r = mirror(call);
+    const kids = (r.tree.conditions as Record<string, unknown>[]);
+    expect(kids[0]).toEqual({ type: "compare", left: or("high"), op: "lt", right: piv("bc") });
+    expect(kids[1]).toEqual({ type: "compare", left: { price: "close" }, op: "lt", right: or("low") });
+    expect(kids[2]!.op).toBe("lte"); // a candle-size filter has no direction
+    expect(kids[3]!.op).toBe("lte");
+    expect(r.needsReview).toEqual(expect.arrayContaining(["/conditions/0/left", "/conditions/0/right", "/conditions/1/right"]));
   });
 });

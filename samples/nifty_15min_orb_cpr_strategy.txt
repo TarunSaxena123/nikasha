@@ -1,0 +1,54 @@
+NIFTY 15-MIN ORB + CPR STRATEGY
+ BLUEPRINT
+ High Win-Rate Structural Execution Plan for Option Buyers  Manual Setup Guide
+Phase 1: Chart Layout Setup
+ 1. Timeframe: Set the NIFTY 50 Spot Index chart strictly to the 15-Minute interval.
+ 2. Central Pivot Range (CPR): Search for 'Pivot Points Standard' in the Indicators (Fx) menu.
+  Change the Type to Traditional and Timeframe to Daily in settings.
+  In Style settings, check only P, TC, BC (the 3 CPR lines), R1 (Call target), and S1 (Put target).
+ 3. Momentum Guard Line: Add 'Moving Average Exponential' (EMA) and change its length to 20.
+ 4. Opening Range: At 09:30 AM, draw 2 horizontal lines marking the absolute High and Low of the first 15-min
+ candle.
+Phase 2: Rules of Engagement (Exact Entry Filters)
+■ Call Option (CE) Buying Rules:
+  Core Bias: The first 15-min candle must open and trade completely above the daily CPR lines.
+  Trigger: A subsequent 15-min candle must close its body completely above the Opening Range High line.
+  Strike Selection: Buy the weekly contract exactly 100 points In-The-Money (ITM) below Nifty spot via Market
+ Order.
+■ Put Option (PE) Buying Rules:
+  Core Bias: The first 15-min candle must open and trade completely below the daily CPR lines.
+  Trigger: A subsequent 15-min candle must close its body completely below the Opening Range Low line.
+  Strike Selection: Buy the weekly contract exactly 100 points In-The-Money (ITM) above Nifty spot via Market
+ Order.
+Phase 3: Two-Tiered Risk & Trailing Stop-Loss Strategy
+Manage risk on your active position via a GTT OCO order based on these strict structural rules:
+Risk Metric
+Execution Rule & Parameter Details
+Hard System SL
+Placed at the trigger candle's low/high on the option premium chart. Hard-capped at a
+maximum of 25 premium points. If hit, the system exits automatically.
+20 EMA Guard
+Active manual exit guard on the spot chart. Exit immediately at market price if a 15-min
+candle closes below the 20 EMA (for CE) or above the 20 EMA (for PE), cutting your loss
+short.
+Trailing Step 1
+The exact second your option premium gains +25 points in profit, manually modify your
+active GTT stop-loss order and move it directly to your Entry Price (Cost/Break-even).
+Trailing Step 2
+When Nifty Spot hits the daily R1 line (for CE) or S1 line (for PE), instantly book and
+close exactly 50% of your total quantity to secure profits.
+
+Trailing Step 3
+Trail the remaining 50% to the high/low of the candle that broke R1/S1. Ride the trend fully
+until the spot index touches R2 (for CE) or S2 (for PE) to exit completely.
+Phase 4: Unbreakable Capital Protection & 'No-Trade' Filters
+ 1. Time Window Cut-off: Only enter triggers occurring before 11:30 AM. Ignore afternoon breakouts entirely to
+ bypass low volume and high Theta decay traps.
+2. Wide CPR Filter: If the daily printed TC and BC lines have a wide horizontal gap, skip trading. Wide CPR
+ mathematically indicates a sideways trend.
+3. Over-Sized Candle Filter: If the breakout candle moves Nifty more than 70 points in a single 15-minute frame, it
+ is overextended. Skip the entry.
+4. Daily Limit Boundary: Strictly 1 trade per day. Win or lose, turn off your trading application as soon as the
+ position closes.
+ Disclaimer: This strategy blueprint is for educational purposes only. Intraday options trading involves high capital risk. AI responses may include
+ mistakes.

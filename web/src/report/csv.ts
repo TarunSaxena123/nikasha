@@ -5,7 +5,7 @@ import { slug, yyyymmdd } from "@/lib/format";
 
 export const CSV_COLUMNS = [
   "Trade #", "Side", "Legs", "Strike(s)", "Expiry", "Signal time", "Entry time", "Exit time", "Spot at entry",
-  "Entry premium(s)", "Exit premium(s)", "Quantity", "Gross P&L (₹)", "Costs (₹)", "Net P&L (₹)", "Exit reason",
+  "Entry premium(s)", "Exit premium(s)", "Partial exit time", "Partial exit quantity", "Partial exit premium(s)", "Quantity", "Gross P&L (₹)", "Costs (₹)", "Net P&L (₹)", "Exit reason",
   "India VIX at entry", "VIX band", "Market trend", "Expiry day",
 ];
 
@@ -29,6 +29,7 @@ export function tradesCsv(report: Report, meta: MetaResponse | null): string {
     t.n, SIDE[t.side], t.legs.map((l) => `${l.action === "BUY" ? "Buy" : "Sell"} ${l.option_type}`).join(" / "),
     t.legs.map((l) => l.strike).join(" / "), t.legs[0]?.expiry ?? "", ts(t.signal_time), ts(t.entry_time), ts(t.exit_time),
     t.spot_at_entry ?? "", t.legs.map((l) => l.entry_premium.toFixed(2)).join(" / "), t.legs.map((l) => l.exit_premium.toFixed(2)).join(" / "),
+    ts(t.partial_exit?.time), t.partial_exit?.quantity ?? "", t.partial_exit?.exit_premiums.map((p) => p.toFixed(2)).join(" / ") ?? "",
     t.quantity, t.gross_pnl.toFixed(2), t.costs.toFixed(2), t.net_pnl.toFixed(2), t.exit_reason_text, t.vol_at_entry.toFixed(2),
     t.vol_band, TREND[t.regime], t.expiry_day ? "Yes" : "No",
   ]);

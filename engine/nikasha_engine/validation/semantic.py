@@ -21,6 +21,8 @@ OUTPUTS_BY_TYPE: dict[str, set[str]] = {
     "SUPERTREND": {"value"},
     "MACD": {"value", "signal", "hist"},
     "BBANDS": {"upper", "middle", "lower"},
+    "OPENING_RANGE": {"high", "low"},
+    "PIVOTS": {"p", "tc", "bc", "r1", "r2", "r3", "s1", "s2", "s3", "cpr_width", "cpr_width_pct"},
 }
 MAX_DEPTH = 4
 MAX_CONDITIONS_PER_SIDE = 30
@@ -185,7 +187,7 @@ def semantic_problems(
     settings: dict[str, Any] | None = None,
     data_range: DataRange | None = None,
 ) -> list[Problem]:
-    """SEM-01…20 on a schema-valid strategy. Returns problems in rule order."""
+    """SEM-01…25 on a schema-valid strategy. Returns problems in rule order."""
     probs: list[Problem] = []
     inst = instruments.get(strategy["underlying"])
     if inst is None:
@@ -198,13 +200,21 @@ def semantic_problems(
 
     indicators: dict[str, Any] = strategy["indicators"]
     entry: dict[str, Any] = strategy["entry"]
-    sides = [entry[k] for k in ("ce", "pe", "all_legs") if k in entry]
+    exit_when: dict[str, Any] = strategy["exit"].get("exit_when") or {}
+    # Entry and exit condition sets share SEM-03, 04 and 15.
+    sides = [entry[k] for k in ("ce", "pe", "all_legs") if k in entry] + list(exit_when.values())
     all_nodes: list[dict[str, Any]] = []
     for tree in sides:
         all_nodes += _walk(tree)[2]
+    level_specs = _level_specs(strategy)
 
     # SEM-03
     missing: list[str] = []
+    level_refs = [o for spec in level_specs for o in (spec.get("ce"), spec.get("pe")) if o and "ind" in o]
+    for o in level_refs:
+        ind = indicators.get(o["ind"])
+        if ind is None or o["output"] not in OUTPUTS_BY_TYPE[ind["type"]]:
+            missing.append(o["ind"])
     for node in all_nodes:
         refs = [o for o in _operands(node) if "ind" in o]
         for o in refs:
@@ -258,7 +268,11 @@ def semantic_problems(
 
     # SEM-07
     if not intraday and not (
-        "target" in ex or "time_exit" in ex or ex.get("hold_to_expiry") or "exit_after_candles" in adv
+        "target" in ex
+        or "time_exit" in ex
+        or ex.get("hold_to_expiry")
+        or "exit_after_candles" in adv
+        or "exit_when" in ex
     ):
         probs.append(
             Problem(
@@ -402,7 +416,77 @@ def semantic_problems(
     if pos["lots"] * pos["lot_size"] > MAX_QUANTITY:
         probs.append(Problem("SEM-20", "Position size", "That position size is too large to simulate."))
 
+    # SEM-21
+    if adv.get("trail_to_cost_at_r") is not None and adv.get("trail_to_cost_at_pts") is not None:
+        probs.append(
+            Problem(
+                "SEM-21",
+                "Trail to cost",
+                "Choose one way to move the stop to cost: a multiple of the risk, or premium points.",
+            )
+        )
+
+    pe_spec = adv.get("partial_exit")
+    uses_levels = bool(level_specs) or bool(pe_spec and pe_spec["then_stop"] == "PARTIAL_CANDLE")
+    # SEM-22
+    if uses_levels and len(legs) > 1:
+        probs.append(Problem("SEM-22", "Exit levels", "Index-level exits work with one leg only."))
+    # SEM-23
+    if level_specs and len(legs) == 1:
+        otype = legs[0]["option_type"]
+        need = {"CE": ["ce"], "PE": ["pe"]}.get(otype, ["ce", "pe"])
+        bad = any(k not in spec or not ("ind" in spec[k] or "const" in spec[k]) for spec in level_specs for k in need)
+        if bad:
+            probs.append(
+                Problem(
+                    "SEM-23",
+                    "Exit levels",
+                    "Give the index level for each side you trade (calls and puts), using an indicator value or a "
+                    "number.",
+                )
+            )
+    # SEM-24
+    if exit_when:
+        keys = set(exit_when)
+        otype = legs[0]["option_type"]
+        if len(legs) > 1:
+            ok = keys == {"all_legs"}
+        elif otype == "SIGNAL":
+            ok = "all_legs" not in keys
+        else:
+            ok = keys <= {otype.lower(), "all_legs"} and len(keys) == 1
+        if not ok:
+            probs.append(
+                Problem(
+                    "SEM-24",
+                    "Exit conditions",
+                    "The exit conditions don't match the option type: use call and put conditions for one signal "
+                    "leg, or one set for all legs.",
+                )
+            )
+    # SEM-25
+    if pe_spec and pos["lots"] < 2:
+        probs.append(
+            Problem(
+                "SEM-25",
+                "Partial exit",
+                "A partial exit needs at least 2 lots, so part of the position can be closed and part kept.",
+            )
+        )
+
     return probs
+
+
+def _level_specs(strategy: dict[str, Any]) -> list[dict[str, Any]]:
+    """Every SPOT_LEVEL spec (target, partial exit): each has optional `ce` / `pe` operands."""
+    out: list[dict[str, Any]] = []
+    tgt = strategy["exit"].get("target")
+    if tgt and tgt["type"] == "SPOT_LEVEL":
+        out.append(tgt)
+    pe_spec = (strategy.get("advanced") or {}).get("partial_exit")
+    if pe_spec and pe_spec["when"]["type"] == "SPOT_LEVEL":
+        out.append(pe_spec["when"])
+    return out
 
 
 def _bands_cover(bands: list[dict[str, Any]]) -> bool:

@@ -4,13 +4,13 @@
 
 export const validate = validate20;
 export default validate20;
-const schema31 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://nikasha.local/contracts/strategy.schema.json","title":"Strategy","description":"Internal strategy format. Never shown to users (constitution §4). Structural rules live here; rules JSON Schema cannot express are in strategy-rules.md (SEM-xx) and are enforced identically by the web app and the engine. Mandatory inputs (product.md §6.1) are the required top-level fields. Every advanced option (product.md §6.2) is OFF when absent and has no default.","$comment":"Advanced options and where they live: SL cap → advanced.sl_cap_pts; trigger-candle SL → exit.stop_loss.type TRIGGER_CANDLE; R:R target → exit.target.type RR; trail to cost → advanced.trail_to_cost_at_r; exit after N candles → advanced.exit_after_candles; VIX sizing → advanced.vix_sizing; entry/no-entry windows → advanced.entry_windows / advanced.no_entry_windows; expiry-day cutoff → advanced.expiry_day_cutoff; daily limits → advanced.daily; 1–4 legs → legs (more than one leg); strike by delta/premium → legs[].strike.method DELTA / PREMIUM.","type":"object","additionalProperties":false,"required":["schema_version","underlying","timeframe_min","holding","position","indicators","legs","entry","exit"],"properties":{"schema_version":{"const":"1.0"},"name":{"type":"string","minLength":1,"maxLength":120},"origin":{"description":"Which entry path produced this strategy. Informational only; does not change evaluation.","enum":["TEMPLATE","BUILDER","UPLOAD"]},"template_id":{"type":"string","pattern":"^[a-z0-9-]{1,40}$"},"underlying":{"description":"Instrument symbol from the instrument registry (mandatory input 1).","type":"string","pattern":"^[A-Z0-9_]{2,20}$"},"timeframe_min":{"description":"Candle timeframe in minutes (mandatory input 7). Also limited by the instrument profile's allowed_timeframes_min.","enum":[1,3,5,15,30,60,240]},"holding":{"description":"Mandatory input 8. INTRADAY positions are squared off at the profile's intraday_squareoff time.","enum":["INTRADAY","POSITIONAL"]},"position":{"description":"Mandatory inputs 9 and 10. Applied uniformly to every trade in the backtest.","type":"object","additionalProperties":false,"required":["lots","lot_size"],"properties":{"lots":{"type":"integer","minimum":1,"maximum":1000},"lot_size":{"type":"integer","minimum":1,"maximum":100000}}},"indicators":{"description":"Indicator instances referenced by conditions, keyed by an id such as ema9. May be empty for fixed-time strategies.","type":"object","propertyNames":{"pattern":"^[a-z][a-z0-9_]{0,31}$"},"additionalProperties":{"$ref":"#/$defs/Indicator"},"maxProperties":20},"legs":{"description":"Mandatory inputs 2–6 (action, option type, moneyness, distance, expiry). More than one leg is an advanced option.","type":"array","minItems":1,"maxItems":4,"items":{"$ref":"#/$defs/Leg"}},"entry":{"$ref":"#/$defs/Entry"},"exit":{"$ref":"#/$defs/Exit"},"advanced":{"$ref":"#/$defs/Advanced"}},"$defs":{"Time":{"description":"Clock time HH:MM, IST.","type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]$"},"TimeWindow":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/$defs/Time"},"to":{"$ref":"#/$defs/Time"}}},"IndicatorId":{"type":"string","pattern":"^[a-z][a-z0-9_]{0,31}$"},"PriceField":{"enum":["open","high","low","close"]},"Indicator":{"oneOf":[{"title":"Moving average (EMA or SMA)","type":"object","additionalProperties":false,"required":["type","period","source"],"properties":{"type":{"enum":["EMA","SMA"]},"period":{"type":"integer","minimum":1,"maximum":500},"source":{"$ref":"#/$defs/PriceField"}}},{"title":"RSI or ADX","description":"RSI outputs: value. ADX outputs: value (ADX), plus_di, minus_di.","type":"object","additionalProperties":false,"required":["type","period"],"properties":{"type":{"enum":["RSI","ADX"]},"period":{"type":"integer","minimum":2,"maximum":200}}},{"title":"Supertrend","description":"Outputs: value (the Supertrend line) and direction (up = green, down = red), used by state/turns conditions.","type":"object","additionalProperties":false,"required":["type","period","multiplier"],"properties":{"type":{"const":"SUPERTREND"},"period":{"type":"integer","minimum":1,"maximum":200},"multiplier":{"type":"number","exclusiveMinimum":0,"maximum":10}}},{"title":"MACD","description":"Outputs: value (MACD line), signal, hist.","type":"object","additionalProperties":false,"required":["type","fast","slow","signal"],"properties":{"type":{"const":"MACD"},"fast":{"type":"integer","minimum":1,"maximum":200},"slow":{"type":"integer","minimum":2,"maximum":400},"signal":{"type":"integer","minimum":1,"maximum":200}}},{"title":"Bollinger Bands","description":"Outputs: upper, middle, lower.","type":"object","additionalProperties":false,"required":["type","period","stddev","source"],"properties":{"type":{"const":"BBANDS"},"period":{"type":"integer","minimum":2,"maximum":500},"stddev":{"type":"number","exclusiveMinimum":0,"maximum":5},"source":{"$ref":"#/$defs/PriceField"}}}]},"Offset":{"description":"Shifts an operand, e.g. EMA 21 + 10 points, to express thresholds such as 'closes decisively above'.","oneOf":[{"type":"object","additionalProperties":false,"required":["pts"],"properties":{"pts":{"type":"number","minimum":-100000,"maximum":100000}}},{"type":"object","additionalProperties":false,"required":["pct"],"properties":{"pct":{"type":"number","minimum":-100,"maximum":100}}}]},"Operand":{"oneOf":[{"title":"Indicator output","type":"object","additionalProperties":false,"required":["ind","output"],"properties":{"ind":{"$ref":"#/$defs/IndicatorId"},"output":{"enum":["value","signal","hist","upper","middle","lower","plus_di","minus_di"]},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Underlying candle price","type":"object","additionalProperties":false,"required":["price"],"properties":{"price":{"$ref":"#/$defs/PriceField"},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Volatility index value on the candle","type":"object","additionalProperties":false,"required":["vix"],"properties":{"vix":{"enum":["open","close"]}}},{"title":"Constant number","type":"object","additionalProperties":false,"required":["const"],"properties":{"const":{"type":"number"}}}]},"Condition":{"description":"Evaluated on each candle close. Groups nest (max depth 4, SEM-15).","oneOf":[{"$ref":"#/$defs/AllGroup"},{"$ref":"#/$defs/AnyGroup"},{"$ref":"#/$defs/Compare"},{"$ref":"#/$defs/Cross"},{"$ref":"#/$defs/State"},{"$ref":"#/$defs/Turns"},{"$ref":"#/$defs/Slope"}]},"AllGroup":{"description":"True when every condition is true (AND).","type":"object","additionalProperties":false,"required":["type","conditions"],"properties":{"type":{"const":"all"},"conditions":{"type":"array","minItems":1,"maxItems":20,"items":{"$ref":"#/$defs/Condition"}}}},"AnyGroup":{"description":"True when at least one condition is true (OR). Only used where the user's rule says 'or' (product.md §6.4).","type":"object","additionalProperties":false,"required":["type","conditions"],"properties":{"type":{"const":"any"},"conditions":{"type":"array","minItems":2,"maxItems":20,"items":{"$ref":"#/$defs/Condition"}}}},"Compare":{"type":"object","additionalProperties":false,"required":["type","left","op","right"],"properties":{"type":{"const":"compare"},"left":{"$ref":"#/$defs/Operand"},"op":{"enum":["gt","gte","lt","lte"]},"right":{"$ref":"#/$defs/Operand"}}},"Cross":{"description":"left crosses above/below right on this candle (was on the other side, or equal, on the previous candle).","type":"object","additionalProperties":false,"required":["type","left","direction","right"],"properties":{"type":{"const":"cross"},"left":{"$ref":"#/$defs/Operand"},"direction":{"enum":["above","below"]},"right":{"$ref":"#/$defs/Operand"}}},"State":{"description":"A direction indicator is currently up/down (e.g. Supertrend is green), on any candle while it holds.","type":"object","additionalProperties":false,"required":["type","ind","is"],"properties":{"type":{"const":"state"},"ind":{"$ref":"#/$defs/IndicatorId"},"is":{"enum":["up","down"]}}},"Turns":{"description":"A direction indicator flips to up/down on this candle only (e.g. Supertrend turns green).","type":"object","additionalProperties":false,"required":["type","ind","to"],"properties":{"type":{"const":"turns"},"ind":{"$ref":"#/$defs/IndicatorId"},"to":{"enum":["up","down"]}}},"Slope":{"description":"Operand is higher (up) / lower (down) now than lookback candles ago.","type":"object","additionalProperties":false,"required":["type","operand","direction","lookback"],"properties":{"type":{"const":"slope"},"operand":{"$ref":"#/$defs/Operand"},"direction":{"enum":["up","down"]},"lookback":{"type":"integer","minimum":1,"maximum":50}}},"Leg":{"type":"object","additionalProperties":false,"required":["action","option_type","expiry","strike"],"properties":{"action":{"description":"Mandatory input 2.","enum":["BUY","SELL"]},"option_type":{"description":"Mandatory input 3. SIGNAL = CE when the CE entry condition is met, PE when the PE entry condition is met (option type 'both').","enum":["CE","PE","SIGNAL"]},"expiry":{"description":"Mandatory input 6.","enum":["CURRENT_WEEKLY","NEXT_WEEKLY","MONTHLY"]},"strike":{"$ref":"#/$defs/StrikeSelection"}}},"StrikeSelection":{"oneOf":[{"title":"By moneyness (mandatory inputs 4 and 5)","type":"object","additionalProperties":false,"required":["method","moneyness","distance_pts"],"properties":{"method":{"const":"MONEYNESS"},"moneyness":{"enum":["ATM","ITM","OTM"]},"distance_pts":{"type":"number","minimum":0,"maximum":100000}}},{"title":"By delta (advanced)","type":"object","additionalProperties":false,"required":["method","target_delta"],"properties":{"method":{"const":"DELTA"},"target_delta":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1}}},{"title":"By premium (advanced)","type":"object","additionalProperties":false,"required":["method","target_premium"],"properties":{"method":{"const":"PREMIUM"},"target_premium":{"type":"number","exclusiveMinimum":0}}}]},"Entry":{"description":"Mandatory input 11. An entry happens only when the entire strategy is satisfied (product.md §7.2). Triggers present together must all hold (at_time AND the side's conditions).","type":"object","additionalProperties":false,"minProperties":1,"properties":{"at_time":{"description":"Fixed entry time; with conditions it is an additional requirement.","$ref":"#/$defs/Time"},"ce":{"description":"Conditions that open CE (and SIGNAL-as-CE) legs.","$ref":"#/$defs/Condition"},"pe":{"description":"Conditions that open PE (and SIGNAL-as-PE) legs.","$ref":"#/$defs/Condition"},"all_legs":{"description":"Conditions that open all legs together (multi-leg, non-directional).","$ref":"#/$defs/Condition"}}},"Exit":{"description":"Mandatory inputs 12 and 13. INTRADAY: the square-off time is the time exit. POSITIONAL: needs target, time_exit, hold_to_expiry or advanced.exit_after_candles, chosen by the user (SEM-07). A position still open on its expiry day is settled at intrinsic value. For multi-leg strategies, stop_loss and target apply to the combined position.","type":"object","additionalProperties":false,"required":["stop_loss"],"properties":{"stop_loss":{"oneOf":[{"title":"Percent of entry premium","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"PCT_PREMIUM"},"value":{"type":"number","exclusiveMinimum":0,"maximum":1000}}},{"title":"Premium points","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"POINTS"},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Trigger candle (advanced): low (bought) / high (sold) of the trigger candle on the modelled option premium","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"TRIGGER_CANDLE"}}}]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"enum":["PCT_PREMIUM","POINTS"]},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Risk-reward (advanced): target distance = value × stop distance","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"RR"},"value":{"type":"number","exclusiveMinimum":0,"maximum":20}}}]},"time_exit":{"type":"object","additionalProperties":false,"required":["at","on"],"properties":{"at":{"$ref":"#/$defs/Time"},"on":{"enum":["ENTRY_DAY","EXPIRY_DAY"]}}},"hold_to_expiry":{"description":"Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen.","const":true}}},"Advanced":{"description":"Every property is OFF when absent. No property has a default (constitution §3).","type":"object","additionalProperties":false,"properties":{"sl_cap_pts":{"description":"Maximum stop distance in premium points.","type":"number","exclusiveMinimum":0},"trail_to_cost_at_r":{"description":"Move stop to entry price once profit reaches this multiple of the initial risk.","type":"number","exclusiveMinimum":0,"maximum":20},"exit_after_candles":{"description":"Exit if neither stop nor target is hit within N candles after entry.","type":"integer","minimum":1,"maximum":500},"vix_sizing":{"description":"Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot.","type":"object","additionalProperties":false,"required":["measured_at","bands"],"properties":{"measured_at":{"description":"DAY_OPEN = the day's first VIX value (09:15; used for 'pre-market' rules). ENTRY = VIX at the entry minute.","enum":["DAY_OPEN","ENTRY"]},"bands":{"type":"array","minItems":1,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["size_pct"],"properties":{"vix_from":{"description":"Inclusive lower edge; absent = no lower edge.","type":"number","minimum":0},"vix_to":{"description":"Exclusive upper edge; absent = no upper edge.","type":"number","exclusiveMinimum":0},"size_pct":{"type":"number","exclusiveMinimum":0,"maximum":1000}}}}}},"entry_windows":{"description":"New entries only inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"no_entry_windows":{"description":"No new entries inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"expiry_day_cutoff":{"description":"No new entries at or after this time on the traded contract's expiry day.","$ref":"#/$defs/Time"},"daily":{"type":"object","additionalProperties":false,"minProperties":1,"properties":{"max_trades":{"type":"integer","minimum":1,"maximum":100},"stop_after_sl_hits":{"type":"integer","minimum":1,"maximum":100},"max_daily_loss_rupees":{"type":"number","exclusiveMinimum":0}}}}}},"examples":[{"schema_version":"1.0","name":"Simple Trend Follower","origin":"TEMPLATE","template_id":"simple-trend-follower","underlying":"NIFTY50","timeframe_min":15,"holding":"INTRADAY","position":{"lots":1,"lot_size":65},"indicators":{"ema9":{"type":"EMA","period":9,"source":"close"},"ema21":{"type":"EMA","period":21,"source":"close"}},"legs":[{"action":"BUY","option_type":"SIGNAL","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ATM","distance_pts":0}}],"entry":{"ce":{"type":"cross","left":{"ind":"ema9","output":"value"},"direction":"above","right":{"ind":"ema21","output":"value"}},"pe":{"type":"cross","left":{"ind":"ema9","output":"value"},"direction":"below","right":{"ind":"ema21","output":"value"}}},"exit":{"stop_loss":{"type":"PCT_PREMIUM","value":30},"target":{"type":"PCT_PREMIUM","value":50}},"advanced":{"entry_windows":[{"from":"09:30","to":"14:30"}],"daily":{"max_trades":2}}},{"schema_version":"1.0","name":"Nifty 15-min weekly option buying (sample, with example answers to its vague rules)","origin":"UPLOAD","underlying":"NIFTY50","timeframe_min":15,"holding":"INTRADAY","position":{"lots":2,"lot_size":65},"indicators":{"st":{"type":"SUPERTREND","period":10,"multiplier":2},"ema9":{"type":"EMA","period":9,"source":"close"},"ema21":{"type":"EMA","period":21,"source":"close"},"rsi14":{"type":"RSI","period":14},"adx14":{"type":"ADX","period":14}},"legs":[{"action":"BUY","option_type":"SIGNAL","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ITM","distance_pts":100}}],"entry":{"ce":{"type":"all","conditions":[{"type":"turns","ind":"st","to":"up"},{"type":"compare","left":{"ind":"ema9","output":"value"},"op":"gt","right":{"ind":"ema21","output":"value"}},{"type":"compare","left":{"price":"close"},"op":"gt","right":{"ind":"ema9","output":"value","offset":{"pts":10}}},{"type":"compare","left":{"price":"close"},"op":"gt","right":{"ind":"ema21","output":"value","offset":{"pts":10}}},{"type":"compare","left":{"ind":"rsi14","output":"value"},"op":"gt","right":{"const":55}},{"type":"any","conditions":[{"type":"all","conditions":[{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":20}},{"type":"slope","operand":{"ind":"adx14","output":"value"},"direction":"up","lookback":1}]},{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":30}}]}]},"pe":{"type":"all","conditions":[{"type":"turns","ind":"st","to":"down"},{"type":"compare","left":{"ind":"ema9","output":"value"},"op":"lt","right":{"ind":"ema21","output":"value"}},{"type":"compare","left":{"price":"close"},"op":"lt","right":{"ind":"ema9","output":"value","offset":{"pts":-10}}},{"type":"compare","left":{"price":"close"},"op":"lt","right":{"ind":"ema21","output":"value","offset":{"pts":-10}}},{"type":"compare","left":{"ind":"rsi14","output":"value"},"op":"lt","right":{"const":45}},{"type":"any","conditions":[{"type":"all","conditions":[{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":20}},{"type":"slope","operand":{"ind":"adx14","output":"value"},"direction":"up","lookback":1}]},{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":30}}]}]}},"exit":{"stop_loss":{"type":"TRIGGER_CANDLE"},"target":{"type":"RR","value":1.5}},"advanced":{"sl_cap_pts":30,"trail_to_cost_at_r":1,"exit_after_candles":4,"vix_sizing":{"measured_at":"DAY_OPEN","bands":[{"vix_to":12,"size_pct":50},{"vix_from":12,"vix_to":18,"size_pct":100},{"vix_from":18,"size_pct":50}]},"no_entry_windows":[{"from":"11:00","to":"13:30"}],"expiry_day_cutoff":"12:00","daily":{"max_trades":2,"stop_after_sl_hits":2}}},{"schema_version":"1.0","name":"Simple short straddle","origin":"TEMPLATE","template_id":"simple-short-straddle","underlying":"NIFTY50","timeframe_min":5,"holding":"INTRADAY","position":{"lots":1,"lot_size":65},"indicators":{},"legs":[{"action":"SELL","option_type":"CE","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ATM","distance_pts":0}},{"action":"SELL","option_type":"PE","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ATM","distance_pts":0}}],"entry":{"at_time":"09:20"},"exit":{"stop_loss":{"type":"PCT_PREMIUM","value":30}}}]};
+const schema31 = {"$schema":"https://json-schema.org/draft/2020-12/schema","$id":"https://nikasha.local/contracts/strategy.schema.json","title":"Strategy","description":"Internal strategy format. Never shown to users (constitution §4). Structural rules live here; rules JSON Schema cannot express are in strategy-rules.md (SEM-xx) and are enforced identically by the web app and the engine. Mandatory inputs (product.md §6.1) are the required top-level fields. Every advanced option (product.md §6.2) is OFF when absent and has no default.","$comment":"Advanced options and where they live: SL cap → advanced.sl_cap_pts; trigger-candle SL → exit.stop_loss.type TRIGGER_CANDLE; R:R target → exit.target.type RR; trail to cost → advanced.trail_to_cost_at_r or advanced.trail_to_cost_at_pts; exit conditions → exit.exit_when; index-level target → exit.target.type SPOT_LEVEL; partial exit → advanced.partial_exit; exit after N candles → advanced.exit_after_candles; VIX sizing → advanced.vix_sizing; entry/no-entry windows → advanced.entry_windows / advanced.no_entry_windows; expiry-day cutoff → advanced.expiry_day_cutoff; daily limits → advanced.daily; 1–4 legs → legs (more than one leg); strike by delta/premium → legs[].strike.method DELTA / PREMIUM.","type":"object","additionalProperties":false,"required":["schema_version","underlying","timeframe_min","holding","position","indicators","legs","entry","exit"],"properties":{"schema_version":{"const":"1.0"},"name":{"type":"string","minLength":1,"maxLength":120},"origin":{"description":"Which entry path produced this strategy. Informational only; does not change evaluation.","enum":["TEMPLATE","BUILDER","UPLOAD"]},"template_id":{"type":"string","pattern":"^[a-z0-9-]{1,40}$"},"underlying":{"description":"Instrument symbol from the instrument registry (mandatory input 1).","type":"string","pattern":"^[A-Z0-9_]{2,20}$"},"timeframe_min":{"description":"Candle timeframe in minutes (mandatory input 7). Also limited by the instrument profile's allowed_timeframes_min.","enum":[1,3,5,15,30,60,240]},"holding":{"description":"Mandatory input 8. INTRADAY positions are squared off at the profile's intraday_squareoff time.","enum":["INTRADAY","POSITIONAL"]},"position":{"description":"Mandatory inputs 9 and 10. Applied uniformly to every trade in the backtest.","type":"object","additionalProperties":false,"required":["lots","lot_size"],"properties":{"lots":{"type":"integer","minimum":1,"maximum":1000},"lot_size":{"type":"integer","minimum":1,"maximum":100000}}},"indicators":{"description":"Indicator instances referenced by conditions, keyed by an id such as ema9. May be empty for fixed-time strategies.","type":"object","propertyNames":{"pattern":"^[a-z][a-z0-9_]{0,31}$"},"additionalProperties":{"$ref":"#/$defs/Indicator"},"maxProperties":20},"legs":{"description":"Mandatory inputs 2–6 (action, option type, moneyness, distance, expiry). More than one leg is an advanced option.","type":"array","minItems":1,"maxItems":4,"items":{"$ref":"#/$defs/Leg"}},"entry":{"$ref":"#/$defs/Entry"},"exit":{"$ref":"#/$defs/Exit"},"advanced":{"$ref":"#/$defs/Advanced"}},"$defs":{"Time":{"description":"Clock time HH:MM, IST.","type":"string","pattern":"^([01][0-9]|2[0-3]):[0-5][0-9]$"},"TimeWindow":{"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/$defs/Time"},"to":{"$ref":"#/$defs/Time"}}},"IndicatorId":{"type":"string","pattern":"^[a-z][a-z0-9_]{0,31}$"},"PriceField":{"enum":["open","high","low","close"]},"Indicator":{"oneOf":[{"title":"Moving average (EMA or SMA)","type":"object","additionalProperties":false,"required":["type","period","source"],"properties":{"type":{"enum":["EMA","SMA"]},"period":{"type":"integer","minimum":1,"maximum":500},"source":{"$ref":"#/$defs/PriceField"}}},{"title":"RSI or ADX","description":"RSI outputs: value. ADX outputs: value (ADX), plus_di, minus_di.","type":"object","additionalProperties":false,"required":["type","period"],"properties":{"type":{"enum":["RSI","ADX"]},"period":{"type":"integer","minimum":2,"maximum":200}}},{"title":"Supertrend","description":"Outputs: value (the Supertrend line) and direction (up = green, down = red), used by state/turns conditions.","type":"object","additionalProperties":false,"required":["type","period","multiplier"],"properties":{"type":{"const":"SUPERTREND"},"period":{"type":"integer","minimum":1,"maximum":200},"multiplier":{"type":"number","exclusiveMinimum":0,"maximum":10}}},{"title":"MACD","description":"Outputs: value (MACD line), signal, hist.","type":"object","additionalProperties":false,"required":["type","fast","slow","signal"],"properties":{"type":{"const":"MACD"},"fast":{"type":"integer","minimum":1,"maximum":200},"slow":{"type":"integer","minimum":2,"maximum":400},"signal":{"type":"integer","minimum":1,"maximum":200}}},{"title":"Bollinger Bands","description":"Outputs: upper, middle, lower.","type":"object","additionalProperties":false,"required":["type","period","stddev","source"],"properties":{"type":{"const":"BBANDS"},"period":{"type":"integer","minimum":2,"maximum":500},"stddev":{"type":"number","exclusiveMinimum":0,"maximum":5},"source":{"$ref":"#/$defs/PriceField"}}},{"title":"Opening range","description":"Outputs: high, low — of the session's first `minutes` minutes; empty on candles that close before the range ends (REQ-ENG-48).","type":"object","additionalProperties":false,"required":["type","minutes"],"properties":{"type":{"const":"OPENING_RANGE"},"minutes":{"type":"integer","minimum":5,"maximum":120}}},{"title":"Daily pivots and CPR","description":"Outputs: p, tc, bc, r1, r2, r3, s1, s2, s3, cpr_width (points), cpr_width_pct — classic floor pivots from the previous trading day's session high, low and close (REQ-ENG-49).","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"PIVOTS"}}}]},"Offset":{"description":"Shifts an operand, e.g. EMA 21 + 10 points, to express thresholds such as 'closes decisively above'.","oneOf":[{"type":"object","additionalProperties":false,"required":["pts"],"properties":{"pts":{"type":"number","minimum":-100000,"maximum":100000}}},{"type":"object","additionalProperties":false,"required":["pct"],"properties":{"pct":{"type":"number","minimum":-100,"maximum":100}}}]},"Operand":{"oneOf":[{"title":"Indicator output","type":"object","additionalProperties":false,"required":["ind","output"],"properties":{"ind":{"$ref":"#/$defs/IndicatorId"},"output":{"enum":["value","signal","hist","upper","middle","lower","plus_di","minus_di","high","low","p","tc","bc","r1","r2","r3","s1","s2","s3","cpr_width","cpr_width_pct"]},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Underlying candle price","type":"object","additionalProperties":false,"required":["price"],"properties":{"price":{"$ref":"#/$defs/PriceField"},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Volatility index value on the candle","type":"object","additionalProperties":false,"required":["vix"],"properties":{"vix":{"enum":["open","close"]}}},{"title":"Candle size in index points: range = high − low, body = |close − open| (REQ-ENG-50)","type":"object","additionalProperties":false,"required":["candle"],"properties":{"candle":{"enum":["range","body"]}}},{"title":"Constant number","type":"object","additionalProperties":false,"required":["const"],"properties":{"const":{"type":"number"}}}]},"Condition":{"description":"Evaluated on each candle close. Groups nest (max depth 4, SEM-15).","oneOf":[{"$ref":"#/$defs/AllGroup"},{"$ref":"#/$defs/AnyGroup"},{"$ref":"#/$defs/Compare"},{"$ref":"#/$defs/Cross"},{"$ref":"#/$defs/State"},{"$ref":"#/$defs/Turns"},{"$ref":"#/$defs/Slope"}]},"AllGroup":{"description":"True when every condition is true (AND).","type":"object","additionalProperties":false,"required":["type","conditions"],"properties":{"type":{"const":"all"},"conditions":{"type":"array","minItems":1,"maxItems":20,"items":{"$ref":"#/$defs/Condition"}}}},"AnyGroup":{"description":"True when at least one condition is true (OR). Only used where the user's rule says 'or' (product.md §6.4).","type":"object","additionalProperties":false,"required":["type","conditions"],"properties":{"type":{"const":"any"},"conditions":{"type":"array","minItems":2,"maxItems":20,"items":{"$ref":"#/$defs/Condition"}}}},"Compare":{"type":"object","additionalProperties":false,"required":["type","left","op","right"],"properties":{"type":{"const":"compare"},"left":{"$ref":"#/$defs/Operand"},"op":{"enum":["gt","gte","lt","lte"]},"right":{"$ref":"#/$defs/Operand"}}},"Cross":{"description":"left crosses above/below right on this candle (was on the other side, or equal, on the previous candle).","type":"object","additionalProperties":false,"required":["type","left","direction","right"],"properties":{"type":{"const":"cross"},"left":{"$ref":"#/$defs/Operand"},"direction":{"enum":["above","below"]},"right":{"$ref":"#/$defs/Operand"}}},"State":{"description":"A direction indicator is currently up/down (e.g. Supertrend is green), on any candle while it holds.","type":"object","additionalProperties":false,"required":["type","ind","is"],"properties":{"type":{"const":"state"},"ind":{"$ref":"#/$defs/IndicatorId"},"is":{"enum":["up","down"]}}},"Turns":{"description":"A direction indicator flips to up/down on this candle only (e.g. Supertrend turns green).","type":"object","additionalProperties":false,"required":["type","ind","to"],"properties":{"type":{"const":"turns"},"ind":{"$ref":"#/$defs/IndicatorId"},"to":{"enum":["up","down"]}}},"Slope":{"description":"Operand is higher (up) / lower (down) now than lookback candles ago.","type":"object","additionalProperties":false,"required":["type","operand","direction","lookback"],"properties":{"type":{"const":"slope"},"operand":{"$ref":"#/$defs/Operand"},"direction":{"enum":["up","down"]},"lookback":{"type":"integer","minimum":1,"maximum":50}}},"Leg":{"type":"object","additionalProperties":false,"required":["action","option_type","expiry","strike"],"properties":{"action":{"description":"Mandatory input 2.","enum":["BUY","SELL"]},"option_type":{"description":"Mandatory input 3. SIGNAL = CE when the CE entry condition is met, PE when the PE entry condition is met (option type 'both').","enum":["CE","PE","SIGNAL"]},"expiry":{"description":"Mandatory input 6.","enum":["CURRENT_WEEKLY","NEXT_WEEKLY","MONTHLY"]},"strike":{"$ref":"#/$defs/StrikeSelection"}}},"StrikeSelection":{"oneOf":[{"title":"By moneyness (mandatory inputs 4 and 5)","type":"object","additionalProperties":false,"required":["method","moneyness","distance_pts"],"properties":{"method":{"const":"MONEYNESS"},"moneyness":{"enum":["ATM","ITM","OTM"]},"distance_pts":{"type":"number","minimum":0,"maximum":100000}}},{"title":"By delta (advanced)","type":"object","additionalProperties":false,"required":["method","target_delta"],"properties":{"method":{"const":"DELTA"},"target_delta":{"type":"number","exclusiveMinimum":0,"exclusiveMaximum":1}}},{"title":"By premium (advanced)","type":"object","additionalProperties":false,"required":["method","target_premium"],"properties":{"method":{"const":"PREMIUM"},"target_premium":{"type":"number","exclusiveMinimum":0}}}]},"Entry":{"description":"Mandatory input 11. An entry happens only when the entire strategy is satisfied (product.md §7.2). Triggers present together must all hold (at_time AND the side's conditions).","type":"object","additionalProperties":false,"minProperties":1,"properties":{"at_time":{"description":"Fixed entry time; with conditions it is an additional requirement.","$ref":"#/$defs/Time"},"ce":{"description":"Conditions that open CE (and SIGNAL-as-CE) legs.","$ref":"#/$defs/Condition"},"pe":{"description":"Conditions that open PE (and SIGNAL-as-PE) legs.","$ref":"#/$defs/Condition"},"all_legs":{"description":"Conditions that open all legs together (multi-leg, non-directional).","$ref":"#/$defs/Condition"}}},"Exit":{"description":"Mandatory inputs 12 and 13. INTRADAY: the square-off time is the time exit. POSITIONAL: needs target, time_exit, hold_to_expiry or advanced.exit_after_candles, chosen by the user (SEM-07). A position still open on its expiry day is settled at intrinsic value. For multi-leg strategies, stop_loss and target apply to the combined position.","type":"object","additionalProperties":false,"required":["stop_loss"],"properties":{"stop_loss":{"oneOf":[{"title":"Percent of entry premium","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"PCT_PREMIUM"},"value":{"type":"number","exclusiveMinimum":0,"maximum":1000}}},{"title":"Premium points","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"POINTS"},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Trigger candle (advanced): low (bought) / high (sold) of the trigger candle on the modelled option premium","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"TRIGGER_CANDLE"}}}]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"enum":["PCT_PREMIUM","POINTS"]},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Risk-reward (advanced): target distance = value × stop distance","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"RR"},"value":{"type":"number","exclusiveMinimum":0,"maximum":20}}},{"title":"Index level (advanced, single leg): exit when the index reaches the level for the trade's side (REQ-ENG-53, 54; SEM-22, 23)","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"SPOT_LEVEL"},"ce":{"$ref":"#/$defs/Operand"},"pe":{"$ref":"#/$defs/Operand"}}}]},"exit_when":{"description":"Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24).","type":"object","additionalProperties":false,"minProperties":1,"properties":{"ce":{"$ref":"#/$defs/Condition"},"pe":{"$ref":"#/$defs/Condition"},"all_legs":{"$ref":"#/$defs/Condition"}}},"time_exit":{"type":"object","additionalProperties":false,"required":["at","on"],"properties":{"at":{"$ref":"#/$defs/Time"},"on":{"enum":["ENTRY_DAY","EXPIRY_DAY"]}}},"hold_to_expiry":{"description":"Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen.","const":true}}},"Advanced":{"description":"Every property is OFF when absent. No property has a default (constitution §3).","type":"object","additionalProperties":false,"properties":{"sl_cap_pts":{"description":"Maximum stop distance in premium points.","type":"number","exclusiveMinimum":0},"trail_to_cost_at_r":{"description":"Move stop to entry price once profit reaches this multiple of the initial risk.","type":"number","exclusiveMinimum":0,"maximum":20},"trail_to_cost_at_pts":{"description":"Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21).","type":"number","exclusiveMinimum":0,"maximum":100000},"partial_exit":{"description":"Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25).","type":"object","additionalProperties":false,"required":["percent","when","then_stop"],"properties":{"percent":{"description":"Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept).","type":"integer","minimum":1,"maximum":99},"when":{"oneOf":[{"title":"Premium gain","type":"object","additionalProperties":false,"required":["type","gain"],"properties":{"type":{"const":"PREMIUM_GAIN"},"gain":{"type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"enum":["PCT_PREMIUM","POINTS","RR"]},"value":{"type":"number","exclusiveMinimum":0}}}}},{"title":"Index level (single leg)","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"SPOT_LEVEL"},"ce":{"$ref":"#/$defs/Operand"},"pe":{"$ref":"#/$defs/Operand"}}}]},"then_stop":{"description":"UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg).","enum":["UNCHANGED","COST","PARTIAL_CANDLE"]}}},"exit_after_candles":{"description":"Exit if neither stop nor target is hit within N candles after entry.","type":"integer","minimum":1,"maximum":500},"vix_sizing":{"description":"Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot.","type":"object","additionalProperties":false,"required":["measured_at","bands"],"properties":{"measured_at":{"description":"DAY_OPEN = the day's first VIX value (09:15; used for 'pre-market' rules). ENTRY = VIX at the entry minute.","enum":["DAY_OPEN","ENTRY"]},"bands":{"type":"array","minItems":1,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["size_pct"],"properties":{"vix_from":{"description":"Inclusive lower edge; absent = no lower edge.","type":"number","minimum":0},"vix_to":{"description":"Exclusive upper edge; absent = no upper edge.","type":"number","exclusiveMinimum":0},"size_pct":{"type":"number","exclusiveMinimum":0,"maximum":1000}}}}}},"entry_windows":{"description":"New entries only inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"no_entry_windows":{"description":"No new entries inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"expiry_day_cutoff":{"description":"No new entries at or after this time on the traded contract's expiry day.","$ref":"#/$defs/Time"},"daily":{"type":"object","additionalProperties":false,"minProperties":1,"properties":{"max_trades":{"type":"integer","minimum":1,"maximum":100},"stop_after_sl_hits":{"type":"integer","minimum":1,"maximum":100},"max_daily_loss_rupees":{"type":"number","exclusiveMinimum":0}}}}}},"examples":[{"schema_version":"1.0","name":"Simple Trend Follower","origin":"TEMPLATE","template_id":"simple-trend-follower","underlying":"NIFTY50","timeframe_min":15,"holding":"INTRADAY","position":{"lots":1,"lot_size":65},"indicators":{"ema9":{"type":"EMA","period":9,"source":"close"},"ema21":{"type":"EMA","period":21,"source":"close"}},"legs":[{"action":"BUY","option_type":"SIGNAL","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ATM","distance_pts":0}}],"entry":{"ce":{"type":"cross","left":{"ind":"ema9","output":"value"},"direction":"above","right":{"ind":"ema21","output":"value"}},"pe":{"type":"cross","left":{"ind":"ema9","output":"value"},"direction":"below","right":{"ind":"ema21","output":"value"}}},"exit":{"stop_loss":{"type":"PCT_PREMIUM","value":30},"target":{"type":"PCT_PREMIUM","value":50}},"advanced":{"entry_windows":[{"from":"09:30","to":"14:30"}],"daily":{"max_trades":2}}},{"schema_version":"1.0","name":"Nifty 15-min weekly option buying (sample, with example answers to its vague rules)","origin":"UPLOAD","underlying":"NIFTY50","timeframe_min":15,"holding":"INTRADAY","position":{"lots":2,"lot_size":65},"indicators":{"st":{"type":"SUPERTREND","period":10,"multiplier":2},"ema9":{"type":"EMA","period":9,"source":"close"},"ema21":{"type":"EMA","period":21,"source":"close"},"rsi14":{"type":"RSI","period":14},"adx14":{"type":"ADX","period":14}},"legs":[{"action":"BUY","option_type":"SIGNAL","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ITM","distance_pts":100}}],"entry":{"ce":{"type":"all","conditions":[{"type":"turns","ind":"st","to":"up"},{"type":"compare","left":{"ind":"ema9","output":"value"},"op":"gt","right":{"ind":"ema21","output":"value"}},{"type":"compare","left":{"price":"close"},"op":"gt","right":{"ind":"ema9","output":"value","offset":{"pts":10}}},{"type":"compare","left":{"price":"close"},"op":"gt","right":{"ind":"ema21","output":"value","offset":{"pts":10}}},{"type":"compare","left":{"ind":"rsi14","output":"value"},"op":"gt","right":{"const":55}},{"type":"any","conditions":[{"type":"all","conditions":[{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":20}},{"type":"slope","operand":{"ind":"adx14","output":"value"},"direction":"up","lookback":1}]},{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":30}}]}]},"pe":{"type":"all","conditions":[{"type":"turns","ind":"st","to":"down"},{"type":"compare","left":{"ind":"ema9","output":"value"},"op":"lt","right":{"ind":"ema21","output":"value"}},{"type":"compare","left":{"price":"close"},"op":"lt","right":{"ind":"ema9","output":"value","offset":{"pts":-10}}},{"type":"compare","left":{"price":"close"},"op":"lt","right":{"ind":"ema21","output":"value","offset":{"pts":-10}}},{"type":"compare","left":{"ind":"rsi14","output":"value"},"op":"lt","right":{"const":45}},{"type":"any","conditions":[{"type":"all","conditions":[{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":20}},{"type":"slope","operand":{"ind":"adx14","output":"value"},"direction":"up","lookback":1}]},{"type":"compare","left":{"ind":"adx14","output":"value"},"op":"gt","right":{"const":30}}]}]}},"exit":{"stop_loss":{"type":"TRIGGER_CANDLE"},"target":{"type":"RR","value":1.5}},"advanced":{"sl_cap_pts":30,"trail_to_cost_at_r":1,"exit_after_candles":4,"vix_sizing":{"measured_at":"DAY_OPEN","bands":[{"vix_to":12,"size_pct":50},{"vix_from":12,"vix_to":18,"size_pct":100},{"vix_from":18,"size_pct":50}]},"no_entry_windows":[{"from":"11:00","to":"13:30"}],"expiry_day_cutoff":"12:00","daily":{"max_trades":2,"stop_after_sl_hits":2}}},{"schema_version":"1.0","name":"Simple short straddle","origin":"TEMPLATE","template_id":"simple-short-straddle","underlying":"NIFTY50","timeframe_min":5,"holding":"INTRADAY","position":{"lots":1,"lot_size":65},"indicators":{},"legs":[{"action":"SELL","option_type":"CE","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ATM","distance_pts":0}},{"action":"SELL","option_type":"PE","expiry":"CURRENT_WEEKLY","strike":{"method":"MONEYNESS","moneyness":"ATM","distance_pts":0}}],"entry":{"at_time":"09:20"},"exit":{"stop_loss":{"type":"PCT_PREMIUM","value":30}}}]};
 const func1 = Object.prototype.hasOwnProperty;
 const func2 = (function ucs2length(str) { const len = str.length; let length = 0; let pos = 0; let value; while (pos < len) { length++; value = str.charCodeAt(pos++); if (value >= 0xd800 && value <= 0xdbff && pos < len) { value = str.charCodeAt(pos); if ((value & 0xfc00) === 0xdc00) pos++; } } return length; });
 const pattern4 = new RegExp("^[a-z0-9-]{1,40}$", "u");
 const pattern5 = new RegExp("^[A-Z0-9_]{2,20}$", "u");
 const pattern6 = new RegExp("^[a-z][a-z0-9_]{0,31}$", "u");
-const schema32 = {"oneOf":[{"title":"Moving average (EMA or SMA)","type":"object","additionalProperties":false,"required":["type","period","source"],"properties":{"type":{"enum":["EMA","SMA"]},"period":{"type":"integer","minimum":1,"maximum":500},"source":{"$ref":"#/$defs/PriceField"}}},{"title":"RSI or ADX","description":"RSI outputs: value. ADX outputs: value (ADX), plus_di, minus_di.","type":"object","additionalProperties":false,"required":["type","period"],"properties":{"type":{"enum":["RSI","ADX"]},"period":{"type":"integer","minimum":2,"maximum":200}}},{"title":"Supertrend","description":"Outputs: value (the Supertrend line) and direction (up = green, down = red), used by state/turns conditions.","type":"object","additionalProperties":false,"required":["type","period","multiplier"],"properties":{"type":{"const":"SUPERTREND"},"period":{"type":"integer","minimum":1,"maximum":200},"multiplier":{"type":"number","exclusiveMinimum":0,"maximum":10}}},{"title":"MACD","description":"Outputs: value (MACD line), signal, hist.","type":"object","additionalProperties":false,"required":["type","fast","slow","signal"],"properties":{"type":{"const":"MACD"},"fast":{"type":"integer","minimum":1,"maximum":200},"slow":{"type":"integer","minimum":2,"maximum":400},"signal":{"type":"integer","minimum":1,"maximum":200}}},{"title":"Bollinger Bands","description":"Outputs: upper, middle, lower.","type":"object","additionalProperties":false,"required":["type","period","stddev","source"],"properties":{"type":{"const":"BBANDS"},"period":{"type":"integer","minimum":2,"maximum":500},"stddev":{"type":"number","exclusiveMinimum":0,"maximum":5},"source":{"$ref":"#/$defs/PriceField"}}}]};
+const schema32 = {"oneOf":[{"title":"Moving average (EMA or SMA)","type":"object","additionalProperties":false,"required":["type","period","source"],"properties":{"type":{"enum":["EMA","SMA"]},"period":{"type":"integer","minimum":1,"maximum":500},"source":{"$ref":"#/$defs/PriceField"}}},{"title":"RSI or ADX","description":"RSI outputs: value. ADX outputs: value (ADX), plus_di, minus_di.","type":"object","additionalProperties":false,"required":["type","period"],"properties":{"type":{"enum":["RSI","ADX"]},"period":{"type":"integer","minimum":2,"maximum":200}}},{"title":"Supertrend","description":"Outputs: value (the Supertrend line) and direction (up = green, down = red), used by state/turns conditions.","type":"object","additionalProperties":false,"required":["type","period","multiplier"],"properties":{"type":{"const":"SUPERTREND"},"period":{"type":"integer","minimum":1,"maximum":200},"multiplier":{"type":"number","exclusiveMinimum":0,"maximum":10}}},{"title":"MACD","description":"Outputs: value (MACD line), signal, hist.","type":"object","additionalProperties":false,"required":["type","fast","slow","signal"],"properties":{"type":{"const":"MACD"},"fast":{"type":"integer","minimum":1,"maximum":200},"slow":{"type":"integer","minimum":2,"maximum":400},"signal":{"type":"integer","minimum":1,"maximum":200}}},{"title":"Bollinger Bands","description":"Outputs: upper, middle, lower.","type":"object","additionalProperties":false,"required":["type","period","stddev","source"],"properties":{"type":{"const":"BBANDS"},"period":{"type":"integer","minimum":2,"maximum":500},"stddev":{"type":"number","exclusiveMinimum":0,"maximum":5},"source":{"$ref":"#/$defs/PriceField"}}},{"title":"Opening range","description":"Outputs: high, low — of the session's first `minutes` minutes; empty on candles that close before the range ends (REQ-ENG-48).","type":"object","additionalProperties":false,"required":["type","minutes"],"properties":{"type":{"const":"OPENING_RANGE"},"minutes":{"type":"integer","minimum":5,"maximum":120}}},{"title":"Daily pivots and CPR","description":"Outputs: p, tc, bc, r1, r2, r3, s1, s2, s3, cpr_width (points), cpr_width_pct — classic floor pivots from the previous trading day's session high, low and close (REQ-ENG-49).","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"PIVOTS"}}}]};
 const schema33 = {"enum":["open","high","low","close"]};
 
 function validate21(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
@@ -772,17 +772,184 @@ if(props0 !== true){
 props0 = true;
 }
 }
-}
-}
-}
-}
-if(!valid0){
-const err60 = {instancePath,schemaPath:"#/oneOf",keyword:"oneOf",params:{passingSchemas: passing0},message:"must match exactly one schema in oneOf"};
+const _errs43 = errors;
+if(data && typeof data == "object" && !Array.isArray(data)){
+if(data.type === undefined){
+const err60 = {instancePath,schemaPath:"#/oneOf/5/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
 if(vErrors === null){
 vErrors = [err60];
 }
 else {
 vErrors.push(err60);
+}
+errors++;
+}
+if(data.minutes === undefined){
+const err61 = {instancePath,schemaPath:"#/oneOf/5/required",keyword:"required",params:{missingProperty: "minutes"},message:"must have required property '"+"minutes"+"'"};
+if(vErrors === null){
+vErrors = [err61];
+}
+else {
+vErrors.push(err61);
+}
+errors++;
+}
+for(const key5 in data){
+if(!((key5 === "type") || (key5 === "minutes"))){
+const err62 = {instancePath,schemaPath:"#/oneOf/5/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key5},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err62];
+}
+else {
+vErrors.push(err62);
+}
+errors++;
+}
+}
+if(data.type !== undefined){
+if("OPENING_RANGE" !== data.type){
+const err63 = {instancePath:instancePath+"/type",schemaPath:"#/oneOf/5/properties/type/const",keyword:"const",params:{allowedValue: "OPENING_RANGE"},message:"must be equal to constant"};
+if(vErrors === null){
+vErrors = [err63];
+}
+else {
+vErrors.push(err63);
+}
+errors++;
+}
+}
+if(data.minutes !== undefined){
+let data17 = data.minutes;
+if(!((typeof data17 == "number") && (!(data17 % 1) && !isNaN(data17)))){
+const err64 = {instancePath:instancePath+"/minutes",schemaPath:"#/oneOf/5/properties/minutes/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
+if(vErrors === null){
+vErrors = [err64];
+}
+else {
+vErrors.push(err64);
+}
+errors++;
+}
+if(typeof data17 == "number"){
+if(data17 > 120 || isNaN(data17)){
+const err65 = {instancePath:instancePath+"/minutes",schemaPath:"#/oneOf/5/properties/minutes/maximum",keyword:"maximum",params:{comparison: "<=", limit: 120},message:"must be <= 120"};
+if(vErrors === null){
+vErrors = [err65];
+}
+else {
+vErrors.push(err65);
+}
+errors++;
+}
+if(data17 < 5 || isNaN(data17)){
+const err66 = {instancePath:instancePath+"/minutes",schemaPath:"#/oneOf/5/properties/minutes/minimum",keyword:"minimum",params:{comparison: ">=", limit: 5},message:"must be >= 5"};
+if(vErrors === null){
+vErrors = [err66];
+}
+else {
+vErrors.push(err66);
+}
+errors++;
+}
+}
+}
+}
+else {
+const err67 = {instancePath,schemaPath:"#/oneOf/5/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err67];
+}
+else {
+vErrors.push(err67);
+}
+errors++;
+}
+var _valid0 = _errs43 === errors;
+if(_valid0 && valid0){
+valid0 = false;
+passing0 = [passing0, 5];
+}
+else {
+if(_valid0){
+valid0 = true;
+passing0 = 5;
+if(props0 !== true){
+props0 = true;
+}
+}
+const _errs49 = errors;
+if(data && typeof data == "object" && !Array.isArray(data)){
+if(data.type === undefined){
+const err68 = {instancePath,schemaPath:"#/oneOf/6/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
+if(vErrors === null){
+vErrors = [err68];
+}
+else {
+vErrors.push(err68);
+}
+errors++;
+}
+for(const key6 in data){
+if(!(key6 === "type")){
+const err69 = {instancePath,schemaPath:"#/oneOf/6/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err69];
+}
+else {
+vErrors.push(err69);
+}
+errors++;
+}
+}
+if(data.type !== undefined){
+if("PIVOTS" !== data.type){
+const err70 = {instancePath:instancePath+"/type",schemaPath:"#/oneOf/6/properties/type/const",keyword:"const",params:{allowedValue: "PIVOTS"},message:"must be equal to constant"};
+if(vErrors === null){
+vErrors = [err70];
+}
+else {
+vErrors.push(err70);
+}
+errors++;
+}
+}
+}
+else {
+const err71 = {instancePath,schemaPath:"#/oneOf/6/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err71];
+}
+else {
+vErrors.push(err71);
+}
+errors++;
+}
+var _valid0 = _errs49 === errors;
+if(_valid0 && valid0){
+valid0 = false;
+passing0 = [passing0, 6];
+}
+else {
+if(_valid0){
+valid0 = true;
+passing0 = 6;
+if(props0 !== true){
+props0 = true;
+}
+}
+}
+}
+}
+}
+}
+}
+if(!valid0){
+const err72 = {instancePath,schemaPath:"#/oneOf",keyword:"oneOf",params:{passingSchemas: passing0},message:"must match exactly one schema in oneOf"};
+if(vErrors === null){
+vErrors = [err72];
+}
+else {
+vErrors.push(err72);
 }
 errors++;
 }
@@ -1510,7 +1677,7 @@ return errors === 0;
 validate29.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 const schema42 = {"type":"object","additionalProperties":false,"required":["type","left","op","right"],"properties":{"type":{"const":"compare"},"left":{"$ref":"#/$defs/Operand"},"op":{"enum":["gt","gte","lt","lte"]},"right":{"$ref":"#/$defs/Operand"}}};
-const schema43 = {"oneOf":[{"title":"Indicator output","type":"object","additionalProperties":false,"required":["ind","output"],"properties":{"ind":{"$ref":"#/$defs/IndicatorId"},"output":{"enum":["value","signal","hist","upper","middle","lower","plus_di","minus_di"]},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Underlying candle price","type":"object","additionalProperties":false,"required":["price"],"properties":{"price":{"$ref":"#/$defs/PriceField"},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Volatility index value on the candle","type":"object","additionalProperties":false,"required":["vix"],"properties":{"vix":{"enum":["open","close"]}}},{"title":"Constant number","type":"object","additionalProperties":false,"required":["const"],"properties":{"const":{"type":"number"}}}]};
+const schema43 = {"oneOf":[{"title":"Indicator output","type":"object","additionalProperties":false,"required":["ind","output"],"properties":{"ind":{"$ref":"#/$defs/IndicatorId"},"output":{"enum":["value","signal","hist","upper","middle","lower","plus_di","minus_di","high","low","p","tc","bc","r1","r2","r3","s1","s2","s3","cpr_width","cpr_width_pct"]},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Underlying candle price","type":"object","additionalProperties":false,"required":["price"],"properties":{"price":{"$ref":"#/$defs/PriceField"},"offset":{"$ref":"#/$defs/Offset"}}},{"title":"Volatility index value on the candle","type":"object","additionalProperties":false,"required":["vix"],"properties":{"vix":{"enum":["open","close"]}}},{"title":"Candle size in index points: range = high − low, body = |close − open| (REQ-ENG-50)","type":"object","additionalProperties":false,"required":["candle"],"properties":{"candle":{"enum":["range","body"]}}},{"title":"Constant number","type":"object","additionalProperties":false,"required":["const"],"properties":{"const":{"type":"number"}}}]};
 const schema44 = {"type":"string","pattern":"^[a-z][a-z0-9_]{0,31}$"};
 const schema45 = {"description":"Shifts an operand, e.g. EMA 21 + 10 points, to express thresholds such as 'closes decisively above'.","oneOf":[{"type":"object","additionalProperties":false,"required":["pts"],"properties":{"pts":{"type":"number","minimum":-100000,"maximum":100000}}},{"type":"object","additionalProperties":false,"required":["pct"],"properties":{"pct":{"type":"number","minimum":-100,"maximum":100}}}]};
 
@@ -1588,7 +1755,7 @@ errors++;
 }
 if(data.output !== undefined){
 let data1 = data.output;
-if(!((((((((data1 === "value") || (data1 === "signal")) || (data1 === "hist")) || (data1 === "upper")) || (data1 === "middle")) || (data1 === "lower")) || (data1 === "plus_di")) || (data1 === "minus_di"))){
+if(!(((((((((((((((((((((data1 === "value") || (data1 === "signal")) || (data1 === "hist")) || (data1 === "upper")) || (data1 === "middle")) || (data1 === "lower")) || (data1 === "plus_di")) || (data1 === "minus_di")) || (data1 === "high")) || (data1 === "low")) || (data1 === "p")) || (data1 === "tc")) || (data1 === "bc")) || (data1 === "r1")) || (data1 === "r2")) || (data1 === "r3")) || (data1 === "s1")) || (data1 === "s2")) || (data1 === "s3")) || (data1 === "cpr_width")) || (data1 === "cpr_width_pct"))){
 const err5 = {instancePath:instancePath+"/output",schemaPath:"#/oneOf/0/properties/output/enum",keyword:"enum",params:{allowedValues: schema43.oneOf[0].properties.output.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err5];
@@ -2114,8 +2281,8 @@ props1 = true;
 }
 const _errs43 = errors;
 if(data && typeof data == "object" && !Array.isArray(data)){
-if(data.const === undefined){
-const err41 = {instancePath,schemaPath:"#/oneOf/3/required",keyword:"required",params:{missingProperty: "const"},message:"must have required property '"+"const"+"'"};
+if(data.candle === undefined){
+const err41 = {instancePath,schemaPath:"#/oneOf/3/required",keyword:"required",params:{missingProperty: "candle"},message:"must have required property '"+"candle"+"'"};
 if(vErrors === null){
 vErrors = [err41];
 }
@@ -2125,7 +2292,7 @@ vErrors.push(err41);
 errors++;
 }
 for(const key7 in data){
-if(!(key7 === "const")){
+if(!(key7 === "candle")){
 const err42 = {instancePath,schemaPath:"#/oneOf/3/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err42];
@@ -2136,9 +2303,10 @@ vErrors.push(err42);
 errors++;
 }
 }
-if(data.const !== undefined){
-if(!(typeof data.const == "number")){
-const err43 = {instancePath:instancePath+"/const",schemaPath:"#/oneOf/3/properties/const/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data.candle !== undefined){
+let data10 = data.candle;
+if(!((data10 === "range") || (data10 === "body"))){
+const err43 = {instancePath:instancePath+"/candle",schemaPath:"#/oneOf/3/properties/candle/enum",keyword:"enum",params:{allowedValues: schema43.oneOf[3].properties.candle.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err43];
 }
@@ -2172,16 +2340,77 @@ if(props1 !== true){
 props1 = true;
 }
 }
-}
-}
-}
-if(!valid0){
-const err45 = {instancePath,schemaPath:"#/oneOf",keyword:"oneOf",params:{passingSchemas: passing0},message:"must match exactly one schema in oneOf"};
+const _errs47 = errors;
+if(data && typeof data == "object" && !Array.isArray(data)){
+if(data.const === undefined){
+const err45 = {instancePath,schemaPath:"#/oneOf/4/required",keyword:"required",params:{missingProperty: "const"},message:"must have required property '"+"const"+"'"};
 if(vErrors === null){
 vErrors = [err45];
 }
 else {
 vErrors.push(err45);
+}
+errors++;
+}
+for(const key8 in data){
+if(!(key8 === "const")){
+const err46 = {instancePath,schemaPath:"#/oneOf/4/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err46];
+}
+else {
+vErrors.push(err46);
+}
+errors++;
+}
+}
+if(data.const !== undefined){
+if(!(typeof data.const == "number")){
+const err47 = {instancePath:instancePath+"/const",schemaPath:"#/oneOf/4/properties/const/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err47];
+}
+else {
+vErrors.push(err47);
+}
+errors++;
+}
+}
+}
+else {
+const err48 = {instancePath,schemaPath:"#/oneOf/4/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err48];
+}
+else {
+vErrors.push(err48);
+}
+errors++;
+}
+var _valid0 = _errs47 === errors;
+if(_valid0 && valid0){
+valid0 = false;
+passing0 = [passing0, 4];
+}
+else {
+if(_valid0){
+valid0 = true;
+passing0 = 4;
+if(props1 !== true){
+props1 = true;
+}
+}
+}
+}
+}
+}
+if(!valid0){
+const err49 = {instancePath,schemaPath:"#/oneOf",keyword:"oneOf",params:{passingSchemas: passing0},message:"must match exactly one schema in oneOf"};
+if(vErrors === null){
+vErrors = [err49];
+}
+else {
+vErrors.push(err49);
 }
 errors++;
 }
@@ -3085,7 +3314,7 @@ return errors === 0;
 }
 validate25.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
-const schema54 = {"description":"Mandatory inputs 12 and 13. INTRADAY: the square-off time is the time exit. POSITIONAL: needs target, time_exit, hold_to_expiry or advanced.exit_after_candles, chosen by the user (SEM-07). A position still open on its expiry day is settled at intrinsic value. For multi-leg strategies, stop_loss and target apply to the combined position.","type":"object","additionalProperties":false,"required":["stop_loss"],"properties":{"stop_loss":{"oneOf":[{"title":"Percent of entry premium","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"PCT_PREMIUM"},"value":{"type":"number","exclusiveMinimum":0,"maximum":1000}}},{"title":"Premium points","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"POINTS"},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Trigger candle (advanced): low (bought) / high (sold) of the trigger candle on the modelled option premium","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"TRIGGER_CANDLE"}}}]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"enum":["PCT_PREMIUM","POINTS"]},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Risk-reward (advanced): target distance = value × stop distance","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"RR"},"value":{"type":"number","exclusiveMinimum":0,"maximum":20}}}]},"time_exit":{"type":"object","additionalProperties":false,"required":["at","on"],"properties":{"at":{"$ref":"#/$defs/Time"},"on":{"enum":["ENTRY_DAY","EXPIRY_DAY"]}}},"hold_to_expiry":{"description":"Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen.","const":true}}};
+const schema54 = {"description":"Mandatory inputs 12 and 13. INTRADAY: the square-off time is the time exit. POSITIONAL: needs target, time_exit, hold_to_expiry or advanced.exit_after_candles, chosen by the user (SEM-07). A position still open on its expiry day is settled at intrinsic value. For multi-leg strategies, stop_loss and target apply to the combined position.","type":"object","additionalProperties":false,"required":["stop_loss"],"properties":{"stop_loss":{"oneOf":[{"title":"Percent of entry premium","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"PCT_PREMIUM"},"value":{"type":"number","exclusiveMinimum":0,"maximum":1000}}},{"title":"Premium points","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"POINTS"},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Trigger candle (advanced): low (bought) / high (sold) of the trigger candle on the modelled option premium","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"TRIGGER_CANDLE"}}}]},"target":{"oneOf":[{"type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"enum":["PCT_PREMIUM","POINTS"]},"value":{"type":"number","exclusiveMinimum":0}}},{"title":"Risk-reward (advanced): target distance = value × stop distance","type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"const":"RR"},"value":{"type":"number","exclusiveMinimum":0,"maximum":20}}},{"title":"Index level (advanced, single leg): exit when the index reaches the level for the trade's side (REQ-ENG-53, 54; SEM-22, 23)","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"SPOT_LEVEL"},"ce":{"$ref":"#/$defs/Operand"},"pe":{"$ref":"#/$defs/Operand"}}}]},"exit_when":{"description":"Advanced: exit at the next minute's open when this side's conditions are true on a candle close after entry (REQ-ENG-51; SEM-24).","type":"object","additionalProperties":false,"minProperties":1,"properties":{"ce":{"$ref":"#/$defs/Condition"},"pe":{"$ref":"#/$defs/Condition"},"all_legs":{"$ref":"#/$defs/Condition"}}},"time_exit":{"type":"object","additionalProperties":false,"required":["at","on"],"properties":{"at":{"$ref":"#/$defs/Time"},"on":{"enum":["ENTRY_DAY","EXPIRY_DAY"]}}},"hold_to_expiry":{"description":"Positional only, chosen by the user: hold until expiry and settle at intrinsic value. Only the value true is meaningful; absence means not chosen.","const":true}}};
 
 function validate51(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
@@ -3109,7 +3338,7 @@ vErrors.push(err0);
 errors++;
 }
 for(const key0 in data){
-if(!((((key0 === "stop_loss") || (key0 === "target")) || (key0 === "time_exit")) || (key0 === "hold_to_expiry"))){
+if(!(((((key0 === "stop_loss") || (key0 === "target")) || (key0 === "exit_when")) || (key0 === "time_exit")) || (key0 === "hold_to_expiry"))){
 const err1 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err1];
@@ -3601,14 +3830,87 @@ if(props1 !== true){
 props1 = true;
 }
 }
-}
-if(!valid5){
-const err37 = {instancePath:instancePath+"/target",schemaPath:"#/properties/target/oneOf",keyword:"oneOf",params:{passingSchemas: passing1},message:"must match exactly one schema in oneOf"};
+const _errs34 = errors;
+if(data6 && typeof data6 == "object" && !Array.isArray(data6)){
+if(data6.type === undefined){
+const err37 = {instancePath:instancePath+"/target",schemaPath:"#/properties/target/oneOf/2/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
 if(vErrors === null){
 vErrors = [err37];
 }
 else {
 vErrors.push(err37);
+}
+errors++;
+}
+for(const key6 in data6){
+if(!(((key6 === "type") || (key6 === "ce")) || (key6 === "pe"))){
+const err38 = {instancePath:instancePath+"/target",schemaPath:"#/properties/target/oneOf/2/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err38];
+}
+else {
+vErrors.push(err38);
+}
+errors++;
+}
+}
+if(data6.type !== undefined){
+if("SPOT_LEVEL" !== data6.type){
+const err39 = {instancePath:instancePath+"/target/type",schemaPath:"#/properties/target/oneOf/2/properties/type/const",keyword:"const",params:{allowedValue: "SPOT_LEVEL"},message:"must be equal to constant"};
+if(vErrors === null){
+vErrors = [err39];
+}
+else {
+vErrors.push(err39);
+}
+errors++;
+}
+}
+if(data6.ce !== undefined){
+if(!(validate32(data6.ce, {instancePath:instancePath+"/target/ce",parentData:data6,parentDataProperty:"ce",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate32.errors : vErrors.concat(validate32.errors);
+errors = vErrors.length;
+}
+}
+if(data6.pe !== undefined){
+if(!(validate32(data6.pe, {instancePath:instancePath+"/target/pe",parentData:data6,parentDataProperty:"pe",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate32.errors : vErrors.concat(validate32.errors);
+errors = vErrors.length;
+}
+}
+}
+else {
+const err40 = {instancePath:instancePath+"/target",schemaPath:"#/properties/target/oneOf/2/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err40];
+}
+else {
+vErrors.push(err40);
+}
+errors++;
+}
+var _valid1 = _errs34 === errors;
+if(_valid1 && valid5){
+valid5 = false;
+passing1 = [passing1, 2];
+}
+else {
+if(_valid1){
+valid5 = true;
+passing1 = 2;
+if(props1 !== true){
+props1 = true;
+}
+}
+}
+}
+if(!valid5){
+const err41 = {instancePath:instancePath+"/target",schemaPath:"#/properties/target/oneOf",keyword:"oneOf",params:{passingSchemas: passing1},message:"must match exactly one schema in oneOf"};
+if(vErrors === null){
+vErrors = [err41];
+}
+else {
+vErrors.push(err41);
 }
 errors++;
 }
@@ -3624,57 +3926,11 @@ vErrors = null;
 }
 }
 }
-if(data.time_exit !== undefined){
-let data11 = data.time_exit;
-if(data11 && typeof data11 == "object" && !Array.isArray(data11)){
-if(data11.at === undefined){
-const err38 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/required",keyword:"required",params:{missingProperty: "at"},message:"must have required property '"+"at"+"'"};
-if(vErrors === null){
-vErrors = [err38];
-}
-else {
-vErrors.push(err38);
-}
-errors++;
-}
-if(data11.on === undefined){
-const err39 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/required",keyword:"required",params:{missingProperty: "on"},message:"must have required property '"+"on"+"'"};
-if(vErrors === null){
-vErrors = [err39];
-}
-else {
-vErrors.push(err39);
-}
-errors++;
-}
-for(const key6 in data11){
-if(!((key6 === "at") || (key6 === "on"))){
-const err40 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
-if(vErrors === null){
-vErrors = [err40];
-}
-else {
-vErrors.push(err40);
-}
-errors++;
-}
-}
-if(data11.at !== undefined){
-let data12 = data11.at;
-if(typeof data12 === "string"){
-if(!pattern7.test(data12)){
-const err41 = {instancePath:instancePath+"/time_exit/at",schemaPath:"#/$defs/Time/pattern",keyword:"pattern",params:{pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"},message:"must match pattern \""+"^([01][0-9]|2[0-3]):[0-5][0-9]$"+"\""};
-if(vErrors === null){
-vErrors = [err41];
-}
-else {
-vErrors.push(err41);
-}
-errors++;
-}
-}
-else {
-const err42 = {instancePath:instancePath+"/time_exit/at",schemaPath:"#/$defs/Time/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(data.exit_when !== undefined){
+let data14 = data.exit_when;
+if(data14 && typeof data14 == "object" && !Array.isArray(data14)){
+if(Object.keys(data14).length < 1){
+const err42 = {instancePath:instancePath+"/exit_when",schemaPath:"#/properties/exit_when/minProperties",keyword:"minProperties",params:{limit: 1},message:"must NOT have fewer than 1 properties"};
 if(vErrors === null){
 vErrors = [err42];
 }
@@ -3683,11 +3939,9 @@ vErrors.push(err42);
 }
 errors++;
 }
-}
-if(data11.on !== undefined){
-let data13 = data11.on;
-if(!((data13 === "ENTRY_DAY") || (data13 === "EXPIRY_DAY"))){
-const err43 = {instancePath:instancePath+"/time_exit/on",schemaPath:"#/properties/time_exit/properties/on/enum",keyword:"enum",params:{allowedValues: schema54.properties.time_exit.properties.on.enum},message:"must be equal to one of the allowed values"};
+for(const key7 in data14){
+if(!(((key7 === "ce") || (key7 === "pe")) || (key7 === "all_legs"))){
+const err43 = {instancePath:instancePath+"/exit_when",schemaPath:"#/properties/exit_when/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err43];
 }
@@ -3697,9 +3951,27 @@ vErrors.push(err43);
 errors++;
 }
 }
+if(data14.ce !== undefined){
+if(!(validate26(data14.ce, {instancePath:instancePath+"/exit_when/ce",parentData:data14,parentDataProperty:"ce",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate26.errors : vErrors.concat(validate26.errors);
+errors = vErrors.length;
+}
+}
+if(data14.pe !== undefined){
+if(!(validate26(data14.pe, {instancePath:instancePath+"/exit_when/pe",parentData:data14,parentDataProperty:"pe",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate26.errors : vErrors.concat(validate26.errors);
+errors = vErrors.length;
+}
+}
+if(data14.all_legs !== undefined){
+if(!(validate26(data14.all_legs, {instancePath:instancePath+"/exit_when/all_legs",parentData:data14,parentDataProperty:"all_legs",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate26.errors : vErrors.concat(validate26.errors);
+errors = vErrors.length;
+}
+}
 }
 else {
-const err44 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err44 = {instancePath:instancePath+"/exit_when",schemaPath:"#/properties/exit_when/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err44];
 }
@@ -3709,9 +3981,11 @@ vErrors.push(err44);
 errors++;
 }
 }
-if(data.hold_to_expiry !== undefined){
-if(true !== data.hold_to_expiry){
-const err45 = {instancePath:instancePath+"/hold_to_expiry",schemaPath:"#/properties/hold_to_expiry/const",keyword:"const",params:{allowedValue: true},message:"must be equal to constant"};
+if(data.time_exit !== undefined){
+let data18 = data.time_exit;
+if(data18 && typeof data18 == "object" && !Array.isArray(data18)){
+if(data18.at === undefined){
+const err45 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/required",keyword:"required",params:{missingProperty: "at"},message:"must have required property '"+"at"+"'"};
 if(vErrors === null){
 vErrors = [err45];
 }
@@ -3720,10 +3994,8 @@ vErrors.push(err45);
 }
 errors++;
 }
-}
-}
-else {
-const err46 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data18.on === undefined){
+const err46 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/required",keyword:"required",params:{missingProperty: "on"},message:"must have required property '"+"on"+"'"};
 if(vErrors === null){
 vErrors = [err46];
 }
@@ -3732,18 +4004,103 @@ vErrors.push(err46);
 }
 errors++;
 }
+for(const key8 in data18){
+if(!((key8 === "at") || (key8 === "on"))){
+const err47 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key8},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err47];
+}
+else {
+vErrors.push(err47);
+}
+errors++;
+}
+}
+if(data18.at !== undefined){
+let data19 = data18.at;
+if(typeof data19 === "string"){
+if(!pattern7.test(data19)){
+const err48 = {instancePath:instancePath+"/time_exit/at",schemaPath:"#/$defs/Time/pattern",keyword:"pattern",params:{pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"},message:"must match pattern \""+"^([01][0-9]|2[0-3]):[0-5][0-9]$"+"\""};
+if(vErrors === null){
+vErrors = [err48];
+}
+else {
+vErrors.push(err48);
+}
+errors++;
+}
+}
+else {
+const err49 = {instancePath:instancePath+"/time_exit/at",schemaPath:"#/$defs/Time/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err49];
+}
+else {
+vErrors.push(err49);
+}
+errors++;
+}
+}
+if(data18.on !== undefined){
+let data20 = data18.on;
+if(!((data20 === "ENTRY_DAY") || (data20 === "EXPIRY_DAY"))){
+const err50 = {instancePath:instancePath+"/time_exit/on",schemaPath:"#/properties/time_exit/properties/on/enum",keyword:"enum",params:{allowedValues: schema54.properties.time_exit.properties.on.enum},message:"must be equal to one of the allowed values"};
+if(vErrors === null){
+vErrors = [err50];
+}
+else {
+vErrors.push(err50);
+}
+errors++;
+}
+}
+}
+else {
+const err51 = {instancePath:instancePath+"/time_exit",schemaPath:"#/properties/time_exit/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err51];
+}
+else {
+vErrors.push(err51);
+}
+errors++;
+}
+}
+if(data.hold_to_expiry !== undefined){
+if(true !== data.hold_to_expiry){
+const err52 = {instancePath:instancePath+"/hold_to_expiry",schemaPath:"#/properties/hold_to_expiry/const",keyword:"const",params:{allowedValue: true},message:"must be equal to constant"};
+if(vErrors === null){
+vErrors = [err52];
+}
+else {
+vErrors.push(err52);
+}
+errors++;
+}
+}
+}
+else {
+const err53 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err53];
+}
+else {
+vErrors.push(err53);
+}
+errors++;
+}
 validate51.errors = vErrors;
 return errors === 0;
 }
 validate51.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
-const schema56 = {"description":"Every property is OFF when absent. No property has a default (constitution §3).","type":"object","additionalProperties":false,"properties":{"sl_cap_pts":{"description":"Maximum stop distance in premium points.","type":"number","exclusiveMinimum":0},"trail_to_cost_at_r":{"description":"Move stop to entry price once profit reaches this multiple of the initial risk.","type":"number","exclusiveMinimum":0,"maximum":20},"exit_after_candles":{"description":"Exit if neither stop nor target is hit within N candles after entry.","type":"integer","minimum":1,"maximum":500},"vix_sizing":{"description":"Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot.","type":"object","additionalProperties":false,"required":["measured_at","bands"],"properties":{"measured_at":{"description":"DAY_OPEN = the day's first VIX value (09:15; used for 'pre-market' rules). ENTRY = VIX at the entry minute.","enum":["DAY_OPEN","ENTRY"]},"bands":{"type":"array","minItems":1,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["size_pct"],"properties":{"vix_from":{"description":"Inclusive lower edge; absent = no lower edge.","type":"number","minimum":0},"vix_to":{"description":"Exclusive upper edge; absent = no upper edge.","type":"number","exclusiveMinimum":0},"size_pct":{"type":"number","exclusiveMinimum":0,"maximum":1000}}}}}},"entry_windows":{"description":"New entries only inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"no_entry_windows":{"description":"No new entries inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"expiry_day_cutoff":{"description":"No new entries at or after this time on the traded contract's expiry day.","$ref":"#/$defs/Time"},"daily":{"type":"object","additionalProperties":false,"minProperties":1,"properties":{"max_trades":{"type":"integer","minimum":1,"maximum":100},"stop_after_sl_hits":{"type":"integer","minimum":1,"maximum":100},"max_daily_loss_rupees":{"type":"number","exclusiveMinimum":0}}}}};
+const schema56 = {"description":"Every property is OFF when absent. No property has a default (constitution §3).","type":"object","additionalProperties":false,"properties":{"sl_cap_pts":{"description":"Maximum stop distance in premium points.","type":"number","exclusiveMinimum":0},"trail_to_cost_at_r":{"description":"Move stop to entry price once profit reaches this multiple of the initial risk.","type":"number","exclusiveMinimum":0,"maximum":20},"trail_to_cost_at_pts":{"description":"Move stop to entry price once profit reaches this many premium points (REQ-ENG-52; SEM-21).","type":"number","exclusiveMinimum":0,"maximum":100000},"partial_exit":{"description":"Close part of the lots at a trigger, then manage the rest (REQ-ENG-55, 56; SEM-22, 23, 25).","type":"object","additionalProperties":false,"required":["percent","when","then_stop"],"properties":{"percent":{"description":"Share of lots closed, rounded down to whole lots (at least 1 closed, 1 kept).","type":"integer","minimum":1,"maximum":99},"when":{"oneOf":[{"title":"Premium gain","type":"object","additionalProperties":false,"required":["type","gain"],"properties":{"type":{"const":"PREMIUM_GAIN"},"gain":{"type":"object","additionalProperties":false,"required":["type","value"],"properties":{"type":{"enum":["PCT_PREMIUM","POINTS","RR"]},"value":{"type":"number","exclusiveMinimum":0}}}}},{"title":"Index level (single leg)","type":"object","additionalProperties":false,"required":["type"],"properties":{"type":{"const":"SPOT_LEVEL"},"ce":{"$ref":"#/$defs/Operand"},"pe":{"$ref":"#/$defs/Operand"}}}]},"then_stop":{"description":"UNCHANGED: keep every exit; COST: stop to entry price; PARTIAL_CANDLE: exit when the index breaks back beyond the partial-exit candle (single leg).","enum":["UNCHANGED","COST","PARTIAL_CANDLE"]}}},"exit_after_candles":{"description":"Exit if neither stop nor target is hit within N candles after entry.","type":"integer","minimum":1,"maximum":500},"vix_sizing":{"description":"Position size per VIX band, as % of the set lots. Bands must cover all VIX values without gaps or overlaps (SEM-12). Result rounded down, minimum 1 lot.","type":"object","additionalProperties":false,"required":["measured_at","bands"],"properties":{"measured_at":{"description":"DAY_OPEN = the day's first VIX value (09:15; used for 'pre-market' rules). ENTRY = VIX at the entry minute.","enum":["DAY_OPEN","ENTRY"]},"bands":{"type":"array","minItems":1,"maxItems":6,"items":{"type":"object","additionalProperties":false,"required":["size_pct"],"properties":{"vix_from":{"description":"Inclusive lower edge; absent = no lower edge.","type":"number","minimum":0},"vix_to":{"description":"Exclusive upper edge; absent = no upper edge.","type":"number","exclusiveMinimum":0},"size_pct":{"type":"number","exclusiveMinimum":0,"maximum":1000}}}}}},"entry_windows":{"description":"New entries only inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"no_entry_windows":{"description":"No new entries inside these windows.","type":"array","minItems":1,"maxItems":6,"items":{"$ref":"#/$defs/TimeWindow"}},"expiry_day_cutoff":{"description":"No new entries at or after this time on the traded contract's expiry day.","$ref":"#/$defs/Time"},"daily":{"type":"object","additionalProperties":false,"minProperties":1,"properties":{"max_trades":{"type":"integer","minimum":1,"maximum":100},"stop_after_sl_hits":{"type":"integer","minimum":1,"maximum":100},"max_daily_loss_rupees":{"type":"number","exclusiveMinimum":0}}}}};
 const schema57 = {"type":"object","additionalProperties":false,"required":["from","to"],"properties":{"from":{"$ref":"#/$defs/Time"},"to":{"$ref":"#/$defs/Time"}}};
 
-function validate54(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
+function validate61(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
 let errors = 0;
-const evaluated0 = validate54.evaluated;
+const evaluated0 = validate61.evaluated;
 if(evaluated0.dynamicProps){
 evaluated0.props = undefined;
 }
@@ -3844,16 +4201,16 @@ vErrors.push(err7);
 }
 errors++;
 }
-validate54.errors = vErrors;
+validate61.errors = vErrors;
 return errors === 0;
 }
-validate54.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
+validate61.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 
-function validate53(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
+function validate58(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
 let vErrors = null;
 let errors = 0;
-const evaluated0 = validate53.evaluated;
+const evaluated0 = validate58.evaluated;
 if(evaluated0.dynamicProps){
 evaluated0.props = undefined;
 }
@@ -3862,7 +4219,7 @@ evaluated0.items = undefined;
 }
 if(data && typeof data == "object" && !Array.isArray(data)){
 for(const key0 in data){
-if(!((((((((key0 === "sl_cap_pts") || (key0 === "trail_to_cost_at_r")) || (key0 === "exit_after_candles")) || (key0 === "vix_sizing")) || (key0 === "entry_windows")) || (key0 === "no_entry_windows")) || (key0 === "expiry_day_cutoff")) || (key0 === "daily"))){
+if(!(func1.call(schema56.properties, key0))){
 const err0 = {instancePath,schemaPath:"#/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key0},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err0];
@@ -3933,10 +4290,11 @@ vErrors.push(err5);
 errors++;
 }
 }
-if(data.exit_after_candles !== undefined){
-let data2 = data.exit_after_candles;
-if(!((typeof data2 == "number") && (!(data2 % 1) && !isNaN(data2)))){
-const err6 = {instancePath:instancePath+"/exit_after_candles",schemaPath:"#/properties/exit_after_candles/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
+if(data.trail_to_cost_at_pts !== undefined){
+let data2 = data.trail_to_cost_at_pts;
+if(typeof data2 == "number"){
+if(data2 > 100000 || isNaN(data2)){
+const err6 = {instancePath:instancePath+"/trail_to_cost_at_pts",schemaPath:"#/properties/trail_to_cost_at_pts/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100000},message:"must be <= 100000"};
 if(vErrors === null){
 vErrors = [err6];
 }
@@ -3945,9 +4303,8 @@ vErrors.push(err6);
 }
 errors++;
 }
-if(typeof data2 == "number"){
-if(data2 > 500 || isNaN(data2)){
-const err7 = {instancePath:instancePath+"/exit_after_candles",schemaPath:"#/properties/exit_after_candles/maximum",keyword:"maximum",params:{comparison: "<=", limit: 500},message:"must be <= 500"};
+if(data2 <= 0 || isNaN(data2)){
+const err7 = {instancePath:instancePath+"/trail_to_cost_at_pts",schemaPath:"#/properties/trail_to_cost_at_pts/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
 if(vErrors === null){
 vErrors = [err7];
 }
@@ -3956,8 +4313,9 @@ vErrors.push(err7);
 }
 errors++;
 }
-if(data2 < 1 || isNaN(data2)){
-const err8 = {instancePath:instancePath+"/exit_after_candles",schemaPath:"#/properties/exit_after_candles/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+else {
+const err8 = {instancePath:instancePath+"/trail_to_cost_at_pts",schemaPath:"#/properties/trail_to_cost_at_pts/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err8];
 }
@@ -3967,12 +4325,11 @@ vErrors.push(err8);
 errors++;
 }
 }
-}
-if(data.vix_sizing !== undefined){
-let data3 = data.vix_sizing;
+if(data.partial_exit !== undefined){
+let data3 = data.partial_exit;
 if(data3 && typeof data3 == "object" && !Array.isArray(data3)){
-if(data3.measured_at === undefined){
-const err9 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/required",keyword:"required",params:{missingProperty: "measured_at"},message:"must have required property '"+"measured_at"+"'"};
+if(data3.percent === undefined){
+const err9 = {instancePath:instancePath+"/partial_exit",schemaPath:"#/properties/partial_exit/required",keyword:"required",params:{missingProperty: "percent"},message:"must have required property '"+"percent"+"'"};
 if(vErrors === null){
 vErrors = [err9];
 }
@@ -3981,8 +4338,8 @@ vErrors.push(err9);
 }
 errors++;
 }
-if(data3.bands === undefined){
-const err10 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/required",keyword:"required",params:{missingProperty: "bands"},message:"must have required property '"+"bands"+"'"};
+if(data3.when === undefined){
+const err10 = {instancePath:instancePath+"/partial_exit",schemaPath:"#/properties/partial_exit/required",keyword:"required",params:{missingProperty: "when"},message:"must have required property '"+"when"+"'"};
 if(vErrors === null){
 vErrors = [err10];
 }
@@ -3991,9 +4348,8 @@ vErrors.push(err10);
 }
 errors++;
 }
-for(const key1 in data3){
-if(!((key1 === "measured_at") || (key1 === "bands"))){
-const err11 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key1},message:"must NOT have additional properties"};
+if(data3.then_stop === undefined){
+const err11 = {instancePath:instancePath+"/partial_exit",schemaPath:"#/properties/partial_exit/required",keyword:"required",params:{missingProperty: "then_stop"},message:"must have required property '"+"then_stop"+"'"};
 if(vErrors === null){
 vErrors = [err11];
 }
@@ -4002,11 +4358,9 @@ vErrors.push(err11);
 }
 errors++;
 }
-}
-if(data3.measured_at !== undefined){
-let data4 = data3.measured_at;
-if(!((data4 === "DAY_OPEN") || (data4 === "ENTRY"))){
-const err12 = {instancePath:instancePath+"/vix_sizing/measured_at",schemaPath:"#/properties/vix_sizing/properties/measured_at/enum",keyword:"enum",params:{allowedValues: schema56.properties.vix_sizing.properties.measured_at.enum},message:"must be equal to one of the allowed values"};
+for(const key1 in data3){
+if(!(((key1 === "percent") || (key1 === "when")) || (key1 === "then_stop"))){
+const err12 = {instancePath:instancePath+"/partial_exit",schemaPath:"#/properties/partial_exit/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key1},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err12];
 }
@@ -4016,11 +4370,10 @@ vErrors.push(err12);
 errors++;
 }
 }
-if(data3.bands !== undefined){
-let data5 = data3.bands;
-if(Array.isArray(data5)){
-if(data5.length > 6){
-const err13 = {instancePath:instancePath+"/vix_sizing/bands",schemaPath:"#/properties/vix_sizing/properties/bands/maxItems",keyword:"maxItems",params:{limit: 6},message:"must NOT have more than 6 items"};
+if(data3.percent !== undefined){
+let data4 = data3.percent;
+if(!((typeof data4 == "number") && (!(data4 % 1) && !isNaN(data4)))){
+const err13 = {instancePath:instancePath+"/partial_exit/percent",schemaPath:"#/properties/partial_exit/properties/percent/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
 if(vErrors === null){
 vErrors = [err13];
 }
@@ -4029,8 +4382,9 @@ vErrors.push(err13);
 }
 errors++;
 }
-if(data5.length < 1){
-const err14 = {instancePath:instancePath+"/vix_sizing/bands",schemaPath:"#/properties/vix_sizing/properties/bands/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+if(typeof data4 == "number"){
+if(data4 > 99 || isNaN(data4)){
+const err14 = {instancePath:instancePath+"/partial_exit/percent",schemaPath:"#/properties/partial_exit/properties/percent/maximum",keyword:"maximum",params:{comparison: "<=", limit: 99},message:"must be <= 99"};
 if(vErrors === null){
 vErrors = [err14];
 }
@@ -4039,12 +4393,8 @@ vErrors.push(err14);
 }
 errors++;
 }
-const len0 = data5.length;
-for(let i0=0; i0<len0; i0++){
-let data6 = data5[i0];
-if(data6 && typeof data6 == "object" && !Array.isArray(data6)){
-if(data6.size_pct === undefined){
-const err15 = {instancePath:instancePath+"/vix_sizing/bands/" + i0,schemaPath:"#/properties/vix_sizing/properties/bands/items/required",keyword:"required",params:{missingProperty: "size_pct"},message:"must have required property '"+"size_pct"+"'"};
+if(data4 < 1 || isNaN(data4)){
+const err15 = {instancePath:instancePath+"/partial_exit/percent",schemaPath:"#/properties/partial_exit/properties/percent/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err15];
 }
@@ -4053,9 +4403,17 @@ vErrors.push(err15);
 }
 errors++;
 }
-for(const key2 in data6){
-if(!(((key2 === "vix_from") || (key2 === "vix_to")) || (key2 === "size_pct"))){
-const err16 = {instancePath:instancePath+"/vix_sizing/bands/" + i0,schemaPath:"#/properties/vix_sizing/properties/bands/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key2},message:"must NOT have additional properties"};
+}
+}
+if(data3.when !== undefined){
+let data5 = data3.when;
+const _errs14 = errors;
+let valid2 = false;
+let passing0 = null;
+const _errs15 = errors;
+if(data5 && typeof data5 == "object" && !Array.isArray(data5)){
+if(data5.type === undefined){
+const err16 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
 if(vErrors === null){
 vErrors = [err16];
 }
@@ -4064,12 +4422,8 @@ vErrors.push(err16);
 }
 errors++;
 }
-}
-if(data6.vix_from !== undefined){
-let data7 = data6.vix_from;
-if(typeof data7 == "number"){
-if(data7 < 0 || isNaN(data7)){
-const err17 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_from",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_from/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
+if(data5.gain === undefined){
+const err17 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/required",keyword:"required",params:{missingProperty: "gain"},message:"must have required property '"+"gain"+"'"};
 if(vErrors === null){
 vErrors = [err17];
 }
@@ -4078,9 +4432,9 @@ vErrors.push(err17);
 }
 errors++;
 }
-}
-else {
-const err18 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_from",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_from/type",keyword:"type",params:{type: "number"},message:"must be number"};
+for(const key2 in data5){
+if(!((key2 === "type") || (key2 === "gain"))){
+const err18 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key2},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err18];
 }
@@ -4090,11 +4444,9 @@ vErrors.push(err18);
 errors++;
 }
 }
-if(data6.vix_to !== undefined){
-let data8 = data6.vix_to;
-if(typeof data8 == "number"){
-if(data8 <= 0 || isNaN(data8)){
-const err19 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_to",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_to/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
+if(data5.type !== undefined){
+if("PREMIUM_GAIN" !== data5.type){
+const err19 = {instancePath:instancePath+"/partial_exit/when/type",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/type/const",keyword:"const",params:{allowedValue: "PREMIUM_GAIN"},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err19];
 }
@@ -4104,8 +4456,11 @@ vErrors.push(err19);
 errors++;
 }
 }
-else {
-const err20 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_to",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_to/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data5.gain !== undefined){
+let data7 = data5.gain;
+if(data7 && typeof data7 == "object" && !Array.isArray(data7)){
+if(data7.type === undefined){
+const err20 = {instancePath:instancePath+"/partial_exit/when/gain",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
 if(vErrors === null){
 vErrors = [err20];
 }
@@ -4114,12 +4469,8 @@ vErrors.push(err20);
 }
 errors++;
 }
-}
-if(data6.size_pct !== undefined){
-let data9 = data6.size_pct;
-if(typeof data9 == "number"){
-if(data9 > 1000 || isNaN(data9)){
-const err21 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/size_pct",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/size_pct/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1000},message:"must be <= 1000"};
+if(data7.value === undefined){
+const err21 = {instancePath:instancePath+"/partial_exit/when/gain",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/required",keyword:"required",params:{missingProperty: "value"},message:"must have required property '"+"value"+"'"};
 if(vErrors === null){
 vErrors = [err21];
 }
@@ -4128,8 +4479,9 @@ vErrors.push(err21);
 }
 errors++;
 }
-if(data9 <= 0 || isNaN(data9)){
-const err22 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/size_pct",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/size_pct/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
+for(const key3 in data7){
+if(!((key3 === "type") || (key3 === "value"))){
+const err22 = {instancePath:instancePath+"/partial_exit/when/gain",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err22];
 }
@@ -4139,8 +4491,10 @@ vErrors.push(err22);
 errors++;
 }
 }
-else {
-const err23 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/size_pct",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/size_pct/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(data7.type !== undefined){
+let data8 = data7.type;
+if(!(((data8 === "PCT_PREMIUM") || (data8 === "POINTS")) || (data8 === "RR"))){
+const err23 = {instancePath:instancePath+"/partial_exit/when/gain/type",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/properties/type/enum",keyword:"enum",params:{allowedValues: schema56.properties.partial_exit.properties.when.oneOf[0].properties.gain.properties.type.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err23];
 }
@@ -4150,9 +4504,11 @@ vErrors.push(err23);
 errors++;
 }
 }
-}
-else {
-const err24 = {instancePath:instancePath+"/vix_sizing/bands/" + i0,schemaPath:"#/properties/vix_sizing/properties/bands/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data7.value !== undefined){
+let data9 = data7.value;
+if(typeof data9 == "number"){
+if(data9 <= 0 || isNaN(data9)){
+const err24 = {instancePath:instancePath+"/partial_exit/when/gain/value",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/properties/value/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
 if(vErrors === null){
 vErrors = [err24];
 }
@@ -4162,9 +4518,8 @@ vErrors.push(err24);
 errors++;
 }
 }
-}
 else {
-const err25 = {instancePath:instancePath+"/vix_sizing/bands",schemaPath:"#/properties/vix_sizing/properties/bands/type",keyword:"type",params:{type: "array"},message:"must be array"};
+const err25 = {instancePath:instancePath+"/partial_exit/when/gain/value",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/properties/value/type",keyword:"type",params:{type: "number"},message:"must be number"};
 if(vErrors === null){
 vErrors = [err25];
 }
@@ -4176,7 +4531,7 @@ errors++;
 }
 }
 else {
-const err26 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/type",keyword:"type",params:{type: "object"},message:"must be object"};
+const err26 = {instancePath:instancePath+"/partial_exit/when/gain",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/properties/gain/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err26];
 }
@@ -4186,11 +4541,9 @@ vErrors.push(err26);
 errors++;
 }
 }
-if(data.entry_windows !== undefined){
-let data10 = data.entry_windows;
-if(Array.isArray(data10)){
-if(data10.length > 6){
-const err27 = {instancePath:instancePath+"/entry_windows",schemaPath:"#/properties/entry_windows/maxItems",keyword:"maxItems",params:{limit: 6},message:"must NOT have more than 6 items"};
+}
+else {
+const err27 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/0/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err27];
 }
@@ -4199,8 +4552,16 @@ vErrors.push(err27);
 }
 errors++;
 }
-if(data10.length < 1){
-const err28 = {instancePath:instancePath+"/entry_windows",schemaPath:"#/properties/entry_windows/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+var _valid0 = _errs15 === errors;
+if(_valid0){
+valid2 = true;
+passing0 = 0;
+var props0 = true;
+}
+const _errs25 = errors;
+if(data5 && typeof data5 == "object" && !Array.isArray(data5)){
+if(data5.type === undefined){
+const err28 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/1/required",keyword:"required",params:{missingProperty: "type"},message:"must have required property '"+"type"+"'"};
 if(vErrors === null){
 vErrors = [err28];
 }
@@ -4209,16 +4570,9 @@ vErrors.push(err28);
 }
 errors++;
 }
-const len1 = data10.length;
-for(let i1=0; i1<len1; i1++){
-if(!(validate54(data10[i1], {instancePath:instancePath+"/entry_windows/" + i1,parentData:data10,parentDataProperty:i1,rootData,dynamicAnchors}))){
-vErrors = vErrors === null ? validate54.errors : vErrors.concat(validate54.errors);
-errors = vErrors.length;
-}
-}
-}
-else {
-const err29 = {instancePath:instancePath+"/entry_windows",schemaPath:"#/properties/entry_windows/type",keyword:"type",params:{type: "array"},message:"must be array"};
+for(const key4 in data5){
+if(!(((key4 === "type") || (key4 === "ce")) || (key4 === "pe"))){
+const err29 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/1/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key4},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err29];
 }
@@ -4228,11 +4582,9 @@ vErrors.push(err29);
 errors++;
 }
 }
-if(data.no_entry_windows !== undefined){
-let data12 = data.no_entry_windows;
-if(Array.isArray(data12)){
-if(data12.length > 6){
-const err30 = {instancePath:instancePath+"/no_entry_windows",schemaPath:"#/properties/no_entry_windows/maxItems",keyword:"maxItems",params:{limit: 6},message:"must NOT have more than 6 items"};
+if(data5.type !== undefined){
+if("SPOT_LEVEL" !== data5.type){
+const err30 = {instancePath:instancePath+"/partial_exit/when/type",schemaPath:"#/properties/partial_exit/properties/when/oneOf/1/properties/type/const",keyword:"const",params:{allowedValue: "SPOT_LEVEL"},message:"must be equal to constant"};
 if(vErrors === null){
 vErrors = [err30];
 }
@@ -4241,8 +4593,22 @@ vErrors.push(err30);
 }
 errors++;
 }
-if(data12.length < 1){
-const err31 = {instancePath:instancePath+"/no_entry_windows",schemaPath:"#/properties/no_entry_windows/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+}
+if(data5.ce !== undefined){
+if(!(validate32(data5.ce, {instancePath:instancePath+"/partial_exit/when/ce",parentData:data5,parentDataProperty:"ce",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate32.errors : vErrors.concat(validate32.errors);
+errors = vErrors.length;
+}
+}
+if(data5.pe !== undefined){
+if(!(validate32(data5.pe, {instancePath:instancePath+"/partial_exit/when/pe",parentData:data5,parentDataProperty:"pe",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate32.errors : vErrors.concat(validate32.errors);
+errors = vErrors.length;
+}
+}
+}
+else {
+const err31 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf/1/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err31];
 }
@@ -4251,16 +4617,22 @@ vErrors.push(err31);
 }
 errors++;
 }
-const len2 = data12.length;
-for(let i2=0; i2<len2; i2++){
-if(!(validate54(data12[i2], {instancePath:instancePath+"/no_entry_windows/" + i2,parentData:data12,parentDataProperty:i2,rootData,dynamicAnchors}))){
-vErrors = vErrors === null ? validate54.errors : vErrors.concat(validate54.errors);
-errors = vErrors.length;
-}
-}
+var _valid0 = _errs25 === errors;
+if(_valid0 && valid2){
+valid2 = false;
+passing0 = [passing0, 1];
 }
 else {
-const err32 = {instancePath:instancePath+"/no_entry_windows",schemaPath:"#/properties/no_entry_windows/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(_valid0){
+valid2 = true;
+passing0 = 1;
+if(props0 !== true){
+props0 = true;
+}
+}
+}
+if(!valid2){
+const err32 = {instancePath:instancePath+"/partial_exit/when",schemaPath:"#/properties/partial_exit/properties/when/oneOf",keyword:"oneOf",params:{passingSchemas: passing0},message:"must match exactly one schema in oneOf"};
 if(vErrors === null){
 vErrors = [err32];
 }
@@ -4269,12 +4641,22 @@ vErrors.push(err32);
 }
 errors++;
 }
+else {
+errors = _errs14;
+if(vErrors !== null){
+if(_errs14){
+vErrors.length = _errs14;
 }
-if(data.expiry_day_cutoff !== undefined){
-let data14 = data.expiry_day_cutoff;
-if(typeof data14 === "string"){
-if(!pattern7.test(data14)){
-const err33 = {instancePath:instancePath+"/expiry_day_cutoff",schemaPath:"#/$defs/Time/pattern",keyword:"pattern",params:{pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"},message:"must match pattern \""+"^([01][0-9]|2[0-3]):[0-5][0-9]$"+"\""};
+else {
+vErrors = null;
+}
+}
+}
+}
+if(data3.then_stop !== undefined){
+let data13 = data3.then_stop;
+if(!(((data13 === "UNCHANGED") || (data13 === "COST")) || (data13 === "PARTIAL_CANDLE"))){
+const err33 = {instancePath:instancePath+"/partial_exit/then_stop",schemaPath:"#/properties/partial_exit/properties/then_stop/enum",keyword:"enum",params:{allowedValues: schema56.properties.partial_exit.properties.then_stop.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err33];
 }
@@ -4284,8 +4666,9 @@ vErrors.push(err33);
 errors++;
 }
 }
+}
 else {
-const err34 = {instancePath:instancePath+"/expiry_day_cutoff",schemaPath:"#/$defs/Time/type",keyword:"type",params:{type: "string"},message:"must be string"};
+const err34 = {instancePath:instancePath+"/partial_exit",schemaPath:"#/properties/partial_exit/type",keyword:"type",params:{type: "object"},message:"must be object"};
 if(vErrors === null){
 vErrors = [err34];
 }
@@ -4295,11 +4678,10 @@ vErrors.push(err34);
 errors++;
 }
 }
-if(data.daily !== undefined){
-let data15 = data.daily;
-if(data15 && typeof data15 == "object" && !Array.isArray(data15)){
-if(Object.keys(data15).length < 1){
-const err35 = {instancePath:instancePath+"/daily",schemaPath:"#/properties/daily/minProperties",keyword:"minProperties",params:{limit: 1},message:"must NOT have fewer than 1 properties"};
+if(data.exit_after_candles !== undefined){
+let data14 = data.exit_after_candles;
+if(!((typeof data14 == "number") && (!(data14 % 1) && !isNaN(data14)))){
+const err35 = {instancePath:instancePath+"/exit_after_candles",schemaPath:"#/properties/exit_after_candles/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
 if(vErrors === null){
 vErrors = [err35];
 }
@@ -4308,9 +4690,9 @@ vErrors.push(err35);
 }
 errors++;
 }
-for(const key3 in data15){
-if(!(((key3 === "max_trades") || (key3 === "stop_after_sl_hits")) || (key3 === "max_daily_loss_rupees"))){
-const err36 = {instancePath:instancePath+"/daily",schemaPath:"#/properties/daily/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key3},message:"must NOT have additional properties"};
+if(typeof data14 == "number"){
+if(data14 > 500 || isNaN(data14)){
+const err36 = {instancePath:instancePath+"/exit_after_candles",schemaPath:"#/properties/exit_after_candles/maximum",keyword:"maximum",params:{comparison: "<=", limit: 500},message:"must be <= 500"};
 if(vErrors === null){
 vErrors = [err36];
 }
@@ -4319,11 +4701,8 @@ vErrors.push(err36);
 }
 errors++;
 }
-}
-if(data15.max_trades !== undefined){
-let data16 = data15.max_trades;
-if(!((typeof data16 == "number") && (!(data16 % 1) && !isNaN(data16)))){
-const err37 = {instancePath:instancePath+"/daily/max_trades",schemaPath:"#/properties/daily/properties/max_trades/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
+if(data14 < 1 || isNaN(data14)){
+const err37 = {instancePath:instancePath+"/exit_after_candles",schemaPath:"#/properties/exit_after_candles/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
 if(vErrors === null){
 vErrors = [err37];
 }
@@ -4332,9 +4711,13 @@ vErrors.push(err37);
 }
 errors++;
 }
-if(typeof data16 == "number"){
-if(data16 > 100 || isNaN(data16)){
-const err38 = {instancePath:instancePath+"/daily/max_trades",schemaPath:"#/properties/daily/properties/max_trades/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+}
+}
+if(data.vix_sizing !== undefined){
+let data15 = data.vix_sizing;
+if(data15 && typeof data15 == "object" && !Array.isArray(data15)){
+if(data15.measured_at === undefined){
+const err38 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/required",keyword:"required",params:{missingProperty: "measured_at"},message:"must have required property '"+"measured_at"+"'"};
 if(vErrors === null){
 vErrors = [err38];
 }
@@ -4343,8 +4726,8 @@ vErrors.push(err38);
 }
 errors++;
 }
-if(data16 < 1 || isNaN(data16)){
-const err39 = {instancePath:instancePath+"/daily/max_trades",schemaPath:"#/properties/daily/properties/max_trades/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(data15.bands === undefined){
+const err39 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/required",keyword:"required",params:{missingProperty: "bands"},message:"must have required property '"+"bands"+"'"};
 if(vErrors === null){
 vErrors = [err39];
 }
@@ -4353,12 +4736,9 @@ vErrors.push(err39);
 }
 errors++;
 }
-}
-}
-if(data15.stop_after_sl_hits !== undefined){
-let data17 = data15.stop_after_sl_hits;
-if(!((typeof data17 == "number") && (!(data17 % 1) && !isNaN(data17)))){
-const err40 = {instancePath:instancePath+"/daily/stop_after_sl_hits",schemaPath:"#/properties/daily/properties/stop_after_sl_hits/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
+for(const key5 in data15){
+if(!((key5 === "measured_at") || (key5 === "bands"))){
+const err40 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key5},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err40];
 }
@@ -4367,9 +4747,11 @@ vErrors.push(err40);
 }
 errors++;
 }
-if(typeof data17 == "number"){
-if(data17 > 100 || isNaN(data17)){
-const err41 = {instancePath:instancePath+"/daily/stop_after_sl_hits",schemaPath:"#/properties/daily/properties/stop_after_sl_hits/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+}
+if(data15.measured_at !== undefined){
+let data16 = data15.measured_at;
+if(!((data16 === "DAY_OPEN") || (data16 === "ENTRY"))){
+const err41 = {instancePath:instancePath+"/vix_sizing/measured_at",schemaPath:"#/properties/vix_sizing/properties/measured_at/enum",keyword:"enum",params:{allowedValues: schema56.properties.vix_sizing.properties.measured_at.enum},message:"must be equal to one of the allowed values"};
 if(vErrors === null){
 vErrors = [err41];
 }
@@ -4378,8 +4760,12 @@ vErrors.push(err41);
 }
 errors++;
 }
-if(data17 < 1 || isNaN(data17)){
-const err42 = {instancePath:instancePath+"/daily/stop_after_sl_hits",schemaPath:"#/properties/daily/properties/stop_after_sl_hits/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+}
+if(data15.bands !== undefined){
+let data17 = data15.bands;
+if(Array.isArray(data17)){
+if(data17.length > 6){
+const err42 = {instancePath:instancePath+"/vix_sizing/bands",schemaPath:"#/properties/vix_sizing/properties/bands/maxItems",keyword:"maxItems",params:{limit: 6},message:"must NOT have more than 6 items"};
 if(vErrors === null){
 vErrors = [err42];
 }
@@ -4388,13 +4774,8 @@ vErrors.push(err42);
 }
 errors++;
 }
-}
-}
-if(data15.max_daily_loss_rupees !== undefined){
-let data18 = data15.max_daily_loss_rupees;
-if(typeof data18 == "number"){
-if(data18 <= 0 || isNaN(data18)){
-const err43 = {instancePath:instancePath+"/daily/max_daily_loss_rupees",schemaPath:"#/properties/daily/properties/max_daily_loss_rupees/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
+if(data17.length < 1){
+const err43 = {instancePath:instancePath+"/vix_sizing/bands",schemaPath:"#/properties/vix_sizing/properties/bands/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
 if(vErrors === null){
 vErrors = [err43];
 }
@@ -4403,9 +4784,12 @@ vErrors.push(err43);
 }
 errors++;
 }
-}
-else {
-const err44 = {instancePath:instancePath+"/daily/max_daily_loss_rupees",schemaPath:"#/properties/daily/properties/max_daily_loss_rupees/type",keyword:"type",params:{type: "number"},message:"must be number"};
+const len0 = data17.length;
+for(let i0=0; i0<len0; i0++){
+let data18 = data17[i0];
+if(data18 && typeof data18 == "object" && !Array.isArray(data18)){
+if(data18.size_pct === undefined){
+const err44 = {instancePath:instancePath+"/vix_sizing/bands/" + i0,schemaPath:"#/properties/vix_sizing/properties/bands/items/required",keyword:"required",params:{missingProperty: "size_pct"},message:"must have required property '"+"size_pct"+"'"};
 if(vErrors === null){
 vErrors = [err44];
 }
@@ -4414,10 +4798,9 @@ vErrors.push(err44);
 }
 errors++;
 }
-}
-}
-else {
-const err45 = {instancePath:instancePath+"/daily",schemaPath:"#/properties/daily/type",keyword:"type",params:{type: "object"},message:"must be object"};
+for(const key6 in data18){
+if(!(((key6 === "vix_from") || (key6 === "vix_to")) || (key6 === "size_pct"))){
+const err45 = {instancePath:instancePath+"/vix_sizing/bands/" + i0,schemaPath:"#/properties/vix_sizing/properties/bands/items/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key6},message:"must NOT have additional properties"};
 if(vErrors === null){
 vErrors = [err45];
 }
@@ -4427,9 +4810,11 @@ vErrors.push(err45);
 errors++;
 }
 }
-}
-else {
-const err46 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(data18.vix_from !== undefined){
+let data19 = data18.vix_from;
+if(typeof data19 == "number"){
+if(data19 < 0 || isNaN(data19)){
+const err46 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_from",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_from/minimum",keyword:"minimum",params:{comparison: ">=", limit: 0},message:"must be >= 0"};
 if(vErrors === null){
 vErrors = [err46];
 }
@@ -4438,10 +4823,370 @@ vErrors.push(err46);
 }
 errors++;
 }
-validate53.errors = vErrors;
+}
+else {
+const err47 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_from",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_from/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err47];
+}
+else {
+vErrors.push(err47);
+}
+errors++;
+}
+}
+if(data18.vix_to !== undefined){
+let data20 = data18.vix_to;
+if(typeof data20 == "number"){
+if(data20 <= 0 || isNaN(data20)){
+const err48 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_to",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_to/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
+if(vErrors === null){
+vErrors = [err48];
+}
+else {
+vErrors.push(err48);
+}
+errors++;
+}
+}
+else {
+const err49 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/vix_to",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/vix_to/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err49];
+}
+else {
+vErrors.push(err49);
+}
+errors++;
+}
+}
+if(data18.size_pct !== undefined){
+let data21 = data18.size_pct;
+if(typeof data21 == "number"){
+if(data21 > 1000 || isNaN(data21)){
+const err50 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/size_pct",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/size_pct/maximum",keyword:"maximum",params:{comparison: "<=", limit: 1000},message:"must be <= 1000"};
+if(vErrors === null){
+vErrors = [err50];
+}
+else {
+vErrors.push(err50);
+}
+errors++;
+}
+if(data21 <= 0 || isNaN(data21)){
+const err51 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/size_pct",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/size_pct/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
+if(vErrors === null){
+vErrors = [err51];
+}
+else {
+vErrors.push(err51);
+}
+errors++;
+}
+}
+else {
+const err52 = {instancePath:instancePath+"/vix_sizing/bands/" + i0+"/size_pct",schemaPath:"#/properties/vix_sizing/properties/bands/items/properties/size_pct/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err52];
+}
+else {
+vErrors.push(err52);
+}
+errors++;
+}
+}
+}
+else {
+const err53 = {instancePath:instancePath+"/vix_sizing/bands/" + i0,schemaPath:"#/properties/vix_sizing/properties/bands/items/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err53];
+}
+else {
+vErrors.push(err53);
+}
+errors++;
+}
+}
+}
+else {
+const err54 = {instancePath:instancePath+"/vix_sizing/bands",schemaPath:"#/properties/vix_sizing/properties/bands/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err54];
+}
+else {
+vErrors.push(err54);
+}
+errors++;
+}
+}
+}
+else {
+const err55 = {instancePath:instancePath+"/vix_sizing",schemaPath:"#/properties/vix_sizing/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err55];
+}
+else {
+vErrors.push(err55);
+}
+errors++;
+}
+}
+if(data.entry_windows !== undefined){
+let data22 = data.entry_windows;
+if(Array.isArray(data22)){
+if(data22.length > 6){
+const err56 = {instancePath:instancePath+"/entry_windows",schemaPath:"#/properties/entry_windows/maxItems",keyword:"maxItems",params:{limit: 6},message:"must NOT have more than 6 items"};
+if(vErrors === null){
+vErrors = [err56];
+}
+else {
+vErrors.push(err56);
+}
+errors++;
+}
+if(data22.length < 1){
+const err57 = {instancePath:instancePath+"/entry_windows",schemaPath:"#/properties/entry_windows/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+if(vErrors === null){
+vErrors = [err57];
+}
+else {
+vErrors.push(err57);
+}
+errors++;
+}
+const len1 = data22.length;
+for(let i1=0; i1<len1; i1++){
+if(!(validate61(data22[i1], {instancePath:instancePath+"/entry_windows/" + i1,parentData:data22,parentDataProperty:i1,rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate61.errors : vErrors.concat(validate61.errors);
+errors = vErrors.length;
+}
+}
+}
+else {
+const err58 = {instancePath:instancePath+"/entry_windows",schemaPath:"#/properties/entry_windows/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err58];
+}
+else {
+vErrors.push(err58);
+}
+errors++;
+}
+}
+if(data.no_entry_windows !== undefined){
+let data24 = data.no_entry_windows;
+if(Array.isArray(data24)){
+if(data24.length > 6){
+const err59 = {instancePath:instancePath+"/no_entry_windows",schemaPath:"#/properties/no_entry_windows/maxItems",keyword:"maxItems",params:{limit: 6},message:"must NOT have more than 6 items"};
+if(vErrors === null){
+vErrors = [err59];
+}
+else {
+vErrors.push(err59);
+}
+errors++;
+}
+if(data24.length < 1){
+const err60 = {instancePath:instancePath+"/no_entry_windows",schemaPath:"#/properties/no_entry_windows/minItems",keyword:"minItems",params:{limit: 1},message:"must NOT have fewer than 1 items"};
+if(vErrors === null){
+vErrors = [err60];
+}
+else {
+vErrors.push(err60);
+}
+errors++;
+}
+const len2 = data24.length;
+for(let i2=0; i2<len2; i2++){
+if(!(validate61(data24[i2], {instancePath:instancePath+"/no_entry_windows/" + i2,parentData:data24,parentDataProperty:i2,rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate61.errors : vErrors.concat(validate61.errors);
+errors = vErrors.length;
+}
+}
+}
+else {
+const err61 = {instancePath:instancePath+"/no_entry_windows",schemaPath:"#/properties/no_entry_windows/type",keyword:"type",params:{type: "array"},message:"must be array"};
+if(vErrors === null){
+vErrors = [err61];
+}
+else {
+vErrors.push(err61);
+}
+errors++;
+}
+}
+if(data.expiry_day_cutoff !== undefined){
+let data26 = data.expiry_day_cutoff;
+if(typeof data26 === "string"){
+if(!pattern7.test(data26)){
+const err62 = {instancePath:instancePath+"/expiry_day_cutoff",schemaPath:"#/$defs/Time/pattern",keyword:"pattern",params:{pattern: "^([01][0-9]|2[0-3]):[0-5][0-9]$"},message:"must match pattern \""+"^([01][0-9]|2[0-3]):[0-5][0-9]$"+"\""};
+if(vErrors === null){
+vErrors = [err62];
+}
+else {
+vErrors.push(err62);
+}
+errors++;
+}
+}
+else {
+const err63 = {instancePath:instancePath+"/expiry_day_cutoff",schemaPath:"#/$defs/Time/type",keyword:"type",params:{type: "string"},message:"must be string"};
+if(vErrors === null){
+vErrors = [err63];
+}
+else {
+vErrors.push(err63);
+}
+errors++;
+}
+}
+if(data.daily !== undefined){
+let data27 = data.daily;
+if(data27 && typeof data27 == "object" && !Array.isArray(data27)){
+if(Object.keys(data27).length < 1){
+const err64 = {instancePath:instancePath+"/daily",schemaPath:"#/properties/daily/minProperties",keyword:"minProperties",params:{limit: 1},message:"must NOT have fewer than 1 properties"};
+if(vErrors === null){
+vErrors = [err64];
+}
+else {
+vErrors.push(err64);
+}
+errors++;
+}
+for(const key7 in data27){
+if(!(((key7 === "max_trades") || (key7 === "stop_after_sl_hits")) || (key7 === "max_daily_loss_rupees"))){
+const err65 = {instancePath:instancePath+"/daily",schemaPath:"#/properties/daily/additionalProperties",keyword:"additionalProperties",params:{additionalProperty: key7},message:"must NOT have additional properties"};
+if(vErrors === null){
+vErrors = [err65];
+}
+else {
+vErrors.push(err65);
+}
+errors++;
+}
+}
+if(data27.max_trades !== undefined){
+let data28 = data27.max_trades;
+if(!((typeof data28 == "number") && (!(data28 % 1) && !isNaN(data28)))){
+const err66 = {instancePath:instancePath+"/daily/max_trades",schemaPath:"#/properties/daily/properties/max_trades/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
+if(vErrors === null){
+vErrors = [err66];
+}
+else {
+vErrors.push(err66);
+}
+errors++;
+}
+if(typeof data28 == "number"){
+if(data28 > 100 || isNaN(data28)){
+const err67 = {instancePath:instancePath+"/daily/max_trades",schemaPath:"#/properties/daily/properties/max_trades/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+if(vErrors === null){
+vErrors = [err67];
+}
+else {
+vErrors.push(err67);
+}
+errors++;
+}
+if(data28 < 1 || isNaN(data28)){
+const err68 = {instancePath:instancePath+"/daily/max_trades",schemaPath:"#/properties/daily/properties/max_trades/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err68];
+}
+else {
+vErrors.push(err68);
+}
+errors++;
+}
+}
+}
+if(data27.stop_after_sl_hits !== undefined){
+let data29 = data27.stop_after_sl_hits;
+if(!((typeof data29 == "number") && (!(data29 % 1) && !isNaN(data29)))){
+const err69 = {instancePath:instancePath+"/daily/stop_after_sl_hits",schemaPath:"#/properties/daily/properties/stop_after_sl_hits/type",keyword:"type",params:{type: "integer"},message:"must be integer"};
+if(vErrors === null){
+vErrors = [err69];
+}
+else {
+vErrors.push(err69);
+}
+errors++;
+}
+if(typeof data29 == "number"){
+if(data29 > 100 || isNaN(data29)){
+const err70 = {instancePath:instancePath+"/daily/stop_after_sl_hits",schemaPath:"#/properties/daily/properties/stop_after_sl_hits/maximum",keyword:"maximum",params:{comparison: "<=", limit: 100},message:"must be <= 100"};
+if(vErrors === null){
+vErrors = [err70];
+}
+else {
+vErrors.push(err70);
+}
+errors++;
+}
+if(data29 < 1 || isNaN(data29)){
+const err71 = {instancePath:instancePath+"/daily/stop_after_sl_hits",schemaPath:"#/properties/daily/properties/stop_after_sl_hits/minimum",keyword:"minimum",params:{comparison: ">=", limit: 1},message:"must be >= 1"};
+if(vErrors === null){
+vErrors = [err71];
+}
+else {
+vErrors.push(err71);
+}
+errors++;
+}
+}
+}
+if(data27.max_daily_loss_rupees !== undefined){
+let data30 = data27.max_daily_loss_rupees;
+if(typeof data30 == "number"){
+if(data30 <= 0 || isNaN(data30)){
+const err72 = {instancePath:instancePath+"/daily/max_daily_loss_rupees",schemaPath:"#/properties/daily/properties/max_daily_loss_rupees/exclusiveMinimum",keyword:"exclusiveMinimum",params:{comparison: ">", limit: 0},message:"must be > 0"};
+if(vErrors === null){
+vErrors = [err72];
+}
+else {
+vErrors.push(err72);
+}
+errors++;
+}
+}
+else {
+const err73 = {instancePath:instancePath+"/daily/max_daily_loss_rupees",schemaPath:"#/properties/daily/properties/max_daily_loss_rupees/type",keyword:"type",params:{type: "number"},message:"must be number"};
+if(vErrors === null){
+vErrors = [err73];
+}
+else {
+vErrors.push(err73);
+}
+errors++;
+}
+}
+}
+else {
+const err74 = {instancePath:instancePath+"/daily",schemaPath:"#/properties/daily/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err74];
+}
+else {
+vErrors.push(err74);
+}
+errors++;
+}
+}
+}
+else {
+const err75 = {instancePath,schemaPath:"#/type",keyword:"type",params:{type: "object"},message:"must be object"};
+if(vErrors === null){
+vErrors = [err75];
+}
+else {
+vErrors.push(err75);
+}
+errors++;
+}
+validate58.errors = vErrors;
 return errors === 0;
 }
-validate53.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
+validate58.evaluated = {"props":true,"dynamicProps":false,"dynamicItems":false};
 
 
 function validate20(data, {instancePath="", parentData, parentDataProperty, rootData=data, dynamicAnchors={}}={}){
@@ -4923,8 +5668,8 @@ errors = vErrors.length;
 }
 }
 if(data.advanced !== undefined){
-if(!(validate53(data.advanced, {instancePath:instancePath+"/advanced",parentData:data,parentDataProperty:"advanced",rootData,dynamicAnchors}))){
-vErrors = vErrors === null ? validate53.errors : vErrors.concat(validate53.errors);
+if(!(validate58(data.advanced, {instancePath:instancePath+"/advanced",parentData:data,parentDataProperty:"advanced",rootData,dynamicAnchors}))){
+vErrors = vErrors === null ? validate58.errors : vErrors.concat(validate58.errors);
 errors = vErrors.length;
 }
 }

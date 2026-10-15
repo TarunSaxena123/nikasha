@@ -200,6 +200,11 @@ The prompt is a static string (identical across requests, so prompt caching can 
 
 **One-line sample:** BUY, CE, ATM, RSI 14 crosses above 60, 5-minute, SL 30% of premium — all FOUND. No VAGUE or UNSUPPORTED items. MISSING (browser): holding type, expiry, lots, lot size, and the positional exit question only if Positional.
 
+### 2.5b Vocabulary extensions (UPL-22, 23; added 2026-10-15)
+- Prompt (`upl-3`, recorded live 2026-10-15): the new indicators (`OPENING_RANGE` params "minutes", `PIVOTS` none), outputs, `candle.range` / `candle.body` refs, exit-condition rows (sides `EXIT_CE`, `EXIT_PE`, `EXIT_ALL_LEGS`), trail after points, `SPOT_LEVEL` targets and partial exits, with the mistakes to avoid.
+- Wire form: new choices only (enum values and settings names), so the schema does not grow: indicator types, condition sides, target type `SPOT_LEVEL` with `target_value` "ce_ref|pe_ref", settings `trail_to_cost_at_pts`, `partial_percent`, `partial_when` ("gain:PCT_PREMIUM:50", "gain:POINTS:25", "gain:RR:1" or "level:ce_ref|pe_ref"), `partial_then` (UNCHANGED, COST, PARTIAL_CANDLE). New FieldKeys: `exit_condition`, `partial_exit`, `trail_to_cost_at_pts`, and `condition_value` (a NUMBER question for a threshold the text leaves vague, e.g. "wide CPR"; the row's right side stays empty until answered). An item that comes with a question is treated as VAGUE whatever status the reply gave it.
+- ORB + CPR sample expectation (oracle for UPL-23): 15-min; BUY; both by signal; ITM 100; current weekly; call entry all(OR-15 low > Pivots TC, close > OR-15 high [+ open > OR-15 high if the "body" answer says so]); put mirror with BC and OR low; exit when close crosses below EMA 20 (calls) / above (puts); trigger-candle stop capped at 25; trail to cost after 25 points; partial 50% at R1 / S1 then trail to the partial candle; target at R2 / S2; entry window until 11:30; candle range ≤ 70; daily max 1 trade; questions: CPR width threshold, "completely above" (body or close).
+
 ### 2.6 Recorded responses
 `scripts/record_extraction.py` (manual, uses the owner's key) runs the live call for each sample and saves the raw structured output to `extractor/tests/recordings/<sample>.<PROMPT_VERSION>.json`. CI tests replay the recordings through `validate` + `convert` and compare with §2.5. The live run is repeated before release (feature 07 release checklist).
 

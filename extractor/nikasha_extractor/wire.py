@@ -9,7 +9,8 @@ wire schema is compact and has no nullable or optional fields:
 - A condition row has one `op` for comparisons, cross directions and up/down.
 - Indicator parameters are one comma-separated `params` text, in a fixed order per type.
 - Advanced options are a list of {name, value} settings, only those the text states; an item's
-  question is flattened into the item.
+  question is flattened into the item. Index levels are written "ce_ref|pe_ref" (target value,
+  partial exit "level:…"); a premium-gain partial exit is "gain:TYPE:VALUE".
 `from_wire` turns this back into ExtractionDraft, so convert.py and validate.py work on one internal
 shape. A number that doesn't parse is treated as not stated, so the app asks instead of guessing.
 """
@@ -25,7 +26,29 @@ from nikasha_extractor import schema as d
 
 NONE = "NONE"
 PRICES = ("open", "high", "low", "close")
-OUTPUTS = ("value", "signal", "hist", "upper", "middle", "lower", "plus_di", "minus_di")
+OUTPUTS = (
+    "value",
+    "signal",
+    "hist",
+    "upper",
+    "middle",
+    "lower",
+    "plus_di",
+    "minus_di",
+    "high",
+    "low",
+    "p",
+    "tc",
+    "bc",
+    "r1",
+    "r2",
+    "r3",
+    "s1",
+    "s2",
+    "s3",
+    "cpr_width",
+    "cpr_width_pct",
+)
 # Order of the numbers in Indicator.params per type.
 PARAMS: dict[str, tuple[str, ...]] = {
     "EMA": ("period",),
@@ -35,8 +58,10 @@ PARAMS: dict[str, tuple[str, ...]] = {
     "SUPERTREND": ("period", "multiplier"),
     "MACD": ("fast", "slow", "signal"),
     "BBANDS": ("period", "stddev"),
+    "OPENING_RANGE": ("minutes",),
+    "PIVOTS": (),
 }
-_INT_PARAMS = {"period", "fast", "slow", "signal"}
+_INT_PARAMS = {"period", "fast", "slow", "signal", "minutes"}
 
 
 class _Strict(BaseModel):
@@ -59,7 +84,7 @@ class Indicator(_Strict):
 class ConditionRow(_Strict):
     id: str
     parent_id: str
-    side: Literal["CE", "PE", "ALL_LEGS"]
+    side: Literal["CE", "PE", "ALL_LEGS", "EXIT_CE", "EXIT_PE", "EXIT_ALL_LEGS"]
     kind: Literal["all", "any", "compare", "cross", "state", "turns", "slope", "state_or_turns"]
     left: Operand
     op: Literal["gt", "gte", "lt", "lte", "above", "below", "up", "down", "NONE"]
@@ -83,7 +108,7 @@ class Basics(_Strict):
 class ExitSpec(_Strict):
     sl_type: Literal["PCT_PREMIUM", "POINTS", "TRIGGER_CANDLE", "NONE"]
     sl_value: str
-    target_type: Literal["PCT_PREMIUM", "POINTS", "RR", "NONE"]
+    target_type: Literal["PCT_PREMIUM", "POINTS", "RR", "SPOT_LEVEL", "NONE"]
     target_value: str
     time_exit_at: str
     time_exit_on: Literal["ENTRY_DAY", "EXPIRY_DAY", "NONE"]
@@ -102,6 +127,10 @@ SettingName = Literal[
     "daily_max_trades",
     "daily_stop_after_sl_hits",
     "daily_max_loss_rupees",
+    "trail_to_cost_at_pts",
+    "partial_percent",
+    "partial_when",
+    "partial_then",
 ]
 
 
@@ -184,6 +213,18 @@ def _operand(o: Operand) -> d.Operand | None:
         kind, ind, output, price, vix = "const", None, None, None, None
     elif ref.lower() in PRICES:
         kind, ind, output, price, vix = "price", None, None, ref.lower(), None
+    elif head.lower() == "candle" and tail in ("range", "body"):
+        return d.Operand(
+            kind="candle",
+            ind=None,
+            output=None,
+            price=None,
+            vix=None,
+            const=None,
+            candle=tail,
+            offset_pts=pts,
+            offset_pct=pct,
+        )
     elif head.lower() == "vix":
         kind, ind, output, price, vix = "vix", None, None, None, (tail if tail in ("open", "close") else None)
     else:
@@ -237,6 +278,7 @@ def _indicator(i: Indicator) -> d.Indicator:
         slow=p.get("slow"),
         signal=p.get("signal"),
         stddev=p.get("stddev"),
+        minutes=p.get("minutes"),
     )
 
 
@@ -249,6 +291,33 @@ def _band(v: str) -> d.VixBand:
     rng, _, size = v.partition("=")
     lo, _, hi = rng.partition("-")
     return d.VixBand(vix_from=_float(lo), vix_to=_float(hi), size_pct=_float(size))
+
+
+def _ref_operand(ref: str) -> d.Operand | None:
+    return _operand(Operand(ref=ref, offset_pts="", offset_pct=""))
+
+
+def _levels(text: str) -> tuple[d.Operand | None, d.Operand | None]:
+    """Index levels written "ce_ref|pe_ref" (either side may be empty)."""
+    ce, _, pe = text.partition("|")
+    return _ref_operand(ce), _ref_operand(pe)
+
+
+def _partial(one: dict[str, str]) -> dict[str, Any]:
+    """partial_when: "gain:PCT_PREMIUM:50" / "gain:POINTS:25" / "gain:RR:1" or "level:ce_ref|pe_ref"."""
+    when = one.get("partial_when", "").strip()
+    out: dict[str, Any] = {"partial_percent": _int(one.get("partial_percent", ""))}
+    then = one.get("partial_then", "").strip()
+    out["partial_then"] = then if then in ("UNCHANGED", "COST", "PARTIAL_CANDLE") else None
+    if when.startswith("gain:"):
+        _, gtype, gval = (when.split(":") + ["", ""])[:3]
+        out["partial_when"] = "PREMIUM_GAIN"
+        out["partial_gain_type"] = gtype if gtype in ("PCT_PREMIUM", "POINTS", "RR") else None
+        out["partial_gain_value"] = _float(gval)
+    elif when.startswith("level:"):
+        out["partial_when"] = "SPOT_LEVEL"
+        out["partial_ce"], out["partial_pe"] = _levels(when[len("level:") :])
+    return out
 
 
 def _advanced(settings: list[Setting]) -> d.AdvancedSpec:
@@ -273,14 +342,18 @@ def _advanced(settings: list[Setting]) -> d.AdvancedSpec:
         daily_max_trades=_int(one.get("daily_max_trades", "")),
         daily_stop_after_sl_hits=_int(one.get("daily_stop_after_sl_hits", "")),
         daily_max_loss_rupees=_float(one.get("daily_max_loss_rupees", "")),
+        trail_to_cost_at_pts=_float(one.get("trail_to_cost_at_pts", "")),
+        **_partial(one),
     )
 
 
 def _item(i: Item) -> d.Item:
     unsupported = i.status == "UNSUPPORTED"
+    # An item that asks a question isn't clear: it is VAGUE whatever status the reply gave it.
+    status = "VAGUE" if i.status == "FOUND" and i.question_kind != NONE else i.status
     return d.Item(
         id=i.id,
-        status=i.status,
+        status=status,
         field=i.field,
         quote=i.quote,
         understood=i.understood,
@@ -300,7 +373,13 @@ def _item(i: Item) -> d.Item:
 
 _VAGUE_BASICS = {"action", "option_side", "moneyness", "distance_pts", "expiry", "timeframe_min", "holding"}
 _VAGUE_BASICS |= {"lots", "lot_size", "fixed_entry_time"}
-_VAGUE_ADVANCED = {"sl_cap_pts", "trail_to_cost_at_r", "exit_after_candles", "expiry_day_cutoff"}
+_VAGUE_ADVANCED = {
+    "sl_cap_pts",
+    "trail_to_cost_at_r",
+    "trail_to_cost_at_pts",
+    "exit_after_candles",
+    "expiry_day_cutoff",
+}
 _VAGUE_EXIT = {"stop_loss": "sl_value", "target": "target_value", "time_exit": "time_exit_at"}
 
 
@@ -328,6 +407,8 @@ def clear_vague(x: d.ExtractionDraft) -> d.ExtractionDraft:
                 row = rows[ref]
                 if f == "slope_lookback":
                     row.lookback = None
+                elif f == "condition_value" and row.right is not None and row.right.kind == "const":
+                    row.right = None  # the threshold is asked (e.g. "wide CPR" without a number)
                 elif f == "condition_offset":
                     for o in (row.left, row.right):
                         if o is not None:
@@ -364,10 +445,15 @@ def _from_wire(w: WireDraft) -> d.ExtractionDraft:
             sl_type=_enum(e.sl_type),
             sl_value=_float(e.sl_value),
             target_type=_enum(e.target_type),
-            target_value=_float(e.target_value),
+            target_value=None if e.target_type == "SPOT_LEVEL" else _float(e.target_value),
             time_exit_at=_text(e.time_exit_at),
             time_exit_on=_enum(e.time_exit_on),
             hold_to_expiry={"YES": True, "NO": False}.get(e.hold_to_expiry),
+            **(
+                dict(zip(("target_ce", "target_pe"), _levels(e.target_value), strict=True))
+                if e.target_type == "SPOT_LEVEL"
+                else {}
+            ),
         ),
         advanced=_advanced(w.advanced),
         items=[_item(i) for i in w.items],
@@ -398,6 +484,8 @@ def _w_operand(o: d.Operand | None) -> dict[str, str]:
         ref = _s(o.price)
     elif o.kind == "vix":
         ref = f"vix.{o.vix}" if o.vix else "vix"
+    elif o.kind == "candle":
+        ref = f"candle.{o.candle}"
     else:
         ref = f"{o.ind}.{o.output}" if o.output else _s(o.ind)
     return {"ref": ref, "offset_pts": _s(o.offset_pts), "offset_pct": _s(o.offset_pct)}
@@ -443,6 +531,17 @@ def _w_advanced(a: d.AdvancedSpec) -> list[dict[str, str]]:
     for name in ("expiry_day_cutoff", "daily_max_trades", "daily_stop_after_sl_hits", "daily_max_loss_rupees"):
         if getattr(a, name) is not None:
             out.append({"name": name, "value": _s(getattr(a, name))})
+    if a.trail_to_cost_at_pts is not None:
+        out.append({"name": "trail_to_cost_at_pts", "value": _s(a.trail_to_cost_at_pts)})
+    if a.partial_percent is not None:
+        out.append({"name": "partial_percent", "value": _s(a.partial_percent)})
+    if a.partial_when == "PREMIUM_GAIN":
+        out.append({"name": "partial_when", "value": f"gain:{_s(a.partial_gain_type)}:{_s(a.partial_gain_value)}"})
+    elif a.partial_when == "SPOT_LEVEL":
+        refs = f"{_w_operand(a.partial_ce)['ref']}|{_w_operand(a.partial_pe)['ref']}"
+        out.append({"name": "partial_when", "value": f"level:{refs}"})
+    if a.partial_then is not None:
+        out.append({"name": "partial_then", "value": a.partial_then})
     return out
 
 
@@ -476,7 +575,9 @@ def to_wire(x: d.ExtractionDraft) -> WireDraft:
                 "sl_type": _e(e.sl_type),
                 "sl_value": _s(e.sl_value),
                 "target_type": _e(e.target_type),
-                "target_value": _s(e.target_value),
+                "target_value": f"{_w_operand(e.target_ce)['ref']}|{_w_operand(e.target_pe)['ref']}"
+                if e.target_type == "SPOT_LEVEL"
+                else _s(e.target_value),
                 "time_exit_at": _s(e.time_exit_at),
                 "time_exit_on": _e(e.time_exit_on),
                 "hold_to_expiry": NONE if e.hold_to_expiry is None else ("YES" if e.hold_to_expiry else "NO"),

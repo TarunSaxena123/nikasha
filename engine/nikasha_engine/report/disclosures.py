@@ -35,7 +35,73 @@ EXIT_TEXTS = {
     "SQUARE_OFF": "Intraday square-off",
     "N_CANDLES": "Exit after the set number of candles",
     "EXPIRY_SETTLEMENT": "Settled at expiry at intrinsic value",
+    "SIGNAL_EXIT": "Exit condition met",
+    "SPOT_TARGET": "Index reached the target level",
+    "TRAILING_STOP": "Index broke back past the partial-exit candle",
 }
+
+LEVEL_OUTPUTS = {
+    "high": "high",
+    "low": "low",
+    "p": "P",
+    "tc": "TC",
+    "bc": "BC",
+    "r1": "R1",
+    "r2": "R2",
+    "r3": "R3",
+    "s1": "S1",
+    "s2": "S2",
+    "s3": "S3",
+    "cpr_width": "CPR width",
+    "cpr_width_pct": "CPR width %",
+    "value": "",
+}
+
+
+def _indicator_name(ind: dict[str, Any] | None) -> str:
+    if ind is None:
+        return "indicator"
+    t = ind["type"]
+    if t == "OPENING_RANGE":
+        return f"Opening range {ind['minutes']}"
+    if t == "PIVOTS":
+        return "Pivots"
+    if t in ("EMA", "SMA", "RSI", "ADX", "BBANDS"):
+        return f"{t} {ind['period']}"
+    return str(t).title()
+
+
+def level_text(op: dict[str, Any], indicators: dict[str, Any]) -> str:
+    """An index level in words: "Pivots R2", "Opening range 15 high" or a number."""
+    if "const" in op:
+        return fmt.points(op["const"])
+    name = _indicator_name(indicators.get(op["ind"]))
+    out = LEVEL_OUTPUTS.get(op["output"], op["output"])
+    return f"{name} {out}".strip()
+
+
+def _sides_text(spec: dict[str, Any], indicators: dict[str, Any]) -> str:
+    parts = [
+        f"{level_text(spec[k], indicators)} ({'calls' if k == 'ce' else 'puts'})" for k in ("ce", "pe") if k in spec
+    ]
+    return " / ".join(parts)
+
+
+def _partial_text(pe: dict[str, Any], indicators: dict[str, Any]) -> str:
+    w = pe["when"]
+    if w["type"] == "SPOT_LEVEL":
+        when = f"when the index reaches {_sides_text(w, indicators)}"
+    else:
+        g = w["gain"]
+        unit = {"PCT_PREMIUM": "% of the premium", "POINTS": " premium points", "RR": " × the initial risk"}[g["type"]]
+        when = f"after a gain of {fmt.points(g['value'])}{unit}"
+    then = {
+        "UNCHANGED": "the rest keeps its exits",
+        "COST": "the rest's stop moves to the entry price",
+        "PARTIAL_CANDLE": "the rest exits if the index breaks back past that candle's low (or high)",
+    }[pe["then_stop"]]
+    return f"Close {pe['percent']}% of the lots {when}; {then}"
+
 
 EXPIRY_TEXTS = {
     "CURRENT_WEEKLY": "Current weekly expiry",
@@ -94,8 +160,21 @@ def advanced_used(strategy: dict[str, Any]) -> list[dict[str, Any]]:
         "trail_to_cost": (
             f"Stop moves to the entry price after a gain of {fmt.points(adv['trail_to_cost_at_r'])} × the initial risk"
             if "trail_to_cost_at_r" in adv
+            else f"Stop moves to the entry price after a gain of {fmt.points(adv['trail_to_cost_at_pts'])} points"
+            if "trail_to_cost_at_pts" in adv
             else None
         ),
+        "exit_conditions": (
+            "Exit at the next minute's open when the exit conditions are true on a candle close"
+            if ex.get("exit_when")
+            else None
+        ),
+        "index_target": (
+            f"Exit when the index reaches {_sides_text(tgt, strategy['indicators'])}"
+            if tgt.get("type") == "SPOT_LEVEL"
+            else None
+        ),
+        "partial_exit": _partial_text(adv["partial_exit"], strategy["indicators"]) if adv.get("partial_exit") else None,
         "exit_after_candles": (
             f"Exit after {fmt.count(adv['exit_after_candles'], 'candle')} if no stop or target is hit"
             if "exit_after_candles" in adv

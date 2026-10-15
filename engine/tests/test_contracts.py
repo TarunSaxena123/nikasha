@@ -79,7 +79,7 @@ def test_invalid_fixture_fails_for_its_named_rule(path, nifty):
 
 def test_every_sem_rule_has_a_fixture():
     covered = {p.stem[:6] for p in INVALID if p.stem.startswith("SEM-")}
-    assert covered == {f"SEM-{i:02d}" for i in range(1, 21)}
+    assert covered == {f"SEM-{i:02d}" for i in range(1, 26)}
 
 
 def test_problem_messages_name_no_paths_or_ids(nifty):

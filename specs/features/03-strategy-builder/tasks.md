@@ -20,6 +20,8 @@ Rules: frontend only (no [BE] tasks; the engine's validation is feature 01 T-ENG
 | T-INP-12 | [FE] Step 4 Exit incl. intraday note and positional exit question | 17 | AC-INP-12 (component) | 8 |
 | T-INP-13 | [FE] Advanced section: switches off by default, empty required fields, removal on switch-off; SL cap, trigger candle, R:R, trail, N candles, VIX sizing bands, windows, cutoff, daily limits, delta/premium strike | 18, 19 | AC-INP-13 (component) | 8b |
 | T-INP-14 | [FE] Multi-leg editor (2–4 legs, shared expiry, restricted triggers, combined-stop note) | 20 | AC-INP-14 (component: straddle equals template) | 8b / last (with the straddle) |
+| T-INP-15 | [FE] Indicator picker and value lists for opening range, pivots / CPR, candle range and body; mirror swaps | INP-22, 26 | AC-INP-16, 20 | 11 (added 2026-10-15) |
+| T-INP-16 | [FE] Exit-when editor; trail-to-cost choice; index-level target and partial exit editors; describeStrategy texts | INP-23, 24, 25 | AC-INP-17, 18, 19 | 11 |
 
 ## Order of work
 

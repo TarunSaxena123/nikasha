@@ -100,6 +100,12 @@ Implements [`product.md`](../../product.md) §6.3, §6.5 (Review & Evaluate), §
 | REQ-RPT-20 | WHERE the report has at least one trade (otherwise the button is hidden and the PDF says "no trades") (D7), WHEN the user clicks **Download trades (CSV)**, THE web app SHALL generate in the browser a CSV with one row per trade and plain-English column names, preceded by comment lines with the period, settings summary, data source and short disclaimer. |
 | REQ-RPT-21 | THE downloads SHALL be named `nikasha-report-<strategy-name>-<YYYYMMDD>.pdf` and `nikasha-trades-<strategy-name>-<YYYYMMDD>.csv`, with the strategy name reduced to letters, digits and hyphens. |
 
+### 3.7 Partial exits and new exit reasons (added 2026-10-15, owner approval)
+
+| ID | Requirement |
+|---|---|
+| REQ-RPT-22 | WHERE a trade had a partial exit, THE trade table and CSV SHALL show its time, quantity and exit premium(s) alongside the final exit, THE PDF (which lists trades only as a summary) SHALL state how many trades had one, and the trade's P&L SHALL be the sum of both parts. |
+| REQ-RPT-23 | THE report SHALL describe the new exit reasons in plain English (`SIGNAL_EXIT` "Exit condition met", `SPOT_TARGET` "Index reached the target level", `TRAILING_STOP` "Index broke back past the partial-exit candle") and SHALL list exit conditions, trail after points, index-level targets and partial exits under "Settings used" (used or "Not used"). |
 ## 4. Acceptance criteria
 
 | AC | Req. | Given / When / Then |
@@ -129,6 +135,8 @@ Implements [`product.md`](../../product.md) §6.3, §6.5 (Review & Evaluate), §
 | AC-RPT-12 | 17 | **Given** 230 trades, **then** the table has 5 pages of at most 50 with plain-English columns. |
 | AC-RPT-13 | 19, 21 | **Given** a report, **when** Download PDF is clicked, **then** a PDF named per REQ-RPT-21 is saved with no network request, and its text contains the rules, summary, risk metrics, settings used, data source with dates, the short disclaimer on every page, and the engine version. |
 | AC-RPT-14 | 20, 21 | **Given** a report, **when** Download trades is clicked, **then** a CSV is saved with no network request, with the comment-line preamble and one row per trade. |
+| AC-RPT-16 | 22 | **Given** a report with a partial exit, **then** that trade's row and CSV line show the partial time, quantity and premium, the PDF's trade summary counts it, and gross = partial part + final part. |
+| AC-RPT-17 | 23 | **Given** trades with `SIGNAL_EXIT`, `SPOT_TARGET` and `TRAILING_STOP`, **then** each shows its plain-English reason, and "Settings used" lists the new options as used or "Not used". |
 
 ## 5. Edge cases
 

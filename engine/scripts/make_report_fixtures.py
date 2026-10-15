@@ -44,6 +44,10 @@ def cases() -> dict[str, dict[str, Any]]:
             "strategy": never,
             "settings": {"period": {"start": "2024-01-01", "end": "2024-03-31"}, "costs": _costs()},
         },
+        "orb-cpr-2024": {  # partial exits and the 2026-10-15 exit reasons, for web tests
+            "strategy": json.loads((STRATS / "orb-cpr-sample-with-answers.json").read_text()),
+            "settings": {"period": {"start": "2024-01-01", "end": "2024-12-31"}, "costs": _costs()},
+        },
         "capital-given": {
             "strategy": stf,
             "settings": {

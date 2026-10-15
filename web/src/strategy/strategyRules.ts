@@ -20,7 +20,19 @@ const OUTPUTS: Record<string, string[]> = {
   SUPERTREND: ["value"],
   MACD: ["value", "signal", "hist"],
   BBANDS: ["upper", "middle", "lower"],
+  OPENING_RANGE: ["high", "low"],
+  PIVOTS: ["p", "tc", "bc", "r1", "r2", "r3", "s1", "s2", "s3", "cpr_width", "cpr_width_pct"],
 };
+
+/** Every SPOT_LEVEL spec (target, partial exit), each with optional ce / pe operands. */
+function levelSpecs(s: Strategy): AnyRec[] {
+  const out: AnyRec[] = [];
+  const tgt = (s.exit as unknown as AnyRec).target as AnyRec | undefined;
+  if (tgt && tgt.type === "SPOT_LEVEL") out.push(tgt);
+  const pe = ((s.advanced ?? {}) as AnyRec).partial_exit as AnyRec | undefined;
+  if (pe && (pe.when as AnyRec).type === "SPOT_LEVEL") out.push(pe.when as AnyRec);
+  return out;
+}
 const MAX_DEPTH = 4;
 const MAX_CONDITIONS_PER_SIDE = 30;
 const MAX_QUANTITY = 100_000;
@@ -116,10 +128,24 @@ export function semanticProblems(s: Strategy, ctx: RuleContext): Problem[] {
 
   const indicators = s.indicators as unknown as Record<string, AnyRec>;
   const entry = s.entry as AnyRec;
-  const sides = (["ce", "pe", "all_legs"] as const).filter((k) => k in entry).map((k) => entry[k] as Node);
+  const exitWhen = ((s.exit as unknown as AnyRec).exit_when ?? {}) as Record<string, Node>;
+  // Entry and exit condition sets share SEM-03, 04 and 15.
+  const sides = [
+    ...(["ce", "pe", "all_legs"] as const).filter((k) => k in entry).map((k) => entry[k] as Node),
+    ...Object.values(exitWhen),
+  ];
   const nodes = sides.flatMap((t) => walk(t).nodes);
+  const levels = levelSpecs(s);
 
   const missing: string[] = [];
+  for (const spec of levels) {
+    for (const o of [spec.ce, spec.pe] as (AnyRec | undefined)[]) {
+      if (o && "ind" in o) {
+        const ind = indicators[o.ind as string];
+        if (!ind || !OUTPUTS[ind.type as string]!.includes(o.output as string)) missing.push(o.ind as string);
+      }
+    }
+  }
   for (const node of nodes) {
     for (const o of operands(node)) {
       if ("ind" in o) {
@@ -173,7 +199,7 @@ export function semanticProblems(s: Strategy, ctx: RuleContext): Problem[] {
   const intraday = s.holding === "INTRADAY";
   const sq = inst.intraday_squareoff;
 
-  if (!intraday && !("target" in ex || "time_exit" in ex || ex.hold_to_expiry || "exit_after_candles" in adv)) {
+  if (!intraday && !("target" in ex || "time_exit" in ex || ex.hold_to_expiry || "exit_after_candles" in adv || "exit_when" in ex)) {
     probs.push({
       rule: "SEM-07",
       field_label: "Exit rule",
@@ -294,6 +320,39 @@ export function semanticProblems(s: Strategy, ctx: RuleContext): Problem[] {
 
   if (s.position.lots * s.position.lot_size > MAX_QUANTITY) {
     probs.push({ rule: "SEM-20", field_label: "Position size", message: "That position size is too large to simulate." });
+  }
+
+  if (adv.trail_to_cost_at_r !== undefined && adv.trail_to_cost_at_pts !== undefined) {
+    probs.push({ rule: "SEM-21", field_label: "Trail to cost", message: "Choose one way to move the stop to cost: a multiple of the risk, or premium points." });
+  }
+  const legs = s.legs as unknown as AnyRec[];
+  const partial = adv.partial_exit as AnyRec | undefined;
+  const usesLevels = levels.length > 0 || partial?.then_stop === "PARTIAL_CANDLE";
+  if (usesLevels && legs.length > 1) {
+    probs.push({ rule: "SEM-22", field_label: "Exit levels", message: "Index-level exits work with one leg only." });
+  }
+  if (levels.length && legs.length === 1) {
+    const ot = legs[0]!.option_type as string;
+    const need = ot === "CE" ? ["ce"] : ot === "PE" ? ["pe"] : ["ce", "pe"];
+    const bad = levels.some((spec) => need.some((k) => { const o = spec[k] as AnyRec | undefined; return !o || !("ind" in o || "const" in o); }));
+    if (bad) {
+      probs.push({ rule: "SEM-23", field_label: "Exit levels", message: "Give the index level for each side you trade (calls and puts), using an indicator value or a number." });
+    }
+  }
+  const exitKeys = Object.keys(exitWhen);
+  if (exitKeys.length) {
+    const ot = legs[0]!.option_type as string;
+    const ok = legs.length > 1
+      ? exitKeys.length === 1 && exitKeys[0] === "all_legs"
+      : ot === "SIGNAL"
+        ? !exitKeys.includes("all_legs")
+        : exitKeys.length === 1 && (exitKeys[0] === ot.toLowerCase() || exitKeys[0] === "all_legs");
+    if (!ok) {
+      probs.push({ rule: "SEM-24", field_label: "Exit conditions", message: "The exit conditions don't match the option type: use call and put conditions for one signal leg, or one set for all legs." });
+    }
+  }
+  if (partial && s.position.lots < 2) {
+    probs.push({ rule: "SEM-25", field_label: "Partial exit", message: "A partial exit needs at least 2 lots, so part of the position can be closed and part kept." });
   }
   return probs;
 }

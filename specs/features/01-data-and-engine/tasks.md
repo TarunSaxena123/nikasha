@@ -52,6 +52,10 @@ Rules: [CONTRACT] tasks first; this feature has no [FE] tasks (backend only). **
 | ID | Task | Req. | Tests that prove it |
 |---|---|---|---|
 | T-ENG-16 | [BE] `adapters/lambda_handler.py`, engine Dockerfile (Python base + Lambda RIC, Parquet + `instruments/` baked in, CSVs not copied), engine function in the SAM template (with T-PRV-10) | DAT-08, ENG-45 | Local container run passes the `/v1/meta` and evaluate smoke tests; after deploy: smoke test through the Function URL (`architecture.md` §9) and one timed cold start |
+| T-ENG-17 | [CONTRACT] Schema, OpenAPI (`Trade.partial_exit`, exit reasons `SIGNAL_EXIT`, `SPOT_TARGET`, `TRAILING_STOP`), SEM-21…25 in both validators, valid and invalid fixtures (incl. the ORB + CPR strategy), regenerated Python and TypeScript code | ENG-48…57 | Contract checks; shared-fixture tests in engine and web | 11 (added 2026-10-15) |
+| T-ENG-18 | [BE] `OPENING_RANGE` and `PIVOTS` indicators; candle range and body operands | ENG-48, 49, 50 | AC-ENG-28, 29 | 11 |
+| T-ENG-19 | [BE] Exit conditions, trail after points, index levels, `SPOT_LEVEL` target | ENG-51…54 | AC-ENG-30, 31, 32 | 11 |
+| T-ENG-20 | [BE] Partial exit, the rest's stop, sizing before the path, split costs | ENG-55, 56, 57 | AC-ENG-33; golden reports for existing strategies unchanged | 11 |
 
 ## Order of work
 

@@ -59,6 +59,12 @@ Implements [`product.md`](../../product.md) §6.5 (document upload path) and §6
 | REQ-UPL-20 | FOR `samples/nifty_weekly_options_strategy.pdf`, THE system SHALL ask at least about: "closes decisively above/below" (threshold); SL cap "30–35" (one number); VIX > 18 "reduce significantly" (exact %); "Supertrend turns green/red" (flip candle only or any candle while green); ADX "slope up" (over how many candles); "Thursday" (→ expiry day); "pre-market 09:00 VIX" (→ 09:15 opening VIX); weekly expiry (confirm, implied by the title); and the missing holding type, lots and lot size — and SHALL NOT ask about the "medical advice" footer. |
 | REQ-UPL-21 | FOR `samples/one_line_strategy.txt`, THE system SHALL ask only for holding type, expiry, lots and lot size, plus the positional exit question only if Positional is chosen; nothing about advanced options or the PE side. |
 
+### 2.5 Vocabulary extensions (added 2026-10-15, owner approval)
+
+| ID | Requirement |
+|---|---|
+| REQ-UPL-22 | THE extraction SHALL recognise opening ranges, daily pivots / CPR (including CPR width), candle range and body, exit conditions, trail to cost after premium points, index-level targets and partial exits, and SHALL ask about vague values among them (for example "wide CPR" without a number). |
+| REQ-UPL-23 | GIVEN the ORB + CPR sample (`samples/nifty_15min_orb_cpr_strategy.pdf`), THE extraction SHALL capture the CPR bias, opening-range trigger, 20 EMA exit, +25-point move to cost, 50% partial exit at R1/S1 with the rest trailed to the breakout candle and exited at R2/S2, the 11:30 cut-off, the 70-point candle filter and 1 trade a day, and SHALL ask about the vague ones (CPR width, "trade completely above"). |
 ## 3. Acceptance criteria
 
 | AC | Req. | Given / When / Then |
@@ -78,6 +84,7 @@ Implements [`product.md`](../../product.md) §6.5 (document upload path) and §6
 | AC-UPL-13 | 17 | **Given** all questions answered (incl. lots and lot size), **then** the review screen opens with origin UPLOAD, lots and lot size confirmed, and the costs/period checkbox unticked. |
 | AC-UPL-14 | 18, 19 | **Given** a text with no rules ("hello"), **then** the "no trading rules found" message offers the builder; **given** each error code, **then** the matching plain-English message and next step appear. |
 | AC-UPL-15 | 20 | **Given** the advanced sample (recorded response in CI; live run before release), **then** every ambiguity in REQ-UPL-20 produces a question and the footer produces none. |
+| AC-UPL-16 | 22, 23 | **Given** the ORB + CPR sample (recorded live; replayed in CI), **then** no rule in REQ-UPL-23 is listed as unsupported, each vague one has a question, and with example answers the draft passes the schema and SEM rules. |
 
 ## 4. Edge cases
 

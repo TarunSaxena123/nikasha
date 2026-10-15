@@ -19,6 +19,8 @@ const IND_TYPES: { type: string; label: string; params: { key: string; label: st
   { type: "SUPERTREND", label: "Supertrend", params: [{ key: "period", label: "Period", chips: [10] }, { key: "multiplier", label: "Multiplier", chips: [3, 2] }] },
   { type: "MACD", label: "MACD", params: [{ key: "fast", label: "Fast", chips: [12] }, { key: "slow", label: "Slow", chips: [26] }, { key: "signal", label: "Signal", chips: [9] }] },
   { type: "BBANDS", label: "Bollinger Bands", params: [{ key: "period", label: "Period", chips: [20] }, { key: "stddev", label: "Standard deviations", chips: [2] }, { key: "source", label: "Price", chips: ["close"] }] },
+  { type: "OPENING_RANGE", label: "Opening range", params: [{ key: "minutes", label: "Minutes", chips: [15, 30] }] },
+  { type: "PIVOTS", label: "Daily pivots / CPR", params: [] },
 ];
 
 const OUTPUTS: Record<string, { key: string; label: string }[]> = {
@@ -27,12 +29,17 @@ const OUTPUTS: Record<string, { key: string; label: string }[]> = {
   SUPERTREND: [{ key: "value", label: "line" }],
   MACD: [{ key: "value", label: "line" }, { key: "signal", label: "signal line" }, { key: "hist", label: "histogram" }],
   BBANDS: [{ key: "upper", label: "upper band" }, { key: "middle", label: "middle band" }, { key: "lower", label: "lower band" }],
+  OPENING_RANGE: [{ key: "high", label: "high" }, { key: "low", label: "low" }],
+  PIVOTS: [
+    ["p", "P"], ["tc", "TC"], ["bc", "BC"], ["r1", "R1"], ["r2", "R2"], ["r3", "R3"], ["s1", "S1"], ["s2", "S2"], ["s3", "S3"],
+    ["cpr_width", "CPR width (points)"], ["cpr_width_pct", "CPR width %"],
+  ].map(([key, label]) => ({ key: key!, label: label! })),
 };
 
 /** Hidden, stable id from the type (params are chosen after adding); a numeric suffix avoids clashes. Never shown. */
 export function indicatorId(ind: AnyRec, existing: string[]): string {
   const t = String(ind.type).toLowerCase().replace("supertrend", "st").replace("bbands", "bb");
-  const parts = ["period", "fast", "slow", "signal", "multiplier", "stddev"].filter((k) => ind[k] !== undefined).map((k) => String(ind[k]).replace(".", "_"));
+  const parts = ["period", "fast", "slow", "signal", "multiplier", "stddev", "minutes"].filter((k) => ind[k] !== undefined).map((k) => String(ind[k]).replace(".", "_"));
   let id = (t + parts.join("x")).replace(/[^a-z0-9_]/g, "").slice(0, 28) || t;
   if (!/^[a-z]/.test(id)) id = `i${id}`;
   let n = 2;
@@ -62,6 +69,7 @@ export function IndicatorManager({ indicators, onChange, usedIds }: { indicators
               </button>
             </div>
             <div className="mt-2 flex flex-wrap gap-4">
+              {spec.params.length === 0 && <p className="text-xs text-ink-muted">Classic floor pivots from the previous trading day&apos;s high, low and close. No settings.</p>}
               {spec.params.map((p) => (
                 <label key={p.key} className="text-sm">
                   {p.label}{" "}
@@ -124,19 +132,21 @@ function leftOf(n: Node): AnyRec | undefined {
   return n.left as AnyRec | undefined;
 }
 
-function operandKey(o: AnyRec | undefined): string {
+export function operandKey(o: AnyRec | undefined): string {
   if (!o) return "";
   if ("ind" in o) return `ind:${o.ind}:${o.output}`;
   if ("price" in o) return `price:${o.price}`;
   if ("vix" in o) return `vix:${o.vix}`;
+  if ("candle" in o) return `candle:${o.candle}`;
   return "";
 }
 
-function operandFromKey(k: string): AnyRec | undefined {
+export function operandFromKey(k: string): AnyRec | undefined {
   const [kind, a, b] = k.split(":");
   if (kind === "ind") return { ind: a, output: b };
   if (kind === "price") return { price: a };
   if (kind === "vix") return { vix: a };
+  if (kind === "candle") return { candle: a };
   return undefined;
 }
 
@@ -148,16 +158,21 @@ export function buildNode(op: string, left: AnyRec | undefined, right: AnyRec | 
   return { type: "compare", left, op, right };
 }
 
-function operandOptions(indicators: Record<string, AnyRec>, supertrendOnly = false): { key: string; label: string }[] {
+export function operandOptions(indicators: Record<string, AnyRec>, supertrendOnly = false, levelsOnly = false): { key: string; label: string }[] {
   const opts: { key: string; label: string }[] = [];
   for (const [id, ind] of Object.entries(indicators)) {
     if (supertrendOnly && ind.type !== "SUPERTREND") continue;
+    // Index levels are prices: oscillators and widths aren't offered there.
+    if (levelsOnly && ["RSI", "ADX", "MACD"].includes(String(ind.type))) continue;
     for (const o of OUTPUTS[String(ind.type)] ?? []) {
+      if (levelsOnly && o.key.startsWith("cpr_width")) continue;
       opts.push({ key: `ind:${id}:${o.key}`, label: `${indicatorName(ind)}${o.label ? ` ${o.label}` : ""}` });
     }
   }
-  if (!supertrendOnly) {
+  if (!supertrendOnly && !levelsOnly) {
     for (const p of ["close", "open", "high", "low"]) opts.push({ key: `price:${p}`, label: `Candle ${p}` });
+    opts.push({ key: "candle:range", label: "Candle range (high − low)" });
+    opts.push({ key: "candle:body", label: "Candle body (close − open, either way)" });
     opts.push({ key: "vix:close", label: "India VIX (close)" });
   }
   return opts;
@@ -297,4 +312,39 @@ export function usedIndicatorIds(entry: AnyRec): Set<string> {
   };
   walk(entry);
   return ids;
+}
+
+/** Which index-level sides a single leg needs: calls, puts or both (SEM-23). */
+export function levelSidesFor(optionType: unknown): ("ce" | "pe")[] {
+  return optionType === "CE" ? ["ce"] : optionType === "PE" ? ["pe"] : ["ce", "pe"];
+}
+
+/** An index level per side: an indicator value (pivots, opening range, averages…) or a number (REQ-INP-25). */
+export function LevelSides({ spec, sides, indicators, onChange, label, onMirror }: {
+  spec: AnyRec; sides: ("ce" | "pe")[]; indicators: Record<string, AnyRec>; onChange: (next: AnyRec) => void; label: string; onMirror?: () => void;
+}) {
+  const opts = operandOptions(indicators, false, true);
+  return (
+    <div className="space-y-2" data-testid={`levels-${label}`}>
+      {sides.map((k) => {
+        const v = spec[k] as AnyRec | undefined;
+        const isNum = !!v && "const" in v;
+        const name = `${label} level for ${k === "ce" ? "calls" : "puts"}`;
+        return (
+          <div key={k} className="flex flex-wrap items-center gap-2 text-sm">
+            <span className="w-24">{k === "ce" ? "Calls" : "Puts"}</span>
+            <select aria-label={name} className="rounded-md border border-line px-2 py-1" value={isNum ? "number" : operandKey(v)}
+              onChange={(e) => onChange({ ...spec, [k]: e.target.value === "number" ? { const: undefined } : operandFromKey(e.target.value) })}>
+              <option value="">Choose…</option>
+              <option value="number">a number</option>
+              {opts.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+            </select>
+            {isNum && <NumberInput label={`${name} number`} className="w-28" value={v.const as number | undefined} onChange={(n) => onChange({ ...spec, [k]: { const: n } })} />}
+            {k === "pe" && onMirror && <Button variant="quiet" onClick={onMirror} disabled={!spec.ce}>Mirror from calls</Button>}
+          </div>
+        );
+      })}
+      {opts.length === 0 && <p className="text-xs text-ink-muted">Add an indicator such as Daily pivots / CPR or Opening range in the Entry step to pick its levels, or use a number.</p>}
+    </div>
+  );
 }

@@ -1,10 +1,13 @@
-"""Simulating one trade from entry to exit (REQ-ENG-21, 23…33; design §2.14).
+"""Simulating one trade from entry to exit (REQ-ENG-21, 23…33, 51…56; design §2.14, §2.18).
 
 Single- and multi-leg positions share one mechanism: the combined P&L per unit
 (Σ sold: entry − p; bought: p − entry). For each priceable minute, the worst and best combined
 values come from the spot high and low at that minute's closing volatility; the open value comes
 from spot open at the opening volatility. A single leg's levels are the premium levels of the
 design table, expressed as a loss / profit per unit.
+
+Index levels (pivots, opening range, …) are read per minute from the last candle that closed
+before it; a level is reached in the direction it lay from the index at entry (REQ-ENG-53).
 """
 
 from __future__ import annotations
@@ -50,6 +53,26 @@ class LegFill:
 
 
 @dataclass
+class PartialFill:
+    """Part of the lots closed before the final exit (REQ-ENG-55)."""
+
+    idx: int
+    minute: int
+    lots: int
+    exits: list[float]  # per leg, after slippage
+    reason_text: str
+
+
+@dataclass
+class TradeAux:
+    """Per-strategy arrays computed once in `prepare`, plus the trade's lots (REQ-ENG-51, 53, 57)."""
+
+    exit_flags: dict[str, npt.NDArray[np.bool_]] = field(default_factory=dict)  # side → candle flags
+    levels: dict[str, FloatArr] = field(default_factory=dict)  # e.g. "target_ce" → per-candle level
+    lots: int = 1
+
+
+@dataclass
 class TradePath:
     legs: list[LegFill]
     entry_idx: int
@@ -60,6 +83,7 @@ class TradePath:
     stop_amt: float
     target_amt: float | None
     extra: dict[str, Any] = field(default_factory=dict)
+    partial: PartialFill | None = None
 
 
 class Pricer:
@@ -145,6 +169,15 @@ def _first_minute_at_or_after(md: MarketData, day_idx: int, tod: int) -> int:
     return i if i < len(md.minutes) else -1
 
 
+def _gain_amount(gain: dict[str, Any], entry_ref: float, risk: float) -> float:
+    """Premium gain per unit for a target-like level: % of the (combined) entry premium, points, or × risk."""
+    if gain["type"] == "PCT_PREMIUM":
+        return entry_ref * float(gain["value"]) / 100
+    if gain["type"] == "POINTS":
+        return float(gain["value"])
+    return float(gain["value"]) * risk
+
+
 def simulate_trade(
     sig: Signal,
     strategy: dict[str, Any],
@@ -152,8 +185,10 @@ def simulate_trade(
     candles: Candles,
     pricer: Pricer,
     slippage: float,
+    aux: TradeAux | None = None,
 ) -> TradePath | str:
     """Path of one trade, or a skip reason (EXIT_LEVELS_UNAVAILABLE / UNPRICEABLE)."""
+    aux = aux or TradeAux()
     inst = md.instrument
     tick = inst.tick_size
     legs_spec: list[dict[str, Any]] = strategy["legs"]
@@ -210,28 +245,22 @@ def simulate_trade(
             return NO_LEVELS
         stop_amt = risk
         target_amt: float | None = None
-        if tgt is not None:
-            if tgt["type"] == "PCT_PREMIUM":
-                target_amt = p * tgt["value"] / 100
-            elif tgt["type"] == "POINTS":
-                target_amt = float(tgt["value"])
-            else:
-                target_amt = tgt["value"] * risk
+        if tgt is not None and tgt["type"] != "SPOT_LEVEL":
+            target_amt = _gain_amount(tgt, p, risk)
             if not bought and p - target_amt <= tick + 1e-9:
                 return NO_LEVELS
     else:
         stop_amt = big_e * sl["value"] / 100 if sl["type"] == "PCT_PREMIUM" else float(sl["value"])
         target_amt = None
-        if tgt is not None:
-            if tgt["type"] == "PCT_PREMIUM":
-                target_amt = big_e * tgt["value"] / 100
-            elif tgt["type"] == "POINTS":
-                target_amt = float(tgt["value"])
-            else:
-                target_amt = tgt["value"] * stop_amt
+        if tgt is not None and tgt["type"] != "SPOT_LEVEL":
+            target_amt = _gain_amount(tgt, big_e, stop_amt)
         if stop_amt <= 0:
             return NO_LEVELS
-    trail_amt = adv["trail_to_cost_at_r"] * stop_amt if adv.get("trail_to_cost_at_r") else None
+    trail_amt: float | None = None
+    if adv.get("trail_to_cost_at_r"):
+        trail_amt = adv["trail_to_cost_at_r"] * stop_amt
+    elif adv.get("trail_to_cost_at_pts"):  # REQ-ENG-52
+        trail_amt = float(adv["trail_to_cost_at_pts"])
 
     # ---- the holding window ----
     fill_day = sig.fill_day
@@ -295,20 +324,67 @@ def simulate_trade(
             return n
         return int(np.searchsorted(window, idx, side="left"))
 
+    def after_candle(c: int) -> int:
+        """Window position of the first minute after candle `c` closes."""
+        return pos_of(int(np.searchsorted(md.minutes, int(candles.end_minute[c]) + 1, side="left")))
+
+    side = legs[0].option_type.lower() if single else "all_legs"
+    win_minutes = md.minutes[window]
+    # The last candle that closed before each window minute (−1 before the first one).
+    last_closed = np.searchsorted(candles.end_minute, win_minutes, side="left") - 1
+
+    def level_track(key: str) -> tuple[FloatArr, bool] | None:
+        """Per-window-minute level and whether it lies above the index at entry (REQ-ENG-53)."""
+        arr = aux.levels.get(key)
+        if arr is None:
+            return None
+        lv = np.where(last_closed >= 0, arr[np.maximum(last_closed, 0)], np.nan)
+        known = np.flatnonzero(~np.isnan(lv))
+        up = bool(lv[known[0]] >= md.s_open[window[known[0]]]) if len(known) else True
+        return lv, up
+
+    def touches(track: tuple[FloatArr, bool], start: int = 0) -> int:
+        lv, up = track
+        with np.errstate(invalid="ignore"):
+            hit = md.s_high[window] >= lv if up else md.s_low[window] <= lv
+        hits = np.flatnonzero(hit[start:])
+        return start + int(hits[0]) if len(hits) else n
+
+    def level_fill(pos: int, lv: float, beyond_open: bool) -> list[float]:
+        """Leg premiums with the index at the level, or at the minute's open when it gapped beyond."""
+        xi = int(window[pos])
+        xa = np.array([xi], dtype=np.int64)
+        if beyond_open and pos > 0:
+            return [float(pricer.at(xa, leg, md.s_open[xa], md.v_open[xa])[0]) for leg in legs]
+        return [float(pricer.at(xa, leg, np.array([lv]), md.v_close[xa])[0]) for leg in legs]
+
     candidates: list[tuple[int, int, str]] = []  # (position, priority, reason)
     if first_stop < n:
         candidates.append((first_stop, 0, reason_stop))
     if first_target < n:
         candidates.append((first_target, 1, "TARGET"))
+    spot_target = None
+    if tgt is not None and tgt["type"] == "SPOT_LEVEL":  # REQ-ENG-54
+        spot_target = level_track(f"target_{side}")
+        if spot_target is not None:
+            p = touches(spot_target)
+            if p < n:
+                candidates.append((p, 1, "SPOT_TARGET"))
+    flags = aux.exit_flags.get(side if side in aux.exit_flags else "all_legs")
+    if flags is not None:  # REQ-ENG-51: on a candle close at or after the fill; fills at the next minute's open
+        c0 = int(np.searchsorted(candles.end_minute, sig.fill_minute, side="left"))
+        hits = np.flatnonzero(flags[c0:])
+        if len(hits):
+            p = after_candle(c0 + int(hits[0]))
+            if p < n:
+                candidates.append((p, -1, "SIGNAL_EXIT"))
     n_candles = adv.get("exit_after_candles")
     if n_candles:
         # The candle in which the entry filled counts as candle 1 (REQ-ENG-28).
         c0 = int(np.searchsorted(candles.end_minute, sig.fill_minute, side="left"))
         cn = c0 + int(n_candles) - 1
         if cn < len(candles):
-            target_minute = int(candles.end_minute[cn]) + 1
-            idx = int(np.searchsorted(md.minutes, target_minute, side="left"))
-            p = pos_of(idx)
+            p = after_candle(cn)
             if p < n:
                 candidates.append((p, 2, "N_CANDLES"))
     te = ex.get("time_exit")
@@ -327,6 +403,69 @@ def simulate_trade(
         candidates.append((n, 5, "EXPIRY_SETTLEMENT"))
     pos, _, reason = min(candidates)
 
+    # ---- partial exit (REQ-ENG-55, 56) ----
+    partial: PartialFill | None = None
+    trailing: tuple[float, bool] | None = None  # the rest's index stop: level and favourable direction
+    pe_spec = adv.get("partial_exit")
+    if pe_spec and aux.lots >= 2:
+        when = pe_spec["when"]
+        pp, part_px = n, None
+        if when["type"] == "PREMIUM_GAIN":
+            gain_amt = _gain_amount(when["gain"], legs[0].entry if single else big_e, stop_amt)
+            gh = np.flatnonzero(best >= gain_amt - eps)
+            pp = int(gh[0]) if len(gh) else n
+            if pp < pos:
+                part_legs = [LegFill(lg.action, lg.option_type, lg.strike, lg.expiry, lg.entry) for lg in legs]
+                gapped = pp > 0 and pnl_open[pp] >= gain_amt - eps
+                xi = int(window[pp])
+                if gapped:
+                    xa = np.array([xi], dtype=np.int64)
+                    part_px = [float(pricer.at(xa, lg, md.s_open[xa], md.v_open[xa])[0]) for lg in part_legs]
+                elif single:
+                    part_px = [part_legs[0].entry + part_legs[0].sign * gain_amt]
+                else:
+                    _exit_multi_at_level(part_legs, pricer, md, xi, gain_amt, False, pnl_hi[pp], pnl_lo[pp])
+                    part_px = [lg.exit for lg in part_legs]
+            fav_up = legs[0].is_call == (legs[0].action == "BUY")
+        else:
+            track = level_track(f"partial_{side}")
+            fav_up = True if track is None else track[1]
+            if track is not None:
+                pp = touches(track)
+                if pp < pos:
+                    lv = float(track[0][pp])
+                    o = float(md.s_open[window[pp]])
+                    part_px = level_fill(pp, lv, o >= lv if track[1] else o <= lv)
+        if part_px is not None and pp < pos:
+            lots_out = min(max(int(aux.lots * pe_spec["percent"] // 100), 1), aux.lots - 1)
+            part_exits = [
+                _floor_tick(px - slippage if lg.action == "BUY" else px + slippage, tick)
+                for lg, px in zip(legs, part_px, strict=True)
+            ]
+            partial = PartialFill(int(window[pp]), int(md.minutes[window[pp]]), lots_out, part_exits, "Partial exit")
+            then = pe_spec["then_stop"]
+            rest = [c for c in candidates if c[1] != 0]  # every exit but the stop
+            if then == "UNCHANGED":
+                rest = candidates
+            elif then == "COST":
+                cost_hits = np.flatnonzero(worst[pp + 1 :] <= eps)
+                if len(cost_hits):
+                    rest.append((pp + 1 + int(cost_hits[0]), 0, "TRAIL_TO_COST"))
+            else:  # PARTIAL_CANDLE: the old stop until that candle closes, then the index stop
+                kc = int(np.searchsorted(candles.end_minute, md.minutes[window[pp]], side="left"))
+                act = after_candle(kc) if kc < len(candles) else n
+                if first_stop < act:
+                    rest.append((first_stop, 0, reason_stop))
+                lvl = float(candles.low[kc] if fav_up else candles.high[kc]) if kc < len(candles) else math.nan
+                if act < n and not math.isnan(lvl):
+                    with np.errstate(invalid="ignore"):
+                        broke = md.s_low[window] < lvl if fav_up else md.s_high[window] > lvl
+                    bh = np.flatnonzero(broke[act:])
+                    if len(bh):
+                        rest.append((act + int(bh[0]), 0, "TRAILING_STOP"))
+                        trailing = (lvl, fav_up)
+            pos, _, reason = min(rest)
+
     # ---- exit prices ----
     if reason == "EXPIRY_SETTLEMENT":
         spot = float(md.s_close[settle_idx])
@@ -334,7 +473,8 @@ def simulate_trade(
             intrinsic = max(spot - leg.strike, 0.0) if leg.is_call else max(leg.strike - spot, 0.0)
             leg.exit = round(intrinsic, 2)
             leg.settled_intrinsic = leg.exit
-        return TradePath(legs, f, settle_idx, int(md.minutes[settle_idx]), reason, 0, stop_amt, target_amt)
+        settled = int(md.minutes[settle_idx])
+        return TradePath(legs, f, settle_idx, settled, reason, 0, stop_amt, target_amt, partial=partial)
 
     xi = int(window[pos])
     xarr = np.array([xi], dtype=np.int64)
@@ -351,12 +491,22 @@ def simulate_trade(
             leg.exit = leg.entry + leg.sign * level_pnl
         else:
             _exit_multi_at_level(legs, pricer, md, xi, level_pnl, adverse, pnl_hi[pos], pnl_lo[pos])
+    elif reason == "SPOT_TARGET" and spot_target is not None:
+        lv = float(spot_target[0][pos])
+        o = float(md.s_open[xi])
+        for leg, px in zip(legs, level_fill(pos, lv, o >= lv if spot_target[1] else o <= lv), strict=True):
+            leg.exit = px
+    elif reason == "TRAILING_STOP" and trailing is not None:
+        lvl, up = trailing
+        o = float(md.s_open[xi])
+        for leg, px in zip(legs, level_fill(pos, lvl, o < lvl if up else o > lvl), strict=True):
+            leg.exit = px
     else:
         for leg in legs:
             leg.exit = float(pricer.at(xarr, leg, md.s_open[xarr], md.v_open[xarr])[0])
     for leg in legs:
         leg.exit = _floor_tick(leg.exit - slippage if leg.action == "BUY" else leg.exit + slippage, tick)
-    return TradePath(legs, f, xi, int(md.minutes[xi]), reason, len(legs), stop_amt, target_amt)
+    return TradePath(legs, f, xi, int(md.minutes[xi]), reason, len(legs), stop_amt, target_amt, partial=partial)
 
 
 def _exit_multi_at_level(

@@ -2,25 +2,27 @@
 // Advanced options (feature 03 design §1.9, §1.10; REQ-INP-18…20). Every switch starts OFF; turning
 // one on reveals EMPTY required fields; turning it off removes it from the draft.
 import * as Switch from "@radix-ui/react-switch";
-import type { ReactNode } from "react";
+import { useState, type ReactNode } from "react";
 import { Button } from "@/components/ui/Button";
 import { InfoTip } from "@/components/ui/Glossary";
 import { FIELD_TOOLTIPS, type BuilderFieldId } from "@/copy/tooltips";
 import type { Draft } from "@/strategy/draft";
+import { LevelSides, levelSidesFor } from "./conditions";
 import { NumberInput, TimeInput } from "./fields";
+import { mirrorOperand } from "@/strategy/mirror";
 import type { StepProps } from "./steps";
 
 type AnyRec = Record<string, unknown>;
 
 export const ADVANCED_KEYS = [
-  "sl_cap", "trigger_candle_sl", "rr_target", "trail_to_cost", "exit_after_candles", "vix_sizing",
+  "sl_cap", "trigger_candle_sl", "rr_target", "trail_to_cost", "exit_after_candles", "partial_exit", "vix_sizing",
   "entry_windows", "no_entry_windows", "expiry_day_cutoff", "daily_limits", "multiple_legs", "strike_by_delta_premium",
 ] as const;
 export type AdvancedKey = (typeof ADVANCED_KEYS)[number];
 
 const LABELS: Record<AdvancedKey, string> = {
   sl_cap: "SL cap", trigger_candle_sl: "Trigger-candle stop-loss", rr_target: "Risk-reward target",
-  trail_to_cost: "Trail stop to cost", exit_after_candles: "Exit after N candles", vix_sizing: "Volatility (VIX) sizing",
+  trail_to_cost: "Trail stop to cost", exit_after_candles: "Exit after N candles", partial_exit: "Partial exit", vix_sizing: "Volatility (VIX) sizing",
   entry_windows: "Entry windows", no_entry_windows: "No-entry windows", expiry_day_cutoff: "Expiry-day cutoff",
   daily_limits: "Daily limits", multiple_legs: "Multiple legs", strike_by_delta_premium: "Strike by delta or premium",
 };
@@ -34,7 +36,8 @@ export function isUsed(s: AnyRec, k: AdvancedKey): boolean {
     case "sl_cap": return "sl_cap_pts" in adv;
     case "trigger_candle_sl": return (ex.stop_loss as AnyRec | undefined)?.type === "TRIGGER_CANDLE";
     case "rr_target": return (ex.target as AnyRec | undefined)?.type === "RR";
-    case "trail_to_cost": return "trail_to_cost_at_r" in adv;
+    case "trail_to_cost": return "trail_to_cost_at_r" in adv || "trail_to_cost_at_pts" in adv;
+    case "partial_exit": return "partial_exit" in adv;
     case "exit_after_candles": return "exit_after_candles" in adv;
     case "vix_sizing": return "vix_sizing" in adv;
     case "entry_windows": return "entry_windows" in adv;
@@ -56,7 +59,17 @@ export function advancedIncomplete(d: Draft): string[] {
   const empty = (v: unknown) => v === undefined || v === null || (typeof v === "number" && Number.isNaN(v));
   if (on.has("sl_cap") && empty(adv.sl_cap_pts)) out.push(LABELS.sl_cap);
   if (on.has("rr_target") && empty((ex.target as AnyRec | undefined)?.value)) out.push(LABELS.rr_target);
-  if (on.has("trail_to_cost") && empty(adv.trail_to_cost_at_r)) out.push(LABELS.trail_to_cost);
+  if (on.has("trail_to_cost") && empty(adv.trail_to_cost_at_r) && empty(adv.trail_to_cost_at_pts)) out.push(LABELS.trail_to_cost);
+  if (on.has("partial_exit")) {
+    const pe = (adv.partial_exit ?? {}) as AnyRec;
+    const w = (pe.when ?? {}) as AnyRec;
+    const gain = (w.gain ?? {}) as AnyRec;
+    const ot = ((s.legs as AnyRec[] | undefined) ?? [])[0]?.option_type;
+    const levelOk = (o: unknown) => !!o && (!("const" in (o as AnyRec)) || !empty((o as AnyRec).const));
+    const whenOk = w.type === "PREMIUM_GAIN" ? !!gain.type && !empty(gain.value)
+      : w.type === "SPOT_LEVEL" ? levelSidesFor(ot).every((k) => levelOk(w[k])) : false;
+    if (empty(pe.percent) || !whenOk || !pe.then_stop) out.push(LABELS.partial_exit);
+  }
   if (on.has("exit_after_candles") && empty(adv.exit_after_candles)) out.push(LABELS.exit_after_candles);
   if (on.has("vix_sizing")) {
     const vs = adv.vix_sizing as AnyRec | undefined;
@@ -112,6 +125,8 @@ function Windows({ list, onChange, label }: { list: AnyRec[]; onChange: (l: AnyR
 export function Advanced({ draft, update, setDraft, problem }: StepProps) {
   const s = draft.strategy as AnyRec;
   const adv = (s.advanced ?? {}) as AnyRec;
+  const [trailBy, setTrailBy] = useState<"r" | "pts" | undefined>(adv.trail_to_cost_at_pts !== undefined ? "pts" : adv.trail_to_cost_at_r !== undefined ? "r" : undefined);
+  const indicators = ((s.indicators ?? {}) as Record<string, AnyRec>);
   const ex = (s.exit ?? {}) as AnyRec;
   const ls = (s.legs as AnyRec[] | undefined) ?? [];
   const on = new Set(draft.advancedOn ?? ADVANCED_KEYS.filter((k) => isUsed(s, k)));
@@ -135,8 +150,9 @@ export function Advanced({ draft, update, setDraft, problem }: StepProps) {
     const legs = ((st.legs as AnyRec[] | undefined) ?? []).map((l) => ({ ...l }));
     if (!value) {
       // Switching off removes the option (type switches return to "not chosen", so the user picks again).
-      const map: Partial<Record<AdvancedKey, string>> = { sl_cap: "sl_cap_pts", trail_to_cost: "trail_to_cost_at_r", exit_after_candles: "exit_after_candles", vix_sizing: "vix_sizing", entry_windows: "entry_windows", no_entry_windows: "no_entry_windows", expiry_day_cutoff: "expiry_day_cutoff", daily_limits: "daily" };
+      const map: Partial<Record<AdvancedKey, string>> = { sl_cap: "sl_cap_pts", trail_to_cost: "trail_to_cost_at_r", exit_after_candles: "exit_after_candles", partial_exit: "partial_exit", vix_sizing: "vix_sizing", entry_windows: "entry_windows", no_entry_windows: "no_entry_windows", expiry_day_cutoff: "expiry_day_cutoff", daily_limits: "daily" };
       if (map[k]) delete a[map[k]!];
+      if (k === "trail_to_cost") delete a.trail_to_cost_at_pts;
       if (k === "trigger_candle_sl") delete e.stop_loss;
       if (k === "rr_target") delete e.target;
       if (k === "multiple_legs") st.legs = legs.slice(0, 1);
@@ -147,6 +163,7 @@ export function Advanced({ draft, update, setDraft, problem }: StepProps) {
       if (k === "vix_sizing") a.vix_sizing = { bands: [{}] };
       if (k === "entry_windows" || k === "no_entry_windows") a[k] = [{}];
       if (k === "daily_limits") a.daily = {};
+      if (k === "partial_exit") a.partial_exit = { when: {} };
       if (k === "multiple_legs") {
         const first = { ...(legs[0] ?? {}) };
         if (first.option_type === "SIGNAL") delete first.option_type;
@@ -210,10 +227,66 @@ export function Advanced({ draft, update, setDraft, problem }: StepProps) {
         <label>Target at <NumberInput label="Risk-reward multiple" min={0.1} max={20} value={(ex.target as AnyRec | undefined)?.value as number | undefined} onChange={(v) => update((x) => { (x.exit as AnyRec).target = { type: "RR", value: v }; })} /> × the stop distance</label>
       </Row>
       <Row k="trail_to_cost" on={on.has("trail_to_cost")} toggle={(v) => toggle("trail_to_cost", v)}>
-        <label>Move the stop to the entry price after a gain of <NumberInput label="Trail multiple" min={0.1} max={20} value={adv.trail_to_cost_at_r as number | undefined} onChange={(v) => setAdv("trail_to_cost_at_r", v)} /> × the initial risk</label>
+        <p>Move the stop to the entry price after a gain of:</p>
+        <label className="flex flex-wrap items-center gap-2">
+          <input type="radio" name="trail-by" checked={trailBy === "r"} onChange={() => { setTrailBy("r"); setAdv("trail_to_cost_at_pts", undefined); }} />
+          a multiple of the initial risk
+          {trailBy === "r" && <><NumberInput label="Trail multiple" min={0.1} max={20} value={adv.trail_to_cost_at_r as number | undefined} onChange={(v) => setAdv("trail_to_cost_at_r", v)} /> × the initial risk</>}
+        </label>
+        <label className="flex flex-wrap items-center gap-2">
+          <input type="radio" name="trail-by" checked={trailBy === "pts"} onChange={() => { setTrailBy("pts"); setAdv("trail_to_cost_at_r", undefined); }} />
+          a number of premium points
+          {trailBy === "pts" && <><NumberInput label="Trail points" min={0.05} value={adv.trail_to_cost_at_pts as number | undefined} onChange={(v) => setAdv("trail_to_cost_at_pts", v)} /> points</>}
+        </label>
+        {problem("Trail to cost") && <p className="text-xs text-risk" role="alert">{problem("Trail to cost")}</p>}
       </Row>
       <Row k="exit_after_candles" on={on.has("exit_after_candles")} toggle={(v) => toggle("exit_after_candles", v)}>
         <label>Exit after <NumberInput label="Candles" min={1} max={500} step={1} value={adv.exit_after_candles as number | undefined} onChange={(v) => setAdv("exit_after_candles", v)} /> candles if no stop or target is hit</label>
+      </Row>
+      <Row k="partial_exit" on={on.has("partial_exit")} toggle={(v) => toggle("partial_exit", v)}>
+        {(() => {
+          const pe = (adv.partial_exit ?? {}) as AnyRec;
+          const w = (pe.when ?? {}) as AnyRec;
+          const gain = (w.gain ?? {}) as AnyRec;
+          const set = (patch: AnyRec) => setAdv("partial_exit", { ...pe, ...patch });
+          const single = ls.length <= 1;
+          return (
+            <>
+              <label className="block">Close <NumberInput label="Partial exit percent" min={1} max={99} step={1} className="w-20" value={pe.percent as number | undefined} onChange={(v) => set({ percent: v })} /> % of the lots (rounded down to whole lots; at least 1 closed and 1 kept)</label>
+              <label className="flex flex-wrap items-center gap-2">When
+                <select aria-label="Partial exit trigger" className="rounded-md border border-line px-2 py-1" value={(w.type as string) ?? ""}
+                  onChange={(e) => set({ when: e.target.value === "PREMIUM_GAIN" ? { type: "PREMIUM_GAIN", gain: {} } : e.target.value ? { type: e.target.value } : {} })}>
+                  <option value="">Choose…</option>
+                  <option value="PREMIUM_GAIN">the premium gains</option>
+                  <option value="SPOT_LEVEL" disabled={!single}>the index reaches a level</option>
+                </select>
+              </label>
+              {w.type === "PREMIUM_GAIN" && (
+                <span className="flex flex-wrap items-center gap-2">
+                  <NumberInput label="Partial exit gain" min={0.05} value={gain.value as number | undefined} onChange={(v) => set({ when: { ...w, gain: { ...gain, value: v } } })} />
+                  <select aria-label="Partial exit gain type" className="rounded-md border border-line px-2 py-1" value={(gain.type as string) ?? ""} onChange={(e) => set({ when: { ...w, gain: { ...gain, type: e.target.value || undefined } } })}>
+                    <option value="">Choose…</option><option value="PCT_PREMIUM">% of the premium</option><option value="POINTS">premium points</option><option value="RR">× the initial risk</option>
+                  </select>
+                </span>
+              )}
+              {w.type === "SPOT_LEVEL" && (
+                <LevelSides label="Partial exit" spec={w} sides={levelSidesFor(ls[0]?.option_type)} indicators={indicators}
+                  onChange={(n) => set({ when: n })} onMirror={() => set({ when: { ...w, pe: mirrorOperand(w.ce as AnyRec) } })} />
+              )}
+              <label className="flex flex-wrap items-center gap-2">Then
+                <select aria-label="After the partial exit" className="rounded-md border border-line px-2 py-1" value={(pe.then_stop as string) ?? ""} onChange={(e) => set({ then_stop: e.target.value || undefined })}>
+                  <option value="">Choose…</option>
+                  <option value="UNCHANGED">keep the rest&apos;s exits as they are</option>
+                  <option value="COST">move the rest&apos;s stop to the entry price</option>
+                  <option value="PARTIAL_CANDLE" disabled={!single}>exit the rest if the index breaks back past that candle&apos;s low (calls) or high (puts)</option>
+                </select>
+              </label>
+              {!single && <p className="text-xs text-ink-muted">Index-level exits work with one leg only.</p>}
+              {problem("Partial exit") && <p className="text-xs text-risk" role="alert">{problem("Partial exit")}</p>}
+              {problem("Exit levels") && <p className="text-xs text-risk" role="alert">{problem("Exit levels")}</p>}
+            </>
+          );
+        })()}
       </Row>
       <Row k="vix_sizing" on={on.has("vix_sizing")} toggle={(v) => toggle("vix_sizing", v)}>
         <div className="flex flex-wrap gap-3">

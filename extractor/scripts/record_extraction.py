@@ -2,7 +2,7 @@
 
 Needs ANTHROPIC_API_KEY in extractor/.env (never committed). Run from extractor/:
     .venv/bin/python scripts/record_extraction.py
-It overwrites tests/recordings/{advanced-sample,one-line-sample}.<PROMPT_VERSION>.json, keeping each
+It overwrites tests/recordings/{advanced-sample,one-line-sample,orb-cpr-sample}.<PROMPT_VERSION>.json, keeping each
 file's "match" phrase and adding the raw reply as "wire". Afterwards run `pytest` and `python scripts/make_fixtures.py`: the oracle tests
 compare the live output with feature 04 design §2.5; any difference is reviewed before committing.
 Automated tests never run this script.
@@ -37,12 +37,14 @@ def main() -> int:
     for name, src in (
         ("advanced-sample", ROOT / "samples" / "nifty_weekly_options_strategy.pdf"),
         ("one-line-sample", ROOT / "samples" / "one_line_strategy.txt"),
+        ("orb-cpr-sample", ROOT / "samples" / "nifty_15min_orb_cpr_strategy.txt"),
     ):
         text = read_upload(src.read_bytes())
         wire = extract_wire(text)
         draft = from_wire(wire)
         path = REC / f"{name}.{PROMPT_VERSION}.json"
-        match = json.loads(path.read_text())["match"] if path.exists() else ""
+        default_match = {"orb-cpr-sample": "ORB + CPR"}.get(name, "")
+        match = json.loads(path.read_text())["match"] if path.exists() else default_match
         path.write_text(
             json.dumps(
                 {"match": match, "recorded": "live", "output": draft.model_dump(), "wire": wire.model_dump()},

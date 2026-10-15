@@ -12,7 +12,7 @@
    "id": "i2",
    "status": "FOUND",
    "field_label": "Entry conditions",
-   "text": "Enter when the 14-period RSI crosses above 60 on the 5-minute chart.",
+   "text": "Enter the call when RSI(14) crosses above 60 on the 5-minute chart.",
    "mandatory": true,
    "quote": "when RSI 14 crosses above 60 on 5-minute chart"
   },

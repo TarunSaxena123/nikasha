@@ -147,6 +147,8 @@ export async function buildPdf(args: {
     report.trades.forEach((t) => reasons.set(t.exit_reason_text, (reasons.get(t.exit_reason_text) ?? 0) + 1));
     para(`${count(report.trades.length, "trade")}, from ${day(report.trades[0]!.entry_time)} to ${day(report.trades[report.trades.length - 1]!.entry_time)}. The full list is in the trades CSV.`);
     table(["Exit reason", "Trades"], [...reasons.entries()]);
+    const partials = report.trades.filter((t) => t.partial_exit).length;
+    if (partials) para(`${count(partials, "trade")} closed part of the lots early (partial exit); the CSV lists the time, quantity and premium of each.`);
   }
 
   // 7. Settings, simulation, data

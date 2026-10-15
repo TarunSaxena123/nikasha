@@ -25,7 +25,8 @@
     "fast": null,
     "slow": null,
     "signal": null,
-    "stddev": null
+    "stddev": null,
+    "minutes": null
    }
   ],
   "conditions": [
@@ -41,6 +42,7 @@
      "price": null,
      "vix": null,
      "const": null,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -52,6 +54,7 @@
      "price": null,
      "vix": null,
      "const": 60.0,
+     "candle": null,
      "offset_pts": null,
      "offset_pct": null
     },
@@ -68,7 +71,9 @@
    "target_value": null,
    "time_exit_at": null,
    "time_exit_on": null,
-   "hold_to_expiry": null
+   "hold_to_expiry": null,
+   "target_ce": null,
+   "target_pe": null
   },
   "advanced": {
    "sl_cap_pts": null,
@@ -80,7 +85,15 @@
    "expiry_day_cutoff": null,
    "daily_max_trades": null,
    "daily_stop_after_sl_hits": null,
-   "daily_max_loss_rupees": null
+   "daily_max_loss_rupees": null,
+   "trail_to_cost_at_pts": null,
+   "partial_percent": null,
+   "partial_when": null,
+   "partial_gain_type": null,
+   "partial_gain_value": null,
+   "partial_ce": null,
+   "partial_pe": null,
+   "partial_then": null
   },
   "items": [
    {
@@ -98,11 +111,9 @@
     "status": "FOUND",
     "field": "entry_condition",
     "quote": "when RSI 14 crosses above 60 on 5-minute chart",
-    "understood": "Enter when the 14-period RSI crosses above 60 on the 5-minute chart.",
+    "understood": "Enter the call when RSI(14) crosses above 60 on the 5-minute chart.",
     "reason": null,
-    "targets": [
-     "cond:c1"
-    ],
+    "targets": [],
     "question": null
    },
    {
@@ -188,10 +199,8 @@
     "status": "FOUND",
     "field": "entry_condition",
     "quote": "when RSI 14 crosses above 60 on 5-minute chart",
-    "understood": "Enter when the 14-period RSI crosses above 60 on the 5-minute chart.",
-    "targets": [
-     "cond:c1"
-    ],
+    "understood": "Enter the call when RSI(14) crosses above 60 on the 5-minute chart.",
+    "targets": [],
     "question_kind": "NONE",
     "question": "",
     "unit_label": "",

@@ -45,7 +45,7 @@ export const BUILDER_FIELD_IDS = [
   "distance", "entry_mode", "at_time", "indicators", "conditions", "stop_loss", "target", "time_exit",
   "positional_exit", "sl_cap", "trigger_candle_sl", "rr_target", "trail_to_cost", "exit_after_candles",
   "vix_sizing", "entry_windows", "no_entry_windows", "expiry_day_cutoff", "daily_limits", "multiple_legs",
-  "strike_by_delta_premium",
+  "strike_by_delta_premium", "exit_when", "partial_exit",
 ] as const;
 export type BuilderFieldId = (typeof BUILDER_FIELD_IDS)[number];
 
@@ -65,13 +65,13 @@ export const FIELD_TOOLTIPS: Record<BuilderFieldId, string> = {
   indicators: "Indicators your conditions use. Add the same type more than once with different settings if you need to.",
   conditions: "Every condition in an All of group must be true together; Any of needs at least one.",
   stop_loss: "Where a losing trade is closed: a % of the premium or a number of premium points.",
-  target: "Where a winning trade is closed: a % of the premium or a number of premium points.",
+  target: "Where a winning trade is closed: a % of the premium, a number of premium points, or when the index reaches a level such as a pivot.",
   time_exit: "Close the trade at a set time.",
   positional_exit: "A positional trade needs a way to end: hold until expiry, a time on expiry day, a target, or a number of candles.",
   sl_cap: "The stop-loss is never further than this many premium points from the entry.",
   trigger_candle_sl: "The stop sits at the signal candle's lowest (bought) or highest (sold) modelled premium.",
   rr_target: "The target is this many times the stop distance away from the entry.",
-  trail_to_cost: "After the trade gains this multiple of its initial risk, the stop moves to the entry price.",
+  trail_to_cost: "After the trade gains this multiple of its initial risk, or this many premium points, the stop moves to the entry price.",
   exit_after_candles: "Close the trade after this many candles if neither the stop nor the target is hit.",
   vix_sizing: "Trade a different share of your lots depending on India VIX. Bands must cover every VIX level.",
   entry_windows: "New trades only start inside these times.",
@@ -80,4 +80,6 @@ export const FIELD_TOOLTIPS: Record<BuilderFieldId, string> = {
   daily_limits: "Stop taking new trades for the day after a number of trades, stop-losses or a loss amount.",
   multiple_legs: "Open 2 to 4 options together, with one combined stop-loss and target.",
   strike_by_delta_premium: "Choose the strike whose modelled delta or premium is closest to your target.",
+  exit_when: "Close the trade when these conditions are true at a candle close, for example a close below EMA 20. Checked like entry conditions.",
+  partial_exit: "Close part of your lots at a premium gain or an index level, then keep the stop, move it to cost, or trail the rest to that candle.",
 };

@@ -36,6 +36,19 @@ const OUTPUT_NAMES: Record<string, string> = {
   lower: "lower band",
   plus_di: "+DI",
   minus_di: "−DI",
+  high: "high",
+  low: "low",
+  p: "P",
+  tc: "TC",
+  bc: "BC",
+  r1: "R1",
+  r2: "R2",
+  r3: "R3",
+  s1: "S1",
+  s2: "S2",
+  s3: "S3",
+  cpr_width: "CPR width",
+  cpr_width_pct: "CPR width %",
 };
 
 const PRICE: Record<string, string> = { open: "Open", high: "High", low: "Low", close: "Close" };
@@ -57,6 +70,10 @@ export function indicatorName(ind: AnyRec | undefined): string {
       return `MACD ${p("fast")}/${p("slow")}/${p("signal")}`;
     case "BBANDS":
       return `Bollinger ${p("period")}, ${p("stddev")} SD (${(ind.source as string | undefined) ?? "?"})`;
+    case "OPENING_RANGE":
+      return `Opening range ${p("minutes")} min`;
+    case "PIVOTS":
+      return "Pivots";
     default:
       return "an indicator";
   }
@@ -78,6 +95,7 @@ function operandText(o: AnyRec | undefined, ctx: Ctx): string {
     else base = out && out !== "value" ? `${name} ${OUTPUT_NAMES[out] ?? out}` : name;
   } else if ("price" in o) base = `${PRICE[o.price as string] ?? "Price"}`;
   else if ("vix" in o) base = `${ctx.volName} (${o.vix === "open" ? "open" : "close"})`;
+  else if ("candle" in o) base = o.candle === "body" ? "Candle body" : "Candle range";
   else base = Number.isFinite(o.const) ? points(Number(o.const)) : "(number not set yet)";
   const off = o.offset as AnyRec | undefined;
   if (off && "pts" in off) {
@@ -91,6 +109,12 @@ function operandText(o: AnyRec | undefined, ctx: Ctx): string {
 }
 
 const CMP: Record<string, string> = { gt: "is above", gte: "is at or above", lt: "is below", lte: "is at or below" };
+
+/** An index level per side, e.g. "Pivots R2 (calls) / Pivots S2 (puts)". */
+export function levelsText(spec: AnyRec, ctx: Ctx): string {
+  const parts = (["ce", "pe"] as const).filter((k) => spec[k]).map((k) => `${operandText(spec[k] as AnyRec, ctx)} (${k === "ce" ? "calls" : "puts"})`);
+  return parts.length ? parts.join(" / ") : "level not set yet";
+}
 
 export function conditionText(node: AnyRec | undefined, ctx: Ctx): TextNode {
   if (!node) return { text: NOT_SET };
@@ -277,6 +301,8 @@ export function describeStrategy(
     if (tgt.value !== undefined && !multi) meanings.push(bought ? `Bought at ₹100 → exit at ₹${points(100 + Number(tgt.value))}` : `Sold at ₹100 → exit at ₹${points(100 - Number(tgt.value))}`);
   } else if (tgt?.type === "POINTS") parts.push(tgt.value !== undefined ? `Target ${points(Number(tgt.value))} premium points` : "Target in points (value not set yet)");
   else if (tgt?.type === "RR") parts.push(tgt.value !== undefined ? `Target ${points(Number(tgt.value))} × the stop distance` : "Risk-reward target (value not set yet)");
+  else if (tgt?.type === "SPOT_LEVEL") parts.push(`Target when the index reaches ${levelsText(tgt, ctx)}`);
+  if (ex.exit_when) parts.push("Exit when the exit conditions are met");
   const te = ex.time_exit as AnyRec | undefined;
   if (te) parts.push(te.at ? `Exit at ${te.at} on ${te.on === "EXPIRY_DAY" ? "expiry day" : "the entry day"}` : "Time exit (time not set yet)");
   if (ex.hold_to_expiry) {
@@ -296,8 +322,12 @@ export function describeStrategy(
     sl_cap: adv.sl_cap_pts !== undefined ? `Stop no more than ${points(Number(adv.sl_cap_pts))} points from entry` : null,
     trigger_candle_sl: sl?.type === "TRIGGER_CANDLE" ? "Stop at the signal candle's premium low (bought) or high (sold)" : null,
     rr_target: tgt?.type === "RR" ? `Target at ${tgt.value !== undefined ? points(Number(tgt.value)) : "?"} × the stop distance` : null,
-    trail_to_cost: adv.trail_to_cost_at_r !== undefined ? `Stop moves to the entry price after a gain of ${points(Number(adv.trail_to_cost_at_r))} × the initial risk` : null,
+    trail_to_cost: adv.trail_to_cost_at_r !== undefined ? `Stop moves to the entry price after a gain of ${points(Number(adv.trail_to_cost_at_r))} × the initial risk`
+      : adv.trail_to_cost_at_pts !== undefined ? `Stop moves to the entry price after a gain of ${points(Number(adv.trail_to_cost_at_pts))} points` : null,
     exit_after_candles: adv.exit_after_candles !== undefined ? `Exit after ${adv.exit_after_candles} candles if no stop or target is hit` : null,
+    exit_conditions: ex.exit_when ? "Exit at the next minute's open when the exit conditions are true on a candle close" : null,
+    index_target: tgt?.type === "SPOT_LEVEL" ? `Exit when the index reaches ${levelsText(tgt, ctx)}` : null,
+    partial_exit: adv.partial_exit ? partialText(adv.partial_exit as AnyRec, ctx) : null,
     vix_sizing: adv.vix_sizing ? vixSizingText(adv.vix_sizing as AnyRec, ctx.volName) : null,
     entry_windows: Array.isArray(adv.entry_windows) && adv.entry_windows.length ? `New entries only ${windowsText(adv.entry_windows as { from: string; to: string }[])}` : null,
     no_entry_windows: Array.isArray(adv.no_entry_windows) && adv.no_entry_windows.length ? `No new entries ${windowsText(adv.no_entry_windows as { from: string; to: string }[])}` : null,
@@ -307,12 +337,35 @@ export function describeStrategy(
     strike_by_delta_premium: legs.some((l) => ["DELTA", "PREMIUM"].includes(String((l.strike as AnyRec | undefined)?.method))) ? legs.filter((l) => (l.strike as AnyRec | undefined)?.method !== "MONEYNESS").map(legText).join("; ") : null,
   };
   const options = (advancedOptions as { options: { key: string; label: string }[] }).options;
+  const exitTree: TextNode[] = [];
+  const exitHeads: Record<string, string> = { ce: "Exit a call when", pe: "Exit a put when", all_legs: "Exit when" };
+  for (const [k, node] of Object.entries((ex.exit_when ?? {}) as Record<string, AnyRec>)) {
+    const c = conditionText(node, ctx);
+    exitTree.push(node.type === "all" ? { text: `${exitHeads[k]} all of these are true:`, children: c.children } : { text: `${exitHeads[k]}:`, children: [c] });
+  }
+  const STEP_OF: Record<string, StepId> = { exit_conditions: "exit", index_target: "exit" };
   const advRows = options.map((o) => ({
-    key: o.key, rule: o.label, setting: used[o.key] ?? NOT_USED, meaning: used[o.key] ? "" : "", step: "advanced" as StepId,
+    key: o.key, rule: o.label, setting: used[o.key] ?? NOT_USED, meaning: used[o.key] ? "" : "", step: STEP_OF[o.key] ?? ("advanced" as StepId),
     used: used[o.key] !== null, advanced: true,
+    ...(o.key === "exit_conditions" && exitTree.length ? { tree: exitTree } : {}),
   }));
   for (const r of [...advRows.filter((r) => r.used), ...advRows.filter((r) => !r.used)]) add(r);
   return rows;
+}
+
+function partialText(pe: AnyRec, ctx: Ctx): string {
+  const w = (pe.when ?? {}) as AnyRec;
+  let when = "(trigger not set yet)";
+  if (w.type === "SPOT_LEVEL") when = `when the index reaches ${levelsText(w, ctx)}`;
+  else if (w.type === "PREMIUM_GAIN") {
+    const g = (w.gain ?? {}) as AnyRec;
+    const v = g.value !== undefined ? points(Number(g.value)) : "?";
+    when = `after a gain of ${v}${g.type === "PCT_PREMIUM" ? "% of the premium" : g.type === "RR" ? " × the initial risk" : " premium points"}`;
+  }
+  const then = pe.then_stop === "COST" ? "the rest's stop moves to the entry price"
+    : pe.then_stop === "PARTIAL_CANDLE" ? "the rest exits if the index breaks back past that candle's low (or high)"
+    : pe.then_stop === "UNCHANGED" ? "the rest keeps its exits" : "what happens to the rest is not set yet";
+  return `Close ${pe.percent ?? "?"}% of the lots ${when}; ${then}`;
 }
 
 function vixSizingText(vs: AnyRec, vol: string): string {

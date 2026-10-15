@@ -128,6 +128,12 @@ SL cap · Trigger-candle stop-loss · Risk-reward target · Trail stop to cost �
 
 The engine's `settings_used.advanced` uses the same 12 labels, in this order.
 
+### 1.8 Partial exits in the trade table and downloads (RPT-22, 23; added 2026-10-15)
+- Trade table: a "Partial exit" column shows "10:47 · 65 qty · ₹212.50" (one premium per leg, joined by " / "), or "—".
+- CSV: three columns after the exit columns: `Partial exit time`, `Partial exit quantity`, `Partial exit premium(s)` (empty when none).
+- PDF: the trade summary adds "N trades closed part of the lots early (partial exit)…"; the PDF has no per-trade list (the CSV has it).
+- Exit reason texts come from the engine (`exit_reason_text`); settings lines from `advanced-options.json`, which gains "Exit conditions", "Trail to cost after points", "Index-level target" and "Partial exit".
+
 ## 2. Backend (engine report builder, `report/`)
 
 ### 2.1 Input and output

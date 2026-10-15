@@ -1,0 +1,1142 @@
+{
+ "match": "ORB + CPR",
+ "recorded": "live",
+ "output": {
+  "ignored_text_found": true,
+  "basics": {
+   "action": "BUY",
+   "option_side": "BOTH_BY_SIGNAL",
+   "moneyness": "ITM",
+   "distance_pts": 100.0,
+   "expiry": null,
+   "timeframe_min": 15,
+   "holding": null,
+   "lots": null,
+   "lot_size": null,
+   "fixed_entry_time": null
+  },
+  "indicators": [
+   {
+    "id": "piv",
+    "type": "PIVOTS",
+    "period": null,
+    "source": null,
+    "multiplier": null,
+    "fast": null,
+    "slow": null,
+    "signal": null,
+    "stddev": null,
+    "minutes": null
+   },
+   {
+    "id": "or15",
+    "type": "OPENING_RANGE",
+    "period": null,
+    "source": null,
+    "multiplier": null,
+    "fast": null,
+    "slow": null,
+    "signal": null,
+    "stddev": null,
+    "minutes": 15
+   },
+   {
+    "id": "ema20",
+    "type": "EMA",
+    "period": 20,
+    "source": "close",
+    "multiplier": null,
+    "fast": null,
+    "slow": null,
+    "signal": null,
+    "stddev": null,
+    "minutes": null
+   }
+  ],
+  "conditions": [
+   {
+    "id": "c1",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "kind": "indicator",
+     "ind": "or15",
+     "output": "low",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "gt",
+    "right": {
+     "kind": "indicator",
+     "ind": "piv",
+     "output": "tc",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c2",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "kind": "price",
+     "ind": null,
+     "output": null,
+     "price": "open",
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "gt",
+    "right": {
+     "kind": "indicator",
+     "ind": "or15",
+     "output": "high",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c3",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "kind": "price",
+     "ind": null,
+     "output": null,
+     "price": "close",
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "gt",
+    "right": {
+     "kind": "indicator",
+     "ind": "or15",
+     "output": "high",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c4",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "kind": "candle",
+     "ind": null,
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": "range",
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lte",
+    "right": {
+     "kind": "const",
+     "ind": null,
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": 70.0,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c5",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "kind": "indicator",
+     "ind": "piv",
+     "output": "cpr_width",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lte",
+    "right": null,
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c6",
+    "parent_id": null,
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "kind": "indicator",
+     "ind": "or15",
+     "output": "high",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lt",
+    "right": {
+     "kind": "indicator",
+     "ind": "piv",
+     "output": "bc",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c7",
+    "parent_id": null,
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "kind": "price",
+     "ind": null,
+     "output": null,
+     "price": "open",
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lt",
+    "right": {
+     "kind": "indicator",
+     "ind": "or15",
+     "output": "low",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c8",
+    "parent_id": null,
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "kind": "price",
+     "ind": null,
+     "output": null,
+     "price": "close",
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lt",
+    "right": {
+     "kind": "indicator",
+     "ind": "or15",
+     "output": "low",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c9",
+    "parent_id": null,
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "kind": "candle",
+     "ind": null,
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": "range",
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lte",
+    "right": {
+     "kind": "const",
+     "ind": null,
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": 70.0,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c10",
+    "parent_id": null,
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "kind": "indicator",
+     "ind": "piv",
+     "output": "cpr_width",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lte",
+    "right": null,
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c11",
+    "parent_id": null,
+    "side": "EXIT_CE",
+    "kind": "compare",
+    "left": {
+     "kind": "price",
+     "ind": null,
+     "output": null,
+     "price": "close",
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "lt",
+    "right": {
+     "kind": "indicator",
+     "ind": "ema20",
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   },
+   {
+    "id": "c12",
+    "parent_id": null,
+    "side": "EXIT_PE",
+    "kind": "compare",
+    "left": {
+     "kind": "price",
+     "ind": null,
+     "output": null,
+     "price": "close",
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": "gt",
+    "right": {
+     "kind": "indicator",
+     "ind": "ema20",
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": null,
+     "candle": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": null,
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   }
+  ],
+  "exit": {
+   "sl_type": "TRIGGER_CANDLE",
+   "sl_value": null,
+   "target_type": "SPOT_LEVEL",
+   "target_value": null,
+   "time_exit_at": null,
+   "time_exit_on": null,
+   "hold_to_expiry": null,
+   "target_ce": {
+    "kind": "indicator",
+    "ind": "piv",
+    "output": "r2",
+    "price": null,
+    "vix": null,
+    "const": null,
+    "candle": null,
+    "offset_pts": null,
+    "offset_pct": null
+   },
+   "target_pe": {
+    "kind": "indicator",
+    "ind": "piv",
+    "output": "s2",
+    "price": null,
+    "vix": null,
+    "const": null,
+    "candle": null,
+    "offset_pts": null,
+    "offset_pct": null
+   }
+  },
+  "advanced": {
+   "sl_cap_pts": 25.0,
+   "trail_to_cost_at_r": null,
+   "exit_after_candles": null,
+   "vix_sizing": null,
+   "entry_windows": [
+    {
+     "start": "09:15",
+     "end": "11:30"
+    }
+   ],
+   "no_entry_windows": [],
+   "expiry_day_cutoff": null,
+   "daily_max_trades": 1,
+   "daily_stop_after_sl_hits": null,
+   "daily_max_loss_rupees": null,
+   "trail_to_cost_at_pts": 25.0,
+   "partial_percent": 50,
+   "partial_when": "SPOT_LEVEL",
+   "partial_gain_type": null,
+   "partial_gain_value": null,
+   "partial_ce": {
+    "kind": "indicator",
+    "ind": "piv",
+    "output": "r1",
+    "price": null,
+    "vix": null,
+    "const": null,
+    "candle": null,
+    "offset_pts": null,
+    "offset_pct": null
+   },
+   "partial_pe": {
+    "kind": "indicator",
+    "ind": "piv",
+    "output": "s1",
+    "price": null,
+    "vix": null,
+    "const": null,
+    "candle": null,
+    "offset_pts": null,
+    "offset_pct": null
+   },
+   "partial_then": "PARTIAL_CANDLE"
+  },
+  "items": [
+   {
+    "id": "i1",
+    "status": "FOUND",
+    "field": "timeframe_min",
+    "quote": "Set the NIFTY 50 Spot Index chart strictly to the 15-Minute interval.",
+    "understood": "Use the 15-minute timeframe.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i2",
+    "status": "FOUND",
+    "field": "entry_condition",
+    "quote": "The first 15-min candle must open and trade completely above the daily CPR lines.",
+    "understood": "For calls the first candle's low must be above the CPR top (TC); for puts its high must be below the CPR bottom (BC).",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "entry_condition",
+    "quote": "A subsequent 15-min candle must close its body completely above the Opening Range High line.",
+    "understood": "Calls need a candle with open and close above the opening range high; puts need open and close below the opening range low.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i4",
+    "status": "VAGUE",
+    "field": "expiry",
+    "quote": "Buy the weekly contract exactly 100 points In-The-Money (ITM)",
+    "understood": "Weekly expiry, 100 points ITM; which weekly expiry is not stated.",
+    "reason": null,
+    "targets": [],
+    "question": {
+     "prompt": "Which weekly expiry should be used?",
+     "kind": "CHOICE",
+     "unit_label": null,
+     "options": [
+      {
+       "label": "Current weekly",
+       "value_text": "CURRENT_WEEKLY"
+      },
+      {
+       "label": "Next weekly",
+       "value_text": "NEXT_WEEKLY"
+      }
+     ],
+     "recommended_option": null
+    }
+   },
+   {
+    "id": "i5",
+    "status": "FOUND",
+    "field": "stop_loss",
+    "quote": "Placed at the trigger candle's low/high on the option premium chart. Hard-capped at a maximum of 25 premium points.",
+    "understood": "Stop at the trigger candle's low on the option premium, capped at 25 premium points.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i6",
+    "status": "FOUND",
+    "field": "exit_condition",
+    "quote": "Exit immediately at market price if a 15-min candle closes below the 20 EMA (for CE) or above the 20 EMA (for PE)",
+    "understood": "Exit calls when a candle closes below the 20 EMA and puts when it closes above.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i7",
+    "status": "FOUND",
+    "field": "trail_to_cost_at_pts",
+    "quote": "The exact second your option premium gains +25 points in profit, ... move it directly to your Entry Price",
+    "understood": "Move the stop to entry after a 25-point premium gain.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i8",
+    "status": "FOUND",
+    "field": "partial_exit",
+    "quote": "When Nifty Spot hits the daily R1 line (for CE) or S1 line (for PE), instantly book and close exactly 50%... Trail the remaining 50% to the high/low of the candle that broke R1/S1.",
+    "understood": "Close 50% at R1/S1; the rest exits if the index breaks back through the low/high of that candle.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i9",
+    "status": "FOUND",
+    "field": "target",
+    "quote": "until the spot index touches R2 (for CE) or S2 (for PE) to exit completely.",
+    "understood": "Exit everything when the index reaches R2 (calls) or S2 (puts).",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i10",
+    "status": "FOUND",
+    "field": "entry_windows",
+    "quote": "Only enter triggers occurring before 11:30 AM.",
+    "understood": "No entries after 11:30; window starts at market data start 09:15.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i11",
+    "status": "VAGUE",
+    "field": "condition_value",
+    "quote": "If the daily printed TC and BC lines have a wide horizontal gap, skip trading.",
+    "understood": "Skip when the CPR width is wide; the width threshold is not stated.",
+    "reason": null,
+    "targets": [
+     "cond:c5",
+     "cond:c10"
+    ],
+    "question": {
+     "prompt": "Skip when CPR width is above how many points?",
+     "kind": "NUMBER",
+     "unit_label": "points",
+     "options": [],
+     "recommended_option": null
+    }
+   },
+   {
+    "id": "i12",
+    "status": "FOUND",
+    "field": "condition",
+    "quote": "If the breakout candle moves Nifty more than 70 points in a single 15-minute frame... Skip the entry.",
+    "understood": "Only enter if the candle range is 70 points or less.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i13",
+    "status": "FOUND",
+    "field": "daily_limits",
+    "quote": "Strictly 1 trade per day.",
+    "understood": "Maximum 1 trade per day.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   }
+  ]
+ },
+ "wire": {
+  "ignored_text_found": true,
+  "basics": {
+   "action": "BUY",
+   "option_side": "BOTH_BY_SIGNAL",
+   "moneyness": "ITM",
+   "distance_pts": "100",
+   "expiry": "NONE",
+   "timeframe_min": "15",
+   "holding": "NONE",
+   "lots": "",
+   "lot_size": "",
+   "fixed_entry_time": ""
+  },
+  "indicators": [
+   {
+    "id": "piv",
+    "type": "PIVOTS",
+    "source": "NONE",
+    "params": ""
+   },
+   {
+    "id": "or15",
+    "type": "OPENING_RANGE",
+    "source": "NONE",
+    "params": "15"
+   },
+   {
+    "id": "ema20",
+    "type": "EMA",
+    "source": "close",
+    "params": "20"
+   }
+  ],
+  "conditions": [
+   {
+    "id": "c1",
+    "parent_id": "",
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "ref": "or15.low",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "gt",
+    "right": {
+     "ref": "piv.tc",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c2",
+    "parent_id": "",
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "ref": "open",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "gt",
+    "right": {
+     "ref": "or15.high",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c3",
+    "parent_id": "",
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "ref": "close",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "gt",
+    "right": {
+     "ref": "or15.high",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c4",
+    "parent_id": "",
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "ref": "candle.range",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lte",
+    "right": {
+     "ref": "70",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c5",
+    "parent_id": "",
+    "side": "CE",
+    "kind": "compare",
+    "left": {
+     "ref": "piv.cpr_width",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lte",
+    "right": {
+     "ref": "",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c6",
+    "parent_id": "",
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "ref": "or15.high",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lt",
+    "right": {
+     "ref": "piv.bc",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c7",
+    "parent_id": "",
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "ref": "open",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lt",
+    "right": {
+     "ref": "or15.low",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c8",
+    "parent_id": "",
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "ref": "close",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lt",
+    "right": {
+     "ref": "or15.low",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c9",
+    "parent_id": "",
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "ref": "candle.range",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lte",
+    "right": {
+     "ref": "70",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c10",
+    "parent_id": "",
+    "side": "PE",
+    "kind": "compare",
+    "left": {
+     "ref": "piv.cpr_width",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lte",
+    "right": {
+     "ref": "",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c11",
+    "parent_id": "",
+    "side": "EXIT_CE",
+    "kind": "compare",
+    "left": {
+     "ref": "close",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "lt",
+    "right": {
+     "ref": "ema20",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   },
+   {
+    "id": "c12",
+    "parent_id": "",
+    "side": "EXIT_PE",
+    "kind": "compare",
+    "left": {
+     "ref": "close",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "op": "gt",
+    "right": {
+     "ref": "ema20",
+     "offset_pts": "",
+     "offset_pct": ""
+    },
+    "lookback": ""
+   }
+  ],
+  "exit": {
+   "sl_type": "TRIGGER_CANDLE",
+   "sl_value": "",
+   "target_type": "SPOT_LEVEL",
+   "target_value": "piv.r2|piv.s2",
+   "time_exit_at": "",
+   "time_exit_on": "NONE",
+   "hold_to_expiry": "NONE"
+  },
+  "advanced": [
+   {
+    "name": "sl_cap_pts",
+    "value": "25"
+   },
+   {
+    "name": "trail_to_cost_at_pts",
+    "value": "25"
+   },
+   {
+    "name": "partial_percent",
+    "value": "50"
+   },
+   {
+    "name": "partial_when",
+    "value": "level:piv.r1|piv.s1"
+   },
+   {
+    "name": "partial_then",
+    "value": "PARTIAL_CANDLE"
+   },
+   {
+    "name": "entry_window",
+    "value": "09:15-11:30"
+   },
+   {
+    "name": "daily_max_trades",
+    "value": "1"
+   }
+  ],
+  "items": [
+   {
+    "id": "i1",
+    "status": "FOUND",
+    "field": "timeframe_min",
+    "quote": "Set the NIFTY 50 Spot Index chart strictly to the 15-Minute interval.",
+    "understood": "Use the 15-minute timeframe.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i2",
+    "status": "FOUND",
+    "field": "entry_condition",
+    "quote": "The first 15-min candle must open and trade completely above the daily CPR lines.",
+    "understood": "For calls the first candle's low must be above the CPR top (TC); for puts its high must be below the CPR bottom (BC).",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "entry_condition",
+    "quote": "A subsequent 15-min candle must close its body completely above the Opening Range High line.",
+    "understood": "Calls need a candle with open and close above the opening range high; puts need open and close below the opening range low.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i4",
+    "status": "VAGUE",
+    "field": "expiry",
+    "quote": "Buy the weekly contract exactly 100 points In-The-Money (ITM)",
+    "understood": "Weekly expiry, 100 points ITM; which weekly expiry is not stated.",
+    "targets": [],
+    "question_kind": "CHOICE",
+    "question": "Which weekly expiry should be used?",
+    "unit_label": "",
+    "options": [
+     {
+      "label": "Current weekly",
+      "value_text": "CURRENT_WEEKLY"
+     },
+     {
+      "label": "Next weekly",
+      "value_text": "NEXT_WEEKLY"
+     }
+    ],
+    "recommended_option": ""
+   },
+   {
+    "id": "i5",
+    "status": "FOUND",
+    "field": "stop_loss",
+    "quote": "Placed at the trigger candle's low/high on the option premium chart. Hard-capped at a maximum of 25 premium points.",
+    "understood": "Stop at the trigger candle's low on the option premium, capped at 25 premium points.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i6",
+    "status": "FOUND",
+    "field": "exit_condition",
+    "quote": "Exit immediately at market price if a 15-min candle closes below the 20 EMA (for CE) or above the 20 EMA (for PE)",
+    "understood": "Exit calls when a candle closes below the 20 EMA and puts when it closes above.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i7",
+    "status": "FOUND",
+    "field": "trail_to_cost_at_pts",
+    "quote": "The exact second your option premium gains +25 points in profit, ... move it directly to your Entry Price",
+    "understood": "Move the stop to entry after a 25-point premium gain.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i8",
+    "status": "FOUND",
+    "field": "partial_exit",
+    "quote": "When Nifty Spot hits the daily R1 line (for CE) or S1 line (for PE), instantly book and close exactly 50%... Trail the remaining 50% to the high/low of the candle that broke R1/S1.",
+    "understood": "Close 50% at R1/S1; the rest exits if the index breaks back through the low/high of that candle.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i9",
+    "status": "FOUND",
+    "field": "target",
+    "quote": "until the spot index touches R2 (for CE) or S2 (for PE) to exit completely.",
+    "understood": "Exit everything when the index reaches R2 (calls) or S2 (puts).",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i10",
+    "status": "FOUND",
+    "field": "entry_windows",
+    "quote": "Only enter triggers occurring before 11:30 AM.",
+    "understood": "No entries after 11:30; window starts at market data start 09:15.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i11",
+    "status": "VAGUE",
+    "field": "condition_value",
+    "quote": "If the daily printed TC and BC lines have a wide horizontal gap, skip trading.",
+    "understood": "Skip when the CPR width is wide; the width threshold is not stated.",
+    "targets": [
+     "cond:c5",
+     "cond:c10"
+    ],
+    "question_kind": "NUMBER",
+    "question": "Skip when CPR width is above how many points?",
+    "unit_label": "points",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i12",
+    "status": "FOUND",
+    "field": "condition",
+    "quote": "If the breakout candle moves Nifty more than 70 points in a single 15-minute frame... Skip the entry.",
+    "understood": "Only enter if the candle range is 70 points or less.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   },
+   {
+    "id": "i13",
+    "status": "FOUND",
+    "field": "daily_limits",
+    "quote": "Strictly 1 trade per day.",
+    "understood": "Maximum 1 trade per day.",
+    "targets": [],
+    "question_kind": "NONE",
+    "question": "",
+    "unit_label": "",
+    "options": [],
+    "recommended_option": ""
+   }
+  ]
+ }
+}

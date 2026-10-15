@@ -161,6 +161,20 @@ EARS patterns as in feature 07. "The engine" means the engine Lambda function an
 | REQ-ENG-44 | THE engine SHALL be deterministic: the same request on the same engine version gives identical trades. |
 | REQ-ENG-45 | THE engine SHALL meet the performance budgets in `backend.md` §8 (cold start ≤ 8 s; 15-min full weekly period with the three runs ≤ 30 s warm; 1-min full period ≤ 60 s). |
 
+### 3.10 Vocabulary extensions (added 2026-10-15, owner approval)
+
+| ID | Requirement |
+|---|---|
+| REQ-ENG-48 | THE engine SHALL compute `OPENING_RANGE` (`minutes` = N) outputs `high` and `low` as the highest underlying high and lowest low of each session's first N minutes, and SHALL give them a value only on candles of that day that close at or after the range's last minute (empty before, so no condition can look ahead). |
+| REQ-ENG-49 | THE engine SHALL compute `PIVOTS` outputs from the previous trading day's session high H, low L and close C: P = (H+L+C)/3; BC = (H+L)/2; TC = 2P − BC, then ordered so TC ≥ BC; R1 = 2P − L; S1 = 2P − H; R2 = P + (H − L); S2 = P − (H − L); R3 = H + 2(P − L); S3 = L − 2(H − P); `cpr_width` = TC − BC; `cpr_width_pct` = (TC − BC) / P × 100; constant for the whole day, and empty on the first day of the data. |
+| REQ-ENG-50 | THE engine SHALL offer candle size values: `range` = candle high − low and `body` = |close − open|, in index points. |
+| REQ-ENG-51 | WHERE `exit.exit_when` is set, WHEN the condition set for the open position's side (CE trade → `ce`, PE trade → `pe`, otherwise `all_legs`) is true on a candle that closes at or after the entry fill, THE engine SHALL exit every leg at the open of the next priceable minute, recorded as `SIGNAL_EXIT`; IF a stop-loss or target is also crossed in that minute, THEN the exit condition applies, because it fills at the minute's open. |
+| REQ-ENG-52 | WHERE `trail_to_cost_at_pts` is set, WHEN the favourable move (combined per unit for several legs) reaches that many premium points, THE engine SHALL move the stop to the entry price as in REQ-ENG-27. |
+| REQ-ENG-53 | THE engine SHALL treat an index level as the level operand's value on the last candle that closed before the minute; a level at or above the index at the entry fill is reached when a minute's high touches it, a level below when a minute's low touches it; the option SHALL be priced with the index at the level and that minute's closing VIX, or at the minute's open premium when the open is already beyond the level; an empty level is never reached. |
+| REQ-ENG-54 | WHERE `exit.target` has type `SPOT_LEVEL`, WHEN the level for the trade's side is reached (REQ-ENG-53), THE engine SHALL exit the position, recorded as `SPOT_TARGET`; REQ-ENG-24 (stop first) applies within a minute. |
+| REQ-ENG-55 | WHERE `advanced.partial_exit` is set and the trade uses at least 2 lots, WHEN its trigger is reached (a premium gain computed as REQ-ENG-26, or an index level per REQ-ENG-53) before the whole position exits, THE engine SHALL close floor(lots × percent / 100) lots of every leg (at least 1 and at most lots − 1); IF the whole position exits in the same minute, THEN no partial exit is made; IF the trade uses 1 lot, THEN no partial exit is made and the rule is counted as having no effect. |
+| REQ-ENG-56 | AFTER a partial exit, THE engine SHALL manage the remaining lots per `then_stop`: `UNCHANGED` keeps every exit rule; `COST` moves the stop to the entry price from the next minute (`TRAIL_TO_COST`); `PARTIAL_CANDLE` replaces the premium stop and any trail, from the first minute after the candle containing the partial exit closes, with an exit when the index trades beyond that candle's low (level was above the index at entry) or high (otherwise), filled per REQ-ENG-53 and recorded as `TRAILING_STOP`. |
+| REQ-ENG-57 | THE engine SHALL decide the lots used (including volatility sizing) before simulating the trade, charge the partial and the final exits separately for their own quantities, and report the trade's P&L as the sum of both parts. |
 ## 4. Acceptance criteria
 
 | AC | Req. | Given / When / Then |
@@ -201,6 +215,12 @@ EARS patterns as in feature 07. "The engine" means the engine Lambda function an
 | AC-ENG-26 | 46 | **Given** a positional strategy whose condition is true on the 15:15–15:29 candle, **then** no entry is taken that day or the next morning, and the signal is counted as `NEXT_DAY_FILL`. |
 | AC-ENG-27 | 47 | **Given** option type "both" with CE and PE conditions both true on one candle, **then** no entry is taken and the signal is counted as `CONFLICTING_SIGNALS`. |
 | AC-ENG-25 | 15 | **Given** any evaluation, **then** three trade lists are produced (shift 0, −2, +2) and the ±2 runs differ only in premiums and anything that follows from them. |
+| AC-ENG-28 | 48 | **Given** 5-minute candles and `OPENING_RANGE` 15, **then** the 09:15 and 09:20 candles have no value, the 09:25 candle onwards has the high and low of 09:15–09:29, and the next day starts empty again. |
+| AC-ENG-29 | 49, 50 | **Given** a synthetic previous day with H 110, L 90, C 100, **then** P 100, BC 100, TC 100, R1 110, S1 90, R2 120, S2 80, width 0; with C 106: P 102, TC 104, BC 100, width 4; candle range and body match hand values. |
+| AC-ENG-30 | 51 | **Given** an exit condition true on the third candle after entry, **then** the trade exits at the open of the minute after that candle with `SIGNAL_EXIT`, even if the stop is crossed in that minute. |
+| AC-ENG-31 | 52 | **Given** `trail_to_cost_at_pts` 25 and a premium that gains 25 points and then falls to the entry price, **then** the exit is `TRAIL_TO_COST` at the entry price. |
+| AC-ENG-32 | 53, 54 | **Given** a CE trade and a `SPOT_LEVEL` target equal to pivot R2 above the index at entry, **then** it exits in the first minute whose high reaches R2, priced at R2 (or the open premium if the open gapped beyond). |
+| AC-ENG-33 | 55, 56, 57 | **Given** 2 lots and a 50% partial exit at a premium gain, **then** 1 lot exits at the gain level and 1 lot later by its own exit; charges are computed for each order with its own quantity; with 1 lot no partial is made and the no-effect count is 1; `COST` and `PARTIAL_CANDLE` produce `TRAIL_TO_COST` and `TRAILING_STOP` exits at hand-computed minutes. |
 
 ## 5. Edge cases
 
