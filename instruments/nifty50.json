@@ -1,0 +1,178 @@
+{
+  "profile_version": "1.0",
+  "identity": {
+    "symbol": "NIFTY50",
+    "name": "Nifty 50",
+    "exchange": "NSE",
+    "segment": "Index options",
+    "timezone": "Asia/Kolkata"
+  },
+  "session": {
+    "sessions": [
+      {
+        "open": "09:15",
+        "close": "15:30"
+      }
+    ],
+    "first_bar": "09:15",
+    "last_bar": "15:29",
+    "intraday_squareoff": "15:15"
+  },
+  "contract": {
+    "strike_interval": 50,
+    "lot_size_suggested": 65,
+    "lot_size_note": "Current NSE Nifty lot size (revised from 75 in Jan 2026). Applied to the whole backtest.",
+    "multiplier": 1,
+    "tick_size": 0.05,
+    "settlement": "CASH_INTRINSIC_LAST_BAR_CLOSE"
+  },
+  "expiry": {
+    "expiry_time": "15:30",
+    "rules": [
+      {
+        "kind": "MONTHLY",
+        "weekday": "THU",
+        "position": "LAST",
+        "valid_from": "2015-01-01",
+        "valid_to": "2025-08-31",
+        "source": "NSE contract specification"
+      },
+      {
+        "kind": "WEEKLY",
+        "weekday": "THU",
+        "valid_from": "2019-02-14",
+        "valid_to": "2025-08-31",
+        "source": "NSE weekly Nifty options launched 11 Feb 2019"
+      },
+      {
+        "kind": "MONTHLY",
+        "weekday": "TUE",
+        "position": "LAST",
+        "valid_from": "2025-09-01",
+        "source": "NSE expiry-day revision effective 1 Sep 2025 (SEBI circular, May 2025)"
+      },
+      {
+        "kind": "WEEKLY",
+        "weekday": "TUE",
+        "valid_from": "2025-09-01",
+        "source": "NSE expiry-day revision effective 1 Sep 2025 (SEBI circular, May 2025)"
+      }
+    ],
+    "holiday_rule": "PREVIOUS_TRADING_DAY",
+    "extra_trading_days": [
+      "2021-02-24",
+      "2026-05-15"
+    ]
+  },
+  "underlying_type": "SPOT_INDEX",
+  "volatility": {
+    "source": "INDEX_FILE",
+    "name": "India VIX"
+  },
+  "pricing": {
+    "provider": "BLACK_SCHOLES_VIX",
+    "risk_free_rate": 0.065,
+    "sensitivity_shift_pts": 2
+  },
+  "default_costs": {
+    "verified_on": "2026-10-14",
+    "items": {
+      "brokerage_per_order": {
+        "value": 20,
+        "label": "Brokerage",
+        "applies_to": "Each order, flat ₹ per order",
+        "source": "Typical flat discount-broker fee (Nikasha assumption)"
+      },
+      "stt_sell_pct": {
+        "value": 0.15,
+        "label": "Securities Transaction Tax",
+        "applies_to": "Sell side, % of premium",
+        "source": "Finance Act 2026, effective 1 Apr 2026"
+      },
+      "stt_exercise_pct": {
+        "value": 0.15,
+        "label": "STT on exercise",
+        "applies_to": "Bought options settled in the money at expiry, % of intrinsic value",
+        "source": "Finance Act 2026, effective 1 Apr 2026"
+      },
+      "exchange_txn_pct": {
+        "value": 0.03553,
+        "label": "Exchange transaction charges",
+        "applies_to": "Both sides, % of premium",
+        "source": "NSE circular NSE/FA/73061 (27 Feb 2026) — to re-confirm"
+      },
+      "sebi_per_crore": {
+        "value": 10,
+        "label": "SEBI turnover fee",
+        "applies_to": "Both sides, ₹ per crore of premium",
+        "source": "SEBI regulatory fee"
+      },
+      "stamp_buy_pct": {
+        "value": 0.003,
+        "label": "Stamp duty",
+        "applies_to": "Buy side, % of premium",
+        "source": "Indian Stamp Act, as amended by Finance Act 2019"
+      },
+      "gst_pct": {
+        "value": 18,
+        "label": "GST",
+        "applies_to": "% of brokerage + exchange charges + SEBI fee",
+        "source": "CGST/IGST Acts, 2017"
+      },
+      "slippage_pts": {
+        "value": 0.5,
+        "label": "Slippage",
+        "applies_to": "Each fill, premium points against you",
+        "source": "Nikasha assumption (no order-book data)"
+      }
+    }
+  },
+  "periods": {
+    "WEEKLY": {
+      "available_from": "2019-02-11",
+      "in_sample": {
+        "from": "2019-02-11",
+        "to": "2023-12-31"
+      },
+      "out_of_sample_from": "2024-01-01"
+    },
+    "MONTHLY": {
+      "available_from": "2015-01-09",
+      "in_sample": {
+        "from": "2015-01-09",
+        "to": "2023-12-31"
+      },
+      "out_of_sample_from": "2024-01-01"
+    }
+  },
+  "report": {
+    "vol_band_edges": [
+      12,
+      18,
+      25
+    ],
+    "regime": {
+      "adx_period": 14,
+      "trending_min": 25,
+      "sideways_max": 20
+    }
+  },
+  "allowed_timeframes_min": [
+    1,
+    3,
+    5,
+    15,
+    30,
+    60,
+    240
+  ],
+  "data": {
+    "underlying_file": "nifty50_1min.parquet",
+    "volatility_file": "indiavix_1min.parquet",
+    "source": {
+      "name": "Kaggle: NSE - Nifty 50 Index Minute data (2015 to 2026)",
+      "url": "https://www.kaggle.com/datasets/debashis74017/nifty-50-minute-data",
+      "note": "Collected by the uploader from internet sources for research purposes; not an official NSE data feed. Used for non-commercial, educational purposes only."
+    }
+  }
+}

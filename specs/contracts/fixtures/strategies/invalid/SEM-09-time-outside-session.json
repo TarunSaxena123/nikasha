@@ -1,0 +1,54 @@
+{
+  "description": "Fixed entry time before market open",
+  "expect": {
+    "kind": "SEM",
+    "rules": [
+      "SEM-09"
+    ]
+  },
+  "strategy": {
+    "schema_version": "1.0",
+    "name": "Simple short straddle",
+    "origin": "TEMPLATE",
+    "template_id": "simple-short-straddle",
+    "underlying": "NIFTY50",
+    "timeframe_min": 5,
+    "holding": "INTRADAY",
+    "position": {
+      "lots": 1,
+      "lot_size": 65
+    },
+    "indicators": {},
+    "legs": [
+      {
+        "action": "SELL",
+        "option_type": "CE",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ATM",
+          "distance_pts": 0
+        }
+      },
+      {
+        "action": "SELL",
+        "option_type": "PE",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ATM",
+          "distance_pts": 0
+        }
+      }
+    ],
+    "entry": {
+      "at_time": "08:45"
+    },
+    "exit": {
+      "stop_loss": {
+        "type": "PCT_PREMIUM",
+        "value": 30
+      }
+    }
+  }
+}

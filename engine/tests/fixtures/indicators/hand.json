@@ -1,0 +1,557 @@
+{
+ "input": {
+  "open": [
+   10,
+   11,
+   12,
+   11,
+   13,
+   14,
+   13,
+   15,
+   16,
+   15,
+   17,
+   18
+  ],
+  "high": [
+   11,
+   12,
+   13,
+   12.5,
+   14,
+   15,
+   14,
+   16,
+   17,
+   16,
+   18,
+   19
+  ],
+  "low": [
+   9,
+   10,
+   11,
+   10,
+   12,
+   13,
+   12,
+   14,
+   15,
+   14,
+   16,
+   17
+  ],
+  "close": [
+   10.5,
+   11.5,
+   12,
+   11,
+   13.5,
+   14,
+   12.5,
+   15.5,
+   16,
+   14.5,
+   17.5,
+   18
+  ]
+ },
+ "indicators": {
+  "ema9": {
+   "spec": {
+    "type": "EMA",
+    "period": 9,
+    "source": "close"
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     12.9444444444,
+     13.2555555556,
+     14.1044444444,
+     14.8835555556
+    ]
+   }
+  },
+  "ema3": {
+   "spec": {
+    "type": "EMA",
+    "period": 3,
+    "source": "close"
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     11.3333333333,
+     11.1666666667,
+     12.3333333333,
+     13.1666666667,
+     12.8333333333,
+     14.1666666667,
+     15.0833333333,
+     14.7916666667,
+     16.1458333333,
+     17.0729166667
+    ]
+   }
+  },
+  "sma5": {
+   "spec": {
+    "type": "SMA",
+    "period": 5,
+    "source": "close"
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     11.7,
+     12.4,
+     12.6,
+     13.3,
+     14.3,
+     14.5,
+     15.2,
+     16.3
+    ]
+   }
+  },
+  "rsi14": {
+   "spec": {
+    "type": "RSI",
+    "period": 14
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "rsi3": {
+   "spec": {
+    "type": "RSI",
+    "period": 3
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     60.0,
+     84.0,
+     86.4406779661,
+     51.256281407,
+     78.0542986425,
+     80.70611636,
+     52.2789499114,
+     76.7971808927,
+     79.4382470811
+    ]
+   }
+  },
+  "adx14": {
+   "spec": {
+    "type": "ADX",
+    "period": 14
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "plus_di": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "minus_di": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "adx3": {
+   "spec": {
+    "type": "ADX",
+    "period": 3
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     56.1904761905,
+     43.973727422,
+     48.7602627258,
+     55.6398108518,
+     44.1402308114,
+     48.5868149222,
+     55.1914970232
+    ],
+    "plus_di": [
+     null,
+     null,
+     null,
+     30.7692307692,
+     38.6363636364,
+     41.935483871,
+     29.2134831461,
+     41.5949960907,
+     43.9093484419,
+     31.0745789896,
+     42.3924449108,
+     44.455697249
+    ],
+    "minus_di": [
+     null,
+     null,
+     null,
+     15.3846153846,
+     9.0909090909,
+     6.4516129032,
+     19.6629213483,
+     10.9460516028,
+     7.9320113314,
+     20.2285485164,
+     11.4460735657,
+     8.3417729368
+    ]
+   }
+  },
+  "st10_2": {
+   "spec": {
+    "type": "SUPERTREND",
+    "period": 10,
+    "multiplier": 2
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     19.6,
+     19.6,
+     19.6
+    ],
+    "direction": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     -1.0,
+     -1.0,
+     -1.0
+    ]
+   }
+  },
+  "st3_1": {
+   "spec": {
+    "type": "SUPERTREND",
+    "period": 3,
+    "multiplier": 1
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     14.0,
+     13.4166666667,
+     10.5555555556,
+     11.7037037037,
+     11.7037037037,
+     12.3683127572,
+     13.5788751715,
+     13.5788751715,
+     14.3128334095,
+     15.5418889397
+    ],
+    "direction": [
+     null,
+     null,
+     -1.0,
+     -1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0,
+     1.0
+    ]
+   }
+  },
+  "macd": {
+   "spec": {
+    "type": "MACD",
+    "fast": 12,
+    "slow": 26,
+    "signal": 9
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "signal": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "hist": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "macd_small": {
+   "spec": {
+    "type": "MACD",
+    "fast": 2,
+    "slow": 4,
+    "signal": 3
+   },
+   "outputs": {
+    "value": [
+     null,
+     null,
+     null,
+     -0.0277777778,
+     0.5907407407,
+     0.6902469136,
+     0.1260823045,
+     0.7796274348,
+     0.8357691449,
+     0.224125715,
+     0.8420301717,
+     0.8744030172
+    ],
+    "signal": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.4177366255,
+     0.271909465,
+     0.5257684499,
+     0.6807687974,
+     0.4524472562,
+     0.6472387139,
+     0.7608208656
+    ],
+    "hist": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     0.2725102881,
+     -0.1458271605,
+     0.2538589849,
+     0.1550003475,
+     -0.2283215412,
+     0.1947914577,
+     0.1135821516
+    ]
+   }
+  },
+  "bb20": {
+   "spec": {
+    "type": "BBANDS",
+    "period": 20,
+    "stddev": 2,
+    "source": "close"
+   },
+   "outputs": {
+    "upper": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "middle": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ],
+    "lower": [
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null,
+     null
+    ]
+   }
+  },
+  "bb5": {
+   "spec": {
+    "type": "BBANDS",
+    "period": 5,
+    "stddev": 2,
+    "source": "close"
+   },
+   "outputs": {
+    "upper": [
+     null,
+     null,
+     null,
+     null,
+     13.7591260282,
+     14.7151673806,
+     14.7354156504,
+     16.3066592757,
+     16.8768197453,
+     16.9494897428,
+     18.5226495452,
+     18.8768197453
+    ],
+    "middle": [
+     null,
+     null,
+     null,
+     null,
+     11.7,
+     12.4,
+     12.6,
+     13.3,
+     14.3,
+     14.5,
+     15.2,
+     16.3
+    ],
+    "lower": [
+     null,
+     null,
+     null,
+     null,
+     9.6408739718,
+     10.0848326194,
+     10.4645843496,
+     10.2933407243,
+     11.7231802547,
+     12.0505102572,
+     11.8773504548,
+     13.7231802547
+    ]
+   }
+  }
+ }
+}

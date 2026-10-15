@@ -1,0 +1,80 @@
+[project]
+name = "nikasha-engine"
+version = "1.0.0"
+description = "Nikasha backtest engine: data, expiry calendar, indicators, modelled option prices, simulation and reports."
+requires-python = ">=3.12"
+dependencies = [
+  "numpy>=2.0",
+  "pandas>=2.2",
+  "pyarrow>=16",
+  "scipy>=1.13",
+  "jsonschema>=4.22",
+  "referencing>=0.35",
+  "pydantic>=2.7",
+  "starlette>=0.37",
+  "uvicorn>=0.30",
+  "nikasha-log",
+]
+
+[project.optional-dependencies]
+dev = [
+  "pytest>=8",
+  "ruff>=0.6",
+  "mypy>=1.10",
+  "datamodel-code-generator>=0.25",
+  "httpx>=0.27",
+  "pyyaml>=6",
+  "openapi-spec-validator>=0.7",
+  "pandas-stubs",
+  "types-PyYAML",
+  "types-jsonschema",
+  "ta",
+]
+
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[tool.setuptools.packages.find]
+include = ["nikasha_engine*"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+pythonpath = ["tests"]
+markers = [
+  "realdata: needs the Parquet files built from data/*.csv",
+  "perf: performance benchmarks (backend.md §8)",
+]
+addopts = "-m 'not perf'"
+
+[tool.ruff]
+line-length = 120
+target-version = "py312"
+extend-exclude = ["nikasha_engine/generated"]
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "B", "UP", "T20", "TID"]
+
+[tool.ruff.lint.flake8-tidy-imports.banned-api]
+"logging".msg = "Use nikasha_log only (feature 07: no user content in logs)."
+
+[tool.ruff.lint.per-file-ignores]
+"tests/**" = ["T20"]
+"scripts/**" = ["T20"]
+
+[tool.mypy]
+strict = true
+mypy_path = "../pylib/nikasha_log"
+plugins = ["pydantic.mypy"]
+exclude = ["nikasha_engine/generated/"]
+
+[[tool.mypy.overrides]]
+module = ["nikasha_engine.generated.*"]
+ignore_errors = true
+
+[[tool.mypy.overrides]]
+module = ["scipy.*", "pyarrow.*", "uvicorn.*"]
+ignore_missing_imports = true
+
+[tool.ruff.lint.isort]
+known-first-party = ["nikasha_engine", "nikasha_log", "conftest", "contract_helpers"]

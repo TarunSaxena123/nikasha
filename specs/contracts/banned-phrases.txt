@@ -1,0 +1,11 @@
+# Banned in UI copy and engine-generated text (frontend.md §13). One phrase per line, lower-case, matched case-insensitively.
+buy now
+sell now
+guaranteed
+sure-shot
+sure shot
+best strategy
+we recommend
+you should trade
+profit target achieved for you
+best to trade

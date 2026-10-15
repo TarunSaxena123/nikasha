@@ -1,0 +1,298 @@
+{
+  "schema_version": "1.0",
+  "name": "Nifty 15-min weekly option buying (sample, with example answers to its vague rules)",
+  "origin": "UPLOAD",
+  "underlying": "NIFTY50",
+  "timeframe_min": 15,
+  "holding": "INTRADAY",
+  "position": {
+    "lots": 2,
+    "lot_size": 65
+  },
+  "indicators": {
+    "st": {
+      "type": "SUPERTREND",
+      "period": 10,
+      "multiplier": 2
+    },
+    "ema9": {
+      "type": "EMA",
+      "period": 9,
+      "source": "close"
+    },
+    "ema21": {
+      "type": "EMA",
+      "period": 21,
+      "source": "close"
+    },
+    "rsi14": {
+      "type": "RSI",
+      "period": 14
+    },
+    "adx14": {
+      "type": "ADX",
+      "period": 14
+    }
+  },
+  "legs": [
+    {
+      "action": "BUY",
+      "option_type": "SIGNAL",
+      "expiry": "CURRENT_WEEKLY",
+      "strike": {
+        "method": "MONEYNESS",
+        "moneyness": "ITM",
+        "distance_pts": 100
+      }
+    }
+  ],
+  "entry": {
+    "ce": {
+      "type": "all",
+      "conditions": [
+        {
+          "type": "turns",
+          "ind": "st",
+          "to": "up"
+        },
+        {
+          "type": "compare",
+          "left": {
+            "ind": "ema9",
+            "output": "value"
+          },
+          "op": "gt",
+          "right": {
+            "ind": "ema21",
+            "output": "value"
+          }
+        },
+        {
+          "type": "compare",
+          "left": {
+            "price": "close"
+          },
+          "op": "gt",
+          "right": {
+            "ind": "ema9",
+            "output": "value",
+            "offset": {
+              "pts": 10
+            }
+          }
+        },
+        {
+          "type": "compare",
+          "left": {
+            "price": "close"
+          },
+          "op": "gt",
+          "right": {
+            "ind": "ema21",
+            "output": "value",
+            "offset": {
+              "pts": 10
+            }
+          }
+        },
+        {
+          "type": "compare",
+          "left": {
+            "ind": "rsi14",
+            "output": "value"
+          },
+          "op": "gt",
+          "right": {
+            "const": 55
+          }
+        },
+        {
+          "type": "any",
+          "conditions": [
+            {
+              "type": "all",
+              "conditions": [
+                {
+                  "type": "compare",
+                  "left": {
+                    "ind": "adx14",
+                    "output": "value"
+                  },
+                  "op": "gt",
+                  "right": {
+                    "const": 20
+                  }
+                },
+                {
+                  "type": "slope",
+                  "operand": {
+                    "ind": "adx14",
+                    "output": "value"
+                  },
+                  "direction": "up",
+                  "lookback": 1
+                }
+              ]
+            },
+            {
+              "type": "compare",
+              "left": {
+                "ind": "adx14",
+                "output": "value"
+              },
+              "op": "gt",
+              "right": {
+                "const": 30
+              }
+            }
+          ]
+        }
+      ]
+    },
+    "pe": {
+      "type": "all",
+      "conditions": [
+        {
+          "type": "turns",
+          "ind": "st",
+          "to": "down"
+        },
+        {
+          "type": "compare",
+          "left": {
+            "ind": "ema9",
+            "output": "value"
+          },
+          "op": "lt",
+          "right": {
+            "ind": "ema21",
+            "output": "value"
+          }
+        },
+        {
+          "type": "compare",
+          "left": {
+            "price": "close"
+          },
+          "op": "lt",
+          "right": {
+            "ind": "ema9",
+            "output": "value",
+            "offset": {
+              "pts": -10
+            }
+          }
+        },
+        {
+          "type": "compare",
+          "left": {
+            "price": "close"
+          },
+          "op": "lt",
+          "right": {
+            "ind": "ema21",
+            "output": "value",
+            "offset": {
+              "pts": -10
+            }
+          }
+        },
+        {
+          "type": "compare",
+          "left": {
+            "ind": "rsi14",
+            "output": "value"
+          },
+          "op": "lt",
+          "right": {
+            "const": 45
+          }
+        },
+        {
+          "type": "any",
+          "conditions": [
+            {
+              "type": "all",
+              "conditions": [
+                {
+                  "type": "compare",
+                  "left": {
+                    "ind": "adx14",
+                    "output": "value"
+                  },
+                  "op": "gt",
+                  "right": {
+                    "const": 20
+                  }
+                },
+                {
+                  "type": "slope",
+                  "operand": {
+                    "ind": "adx14",
+                    "output": "value"
+                  },
+                  "direction": "up",
+                  "lookback": 1
+                }
+              ]
+            },
+            {
+              "type": "compare",
+              "left": {
+                "ind": "adx14",
+                "output": "value"
+              },
+              "op": "gt",
+              "right": {
+                "const": 30
+              }
+            }
+          ]
+        }
+      ]
+    }
+  },
+  "exit": {
+    "stop_loss": {
+      "type": "TRIGGER_CANDLE"
+    },
+    "target": {
+      "type": "RR",
+      "value": 1.5
+    }
+  },
+  "advanced": {
+    "sl_cap_pts": 30,
+    "trail_to_cost_at_r": 1,
+    "exit_after_candles": 4,
+    "vix_sizing": {
+      "measured_at": "DAY_OPEN",
+      "bands": [
+        {
+          "vix_to": 12,
+          "size_pct": 50
+        },
+        {
+          "vix_from": 12,
+          "vix_to": 18,
+          "size_pct": 100
+        },
+        {
+          "vix_from": 18,
+          "size_pct": 50
+        }
+      ]
+    },
+    "no_entry_windows": [
+      {
+        "from": "11:00",
+        "to": "13:30"
+      }
+    ],
+    "expiry_day_cutoff": "12:00",
+    "daily": {
+      "max_trades": 2,
+      "stop_after_sl_hits": 2
+    }
+  }
+}

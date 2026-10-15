@@ -62,4 +62,6 @@ The commands below become available as each part is scaffolded (T-DAT-03 engine,
 | Repo checks (README disclaimer sync, product-name scan) | `node scripts/sync-readme-disclaimer.mjs --check && node scripts/check-names.mjs` |
 | Privacy marker test (local stack) | `scripts/privacy-marker-test.sh` |
 
+Engine setup (once): `cd engine && python3.12 -m venv .venv && .venv/bin/pip install -e ../pylib/nikasha_log -e ".[dev]" && .venv/bin/python scripts/csv_to_parquet.py` (builds the Parquet files into `engine/build/data/`). Engine tests run with `cd engine && .venv/bin/python -m pytest`; benchmarks with `-m perf tests/perf`. Generated models: `cd engine && .venv/bin/python scripts/codegen.py`.
+
 Local run: engine `cd engine && python -m nikasha_engine.adapters.http_app` (port 8000), extractor `cd extractor && python -m nikasha_extractor.adapters.http_app` (port 8001, needs `ANTHROPIC_API_KEY` in `extractor/.env` for live uploads only), web `cd web && npm run dev` (port 3000).

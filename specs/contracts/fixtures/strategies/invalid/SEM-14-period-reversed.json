@@ -1,0 +1,109 @@
+{
+  "description": "Period start after end",
+  "expect": {
+    "kind": "SEM",
+    "rules": [
+      "SEM-14"
+    ]
+  },
+  "strategy": {
+    "schema_version": "1.0",
+    "name": "Simple Trend Follower",
+    "origin": "TEMPLATE",
+    "template_id": "simple-trend-follower",
+    "underlying": "NIFTY50",
+    "timeframe_min": 15,
+    "holding": "INTRADAY",
+    "position": {
+      "lots": 1,
+      "lot_size": 65
+    },
+    "indicators": {
+      "ema9": {
+        "type": "EMA",
+        "period": 9,
+        "source": "close"
+      },
+      "ema21": {
+        "type": "EMA",
+        "period": 21,
+        "source": "close"
+      }
+    },
+    "legs": [
+      {
+        "action": "BUY",
+        "option_type": "SIGNAL",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ATM",
+          "distance_pts": 0
+        }
+      }
+    ],
+    "entry": {
+      "ce": {
+        "type": "cross",
+        "left": {
+          "ind": "ema9",
+          "output": "value"
+        },
+        "direction": "above",
+        "right": {
+          "ind": "ema21",
+          "output": "value"
+        }
+      },
+      "pe": {
+        "type": "cross",
+        "left": {
+          "ind": "ema9",
+          "output": "value"
+        },
+        "direction": "below",
+        "right": {
+          "ind": "ema21",
+          "output": "value"
+        }
+      }
+    },
+    "exit": {
+      "stop_loss": {
+        "type": "PCT_PREMIUM",
+        "value": 30
+      },
+      "target": {
+        "type": "PCT_PREMIUM",
+        "value": 50
+      }
+    },
+    "advanced": {
+      "entry_windows": [
+        {
+          "from": "09:30",
+          "to": "14:30"
+        }
+      ],
+      "daily": {
+        "max_trades": 2
+      }
+    }
+  },
+  "settings": {
+    "period": {
+      "start": "2024-06-01",
+      "end": "2024-01-01"
+    },
+    "costs": {
+      "brokerage_per_order": 20,
+      "stt_sell_pct": 0.15,
+      "stt_exercise_pct": 0.15,
+      "exchange_txn_pct": 0.03553,
+      "sebi_per_crore": 10,
+      "stamp_buy_pct": 0.003,
+      "gst_pct": 18,
+      "slippage_pts": 0.5
+    }
+  }
+}

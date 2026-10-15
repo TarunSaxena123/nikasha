@@ -1,0 +1,58 @@
+name: CI
+on:
+  push:
+  pull_request:
+
+permissions:
+  contents: read
+
+jobs:
+  engine:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: engine
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -e ../pylib/nikasha_log -e ".[dev]"
+      - name: Build Parquet from data/*.csv
+        run: .venv/bin/python scripts/csv_to_parquet.py
+      - name: Lint and types
+        run: .venv/bin/ruff check . && .venv/bin/mypy nikasha_engine
+      - name: Tests
+        run: .venv/bin/python -m pytest -q
+      - name: Logging helper tests
+        run: .venv/bin/python -m pytest -q ../pylib/nikasha_log/tests
+
+  contracts-and-repo:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "20"
+      - name: Install engine (for contract checks)
+        run: |
+          python -m venv engine/.venv
+          engine/.venv/bin/pip install -q -e pylib/nikasha_log -e "engine[dev]"
+      - name: Install web (when present)
+        run: if [ -f web/package.json ]; then (cd web && npm ci); fi
+      - name: Install extractor (when present)
+        run: |
+          if [ -f extractor/pyproject.toml ]; then
+            python -m venv extractor/.venv
+            extractor/.venv/bin/pip install -q -e pylib/nikasha_log -e "extractor[dev]"
+          fi
+      - name: Contract checks
+        run: scripts/check-contracts.sh
+      - name: Product-name check
+        run: node scripts/check-names.mjs --self-test && node scripts/check-names.mjs

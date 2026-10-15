@@ -25,8 +25,8 @@ These tasks build the foundations, fixtures and pipelines that the requirement t
 
 | Task | Feature | What it enables | Status |
 |---|---|---|---|
-| T-DAT-03 | 01 | Engine project, generated pydantic models, drift check | Specified |
-| T-DAT-11 | 01 | CI pipeline and `scripts/check-contracts.sh` (contract tests for every feature) | Specified |
+| T-DAT-03 | 01 | Engine project, generated pydantic models, drift check | Built |
+| T-DAT-11 | 01 | CI pipeline and `scripts/check-contracts.sh` (contract tests for every feature) | Built |
 | T-UPL-02 | 04 | Extraction function project, adapters, deployment | Specified |
 | T-EVL-07 | 02 | Web app scaffold, design tokens, shared components, store, test tooling | Specified |
 | T-EVL-08 | 02 | Generated TypeScript types from the contracts, drift check | Specified |
@@ -36,76 +36,76 @@ These tasks build the foundations, fixtures and pipelines that the requirement t
 
 ## Feature 01 — Data and Engine
 
-Design sections refer to [`features/01-data-and-engine/design.md`](features/01-data-and-engine/design.md); AC IDs to its [`requirements.md`](features/01-data-and-engine/requirements.md) §4. All tests are automated (pytest).
+Design sections refer to [`features/01-data-and-engine/design.md`](features/01-data-and-engine/design.md); AC IDs to its [`requirements.md`](features/01-data-and-engine/requirements.md) §4. All tests are automated (pytest) in `engine/tests/` (`test_registry`, `test_data`, `test_gaps`, `test_calendar`, `test_candles`, `test_indicators`, `test_conditions`, `test_pricing`, `test_strikes`, `test_gates`, `test_exits`, `test_costs_runner`, `test_contracts`, `test_api`, `test_agnostic`, `test_lambda_handler`; benchmarks in `tests/perf/`).
 
 | Requirement | Summary | Design | Task(s) | Test(s) | Status |
 |---|---|---|---|---|---|
-| REQ-DAT-01 | Load + validate profiles at start-up | §2.1 | T-DAT-01, T-DAT-05 | AC-DAT-01; profile contract test | Specified |
-| REQ-DAT-02 | Fail fast on an invalid profile | §2.1, §4 | T-DAT-05 | AC-DAT-01 | Specified |
-| REQ-DAT-03 | No instrument constants in engine code | §2.1 | T-DAT-01, T-DAT-05, T-DAT-09 | AC-DAT-02 (grep test) | Specified |
-| REQ-DAT-04 | Second profile works with no code change | §2.1 | T-DAT-09 | AC-DAT-02 | Specified |
-| REQ-DAT-05 | CSV → Parquet at build; engine reads Parquet | §2.1 | T-DAT-04 | Row-count/dtype unit test | Specified |
-| REQ-DAT-06 | Load-time checks | §2.3 | T-DAT-06 | AC-DAT-03 | Specified |
-| REQ-DAT-07 | Bad day excluded, never crash | §2.3 | T-DAT-06 | AC-DAT-03 | Specified |
-| REQ-DAT-08 | Load once per container | §2.2 | T-DAT-06, T-ENG-16 | Loader cache unit test | Specified |
-| REQ-DAT-09 | Data range read from data | §2.2, §2.16 | T-DAT-06, T-DAT-10 | AC-DAT-04 | Specified |
-| REQ-DAT-10 | Never fill missing minutes | §2.2 | T-DAT-07 | AC-DAT-05 | Specified |
-| REQ-DAT-11 | Gap inventory (whole data, per period) | §2.4 | T-DAT-07 | AC-DAT-07 | Specified |
-| REQ-DAT-12 | Nifty-without-VIX minute unpriceable | §2.2, §2.9 | T-DAT-07 | AC-DAT-05 | Specified |
-| REQ-DAT-13 | VIX-less day skipped and listed | §2.2, §2.4 | T-DAT-07 | AC-DAT-06 | Specified |
-| REQ-DAT-14 | Expiries from rules + trading days | §2.5 | T-DAT-08 | AC-DAT-08 | Specified |
-| REQ-DAT-15 | Trading days incl. extra trading days | §2.5 | T-DAT-08 | AC-DAT-08 | Specified |
-| REQ-DAT-16 | Holiday → previous trading day | §2.5 | T-DAT-08 | AC-DAT-08 | Specified |
-| REQ-DAT-17 | Calendar equals the recorded check | §2.5 | T-DAT-08 | AC-DAT-08 | Specified |
-| REQ-DAT-18 | No weekly expiries before availability | §2.5 | T-DAT-08 | AC-DAT-09 | Specified |
-| REQ-DAT-19 | `/v1/meta` response | §2.16 | T-DAT-10 | AC-DAT-04; schema validation of response | Specified |
-| REQ-ENG-01 | Candles from present minutes, anchored at session open | §2.6 | T-ENG-01 | AC-ENG-01 | Specified |
-| REQ-ENG-02 | No cross-day candles; short last candle | §2.6 | T-ENG-01 | AC-ENG-01 | Specified |
-| REQ-ENG-03 | Indicator formulas | §2.7 | T-ENG-02, T-ENG-03 | AC-ENG-02 | Specified |
-| REQ-ENG-04 | Warm-up from data start | §2.7 | T-ENG-03 | AC-ENG-03 | Specified |
-| REQ-ENG-05 | No VWAP | §2.7, §3 | T-DAT-02, T-ENG-03 | Invalid VWAP fixture fails schema | Specified |
-| REQ-ENG-06 | All/any trees on candle close | §2.8 | T-ENG-04 | AC-ENG-05 | Specified |
-| REQ-ENG-07 | Compare with offsets | §2.8 | T-ENG-04 | Evaluator unit tests | Specified |
-| REQ-ENG-08 | Cross definition | §2.8 | T-ENG-04 | AC-ENG-04 | Specified |
-| REQ-ENG-09 | Turns / state | §2.8 | T-ENG-04 | Evaluator unit tests | Specified |
-| REQ-ENG-10 | Slope definition | §2.8 | T-ENG-04 | AC-ENG-05 | Specified |
-| REQ-ENG-11 | Missing operand → false | §2.8 | T-ENG-04 | Evaluator NaN tests | Specified |
-| REQ-ENG-12 | Black-Scholes with VIX | §2.9 | T-ENG-05 | AC-ENG-06 | Specified |
-| REQ-ENG-13 | Tick rounding, one-tick floor | §2.9 | T-ENG-05 | AC-ENG-06 | Specified |
-| REQ-ENG-14 | Minute premium range from spot high/low | §2.9 | T-ENG-05 | Monotonicity unit tests | Specified |
-| REQ-ENG-15 | Three runs (0, −S, +S) | §2.11 | T-ENG-13 | AC-ENG-25 | Specified |
-| REQ-ENG-16 | Moneyness strike selection | §2.10 | T-ENG-06 | AC-ENG-07 | Specified |
-| REQ-ENG-17 | Delta / premium strike selection | §2.10 | T-ENG-06 | Strike search unit tests | Specified |
-| REQ-ENG-18 | Expiry kind → contract | §2.5 | T-DAT-08 | Contract lookup unit tests | Specified |
-| REQ-ENG-19 | Entire strategy satisfied | §2.12, §2.13 | T-ENG-08 | AC-ENG-08, AC-ENG-22 | Specified |
-| REQ-ENG-20 | No catch-up; first failing reason counted | §2.13 | T-ENG-08 | AC-ENG-08; ordering test | Specified |
-| REQ-ENG-21 | Fill at the next minute's open ± slippage | §2.12, §2.14 | T-ENG-09 | AC-ENG-09 | Specified |
-| REQ-ENG-22 | One position at a time | §2.11 | T-ENG-08 | AC-ENG-08 | Specified |
-| REQ-ENG-23 | Stop/target per minute; gap fills | §2.14 | T-ENG-09 | AC-ENG-10 | Specified |
-| REQ-ENG-24 | SL before target in one minute | §2.14 | T-ENG-09 | AC-ENG-10 | Specified |
-| REQ-ENG-25 | Stop-loss levels incl. trigger candle and cap | §2.14 | T-ENG-09 | AC-ENG-12 | Specified |
-| REQ-ENG-26 | Targets incl. R:R | §2.14 | T-ENG-09 | AC-ENG-12 | Specified |
-| REQ-ENG-27 | Trail to cost | §2.14 | T-ENG-09 | AC-ENG-12 | Specified |
-| REQ-ENG-28 | Exit after N candles | §2.14 | T-ENG-09 | AC-ENG-13 | Specified |
-| REQ-ENG-29 | Time exit and 15:15 square-off | §2.14 | T-ENG-09 | AC-ENG-11 | Specified |
-| REQ-ENG-30 | Unpriceable exit → next priceable minute | §2.14 | T-ENG-09 | Exit unit test | Specified |
-| REQ-ENG-31 | Expiry settlement at intrinsic | §2.14 | T-ENG-09 | AC-ENG-14 | Specified |
-| REQ-ENG-32 | Multi-leg combined position | §2.14 | T-ENG-10 | AC-ENG-15 | Specified |
-| REQ-ENG-33 | Overnight checks from next day's first priceable minute | §2.14 | T-ENG-09 | Overnight gap unit test | Specified |
-| REQ-ENG-34 | Quantity = lots × lot size | §2.15 | T-ENG-11 | AC-ENG-16 | Specified |
-| REQ-ENG-35 | VIX sizing, 1-lot minimum, no-effect note | §2.15 | T-ENG-11 | AC-ENG-17 | Specified |
-| REQ-ENG-36 | Costs per order | §2.15 | T-ENG-11 | AC-ENG-18 | Specified |
-| REQ-ENG-37 | No defaults for missing values | §2.16 | T-ENG-07, T-ENG-11 | AC-ENG-20 | Specified |
-| REQ-ENG-38 | Max trades per day | §2.11, §2.13 | T-ENG-12 | AC-ENG-19 | Specified |
-| REQ-ENG-39 | Stop after N STOP_LOSS exits | §2.11, §2.13 | T-ENG-12 | AC-ENG-19 | Specified |
-| REQ-ENG-40 | Max daily loss blocks entries only | §2.11, §2.13 | T-ENG-12 | AC-ENG-19 | Specified |
-| REQ-ENG-41 | Validate request (schema + SEM) | §2.16 | T-DAT-02, T-ENG-07, T-ENG-14 | AC-ENG-20; SEM fixtures | Specified |
-| REQ-ENG-42 | Entries only inside period; follow to exit | §2.12 | T-ENG-08 | AC-ENG-21 | Specified |
-| REQ-ENG-43 | RunResult for feature 02 | §2.11 | T-ENG-13, T-ENG-14 | RunResult shape test; contract test | Specified |
-| REQ-ENG-44 | Deterministic | §2.11 | T-ENG-13 | AC-ENG-23 | Specified |
+| REQ-DAT-01 | Load + validate profiles at start-up | §2.1 | T-DAT-01, T-DAT-05 | AC-DAT-01; profile contract test | Built |
+| REQ-DAT-02 | Fail fast on an invalid profile | §2.1, §4 | T-DAT-05 | AC-DAT-01 | Built |
+| REQ-DAT-03 | No instrument constants in engine code | §2.1 | T-DAT-01, T-DAT-05, T-DAT-09 | AC-DAT-02 (grep test) | Built |
+| REQ-DAT-04 | Second profile works with no code change | §2.1 | T-DAT-09 | AC-DAT-02 | Built |
+| REQ-DAT-05 | CSV → Parquet at build; engine reads Parquet | §2.1 | T-DAT-04 | Row-count/dtype unit test | Built |
+| REQ-DAT-06 | Load-time checks | §2.3 | T-DAT-06 | AC-DAT-03 | Built |
+| REQ-DAT-07 | Bad day excluded, never crash | §2.3 | T-DAT-06 | AC-DAT-03 | Built |
+| REQ-DAT-08 | Load once per container | §2.2 | T-DAT-06, T-ENG-16 | Loader cache unit test | Built |
+| REQ-DAT-09 | Data range read from data | §2.2, §2.16 | T-DAT-06, T-DAT-10 | AC-DAT-04 | Built |
+| REQ-DAT-10 | Never fill missing minutes | §2.2 | T-DAT-07 | AC-DAT-05 | Built |
+| REQ-DAT-11 | Gap inventory (whole data, per period) | §2.4 | T-DAT-07 | AC-DAT-07 | Built |
+| REQ-DAT-12 | Nifty-without-VIX minute unpriceable | §2.2, §2.9 | T-DAT-07 | AC-DAT-05 | Built |
+| REQ-DAT-13 | VIX-less day skipped and listed | §2.2, §2.4 | T-DAT-07 | AC-DAT-06 | Built |
+| REQ-DAT-14 | Expiries from rules + trading days | §2.5 | T-DAT-08 | AC-DAT-08 | Built |
+| REQ-DAT-15 | Trading days incl. extra trading days | §2.5 | T-DAT-08 | AC-DAT-08 | Built |
+| REQ-DAT-16 | Holiday → previous trading day | §2.5 | T-DAT-08 | AC-DAT-08 | Built |
+| REQ-DAT-17 | Calendar equals the recorded check | §2.5 | T-DAT-08 | AC-DAT-08 | Built |
+| REQ-DAT-18 | No weekly expiries before availability | §2.5 | T-DAT-08 | AC-DAT-09 | Built |
+| REQ-DAT-19 | `/v1/meta` response | §2.16 | T-DAT-10 | AC-DAT-04; schema validation of response | Built |
+| REQ-ENG-01 | Candles from present minutes, anchored at session open | §2.6 | T-ENG-01 | AC-ENG-01 | Built |
+| REQ-ENG-02 | No cross-day candles; short last candle | §2.6 | T-ENG-01 | AC-ENG-01 | Built |
+| REQ-ENG-03 | Indicator formulas | §2.7 | T-ENG-02, T-ENG-03 | AC-ENG-02 | Built |
+| REQ-ENG-04 | Warm-up from data start | §2.7 | T-ENG-03 | AC-ENG-03 | Built |
+| REQ-ENG-05 | No VWAP | §2.7, §3 | T-DAT-02, T-ENG-03 | Invalid VWAP fixture fails schema | Built |
+| REQ-ENG-06 | All/any trees on candle close | §2.8 | T-ENG-04 | AC-ENG-05 | Built |
+| REQ-ENG-07 | Compare with offsets | §2.8 | T-ENG-04 | Evaluator unit tests | Built |
+| REQ-ENG-08 | Cross definition | §2.8 | T-ENG-04 | AC-ENG-04 | Built |
+| REQ-ENG-09 | Turns / state | §2.8 | T-ENG-04 | Evaluator unit tests | Built |
+| REQ-ENG-10 | Slope definition | §2.8 | T-ENG-04 | AC-ENG-05 | Built |
+| REQ-ENG-11 | Missing operand → false | §2.8 | T-ENG-04 | Evaluator NaN tests | Built |
+| REQ-ENG-12 | Black-Scholes with VIX | §2.9 | T-ENG-05 | AC-ENG-06 | Built |
+| REQ-ENG-13 | Tick rounding, one-tick floor | §2.9 | T-ENG-05 | AC-ENG-06 | Built |
+| REQ-ENG-14 | Minute premium range from spot high/low | §2.9 | T-ENG-05 | Monotonicity unit tests | Built |
+| REQ-ENG-15 | Three runs (0, −S, +S) | §2.11 | T-ENG-13 | AC-ENG-25 | Built |
+| REQ-ENG-16 | Moneyness strike selection | §2.10 | T-ENG-06 | AC-ENG-07 | Built |
+| REQ-ENG-17 | Delta / premium strike selection | §2.10 | T-ENG-06 | Strike search unit tests | Built |
+| REQ-ENG-18 | Expiry kind → contract | §2.5 | T-DAT-08 | Contract lookup unit tests | Built |
+| REQ-ENG-19 | Entire strategy satisfied | §2.12, §2.13 | T-ENG-08 | AC-ENG-08, AC-ENG-22 | Built |
+| REQ-ENG-20 | No catch-up; first failing reason counted | §2.13 | T-ENG-08 | AC-ENG-08; ordering test | Built |
+| REQ-ENG-21 | Fill at the next minute's open ± slippage | §2.12, §2.14 | T-ENG-09 | AC-ENG-09 | Built |
+| REQ-ENG-22 | One position at a time | §2.11 | T-ENG-08 | AC-ENG-08 | Built |
+| REQ-ENG-23 | Stop/target per minute; gap fills | §2.14 | T-ENG-09 | AC-ENG-10 | Built |
+| REQ-ENG-24 | SL before target in one minute | §2.14 | T-ENG-09 | AC-ENG-10 | Built |
+| REQ-ENG-25 | Stop-loss levels incl. trigger candle and cap | §2.14 | T-ENG-09 | AC-ENG-12 | Built |
+| REQ-ENG-26 | Targets incl. R:R | §2.14 | T-ENG-09 | AC-ENG-12 | Built |
+| REQ-ENG-27 | Trail to cost | §2.14 | T-ENG-09 | AC-ENG-12 | Built |
+| REQ-ENG-28 | Exit after N candles | §2.14 | T-ENG-09 | AC-ENG-13 | Built |
+| REQ-ENG-29 | Time exit and 15:15 square-off | §2.14 | T-ENG-09 | AC-ENG-11 | Built |
+| REQ-ENG-30 | Unpriceable exit → next priceable minute | §2.14 | T-ENG-09 | Exit unit test | Built |
+| REQ-ENG-31 | Expiry settlement at intrinsic | §2.14 | T-ENG-09 | AC-ENG-14 | Built |
+| REQ-ENG-32 | Multi-leg combined position | §2.14 | T-ENG-10 | AC-ENG-15 | Built |
+| REQ-ENG-33 | Overnight checks from next day's first priceable minute | §2.14 | T-ENG-09 | Overnight gap unit test | Built |
+| REQ-ENG-34 | Quantity = lots × lot size | §2.15 | T-ENG-11 | AC-ENG-16 | Built |
+| REQ-ENG-35 | VIX sizing, 1-lot minimum, no-effect note | §2.15 | T-ENG-11 | AC-ENG-17 | Built |
+| REQ-ENG-36 | Costs per order | §2.15 | T-ENG-11 | AC-ENG-18 | Built |
+| REQ-ENG-37 | No defaults for missing values | §2.16 | T-ENG-07, T-ENG-11 | AC-ENG-20 | Built |
+| REQ-ENG-38 | Max trades per day | §2.11, §2.13 | T-ENG-12 | AC-ENG-19 | Built |
+| REQ-ENG-39 | Stop after N STOP_LOSS exits | §2.11, §2.13 | T-ENG-12 | AC-ENG-19 | Built |
+| REQ-ENG-40 | Max daily loss blocks entries only | §2.11, §2.13 | T-ENG-12 | AC-ENG-19 | Built |
+| REQ-ENG-41 | Validate request (schema + SEM) | §2.16 | T-DAT-02, T-ENG-07, T-ENG-14 | AC-ENG-20; SEM fixtures | Built |
+| REQ-ENG-42 | Entries only inside period; follow to exit | §2.12 | T-ENG-08 | AC-ENG-21 | Built |
+| REQ-ENG-43 | RunResult for feature 02 | §2.11 | T-ENG-13, T-ENG-14 | RunResult shape test; contract test | Built |
+| REQ-ENG-44 | Deterministic | §2.11 | T-ENG-13 | AC-ENG-23 | Built |
 | REQ-ENG-45 | Performance budgets | §2.17 | T-ENG-15, T-ENG-16 | AC-ENG-24 | Specified |
-| REQ-ENG-46 | Next-day fill skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-26 | Specified |
-| REQ-ENG-47 | Conflicting CE/PE signals skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-27 | Specified |
+| REQ-ENG-46 | Next-day fill skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-26 | Built |
+| REQ-ENG-47 | Conflicting CE/PE signals skipped | §2.12, §2.13 | T-ENG-08 | AC-ENG-27 | Built |
 
 **Coverage check (feature 01):** 66 requirements (19 DAT + 47 ENG) · all have a design section, at least one task and at least one automated test.
 

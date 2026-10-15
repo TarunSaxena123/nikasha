@@ -1,0 +1,93 @@
+{
+  "description": "Instrument not in the registry",
+  "expect": {
+    "kind": "SEM",
+    "rules": [
+      "SEM-01"
+    ]
+  },
+  "strategy": {
+    "schema_version": "1.0",
+    "name": "Simple Trend Follower",
+    "origin": "TEMPLATE",
+    "template_id": "simple-trend-follower",
+    "underlying": "BANKNIFTY",
+    "timeframe_min": 15,
+    "holding": "INTRADAY",
+    "position": {
+      "lots": 1,
+      "lot_size": 65
+    },
+    "indicators": {
+      "ema9": {
+        "type": "EMA",
+        "period": 9,
+        "source": "close"
+      },
+      "ema21": {
+        "type": "EMA",
+        "period": 21,
+        "source": "close"
+      }
+    },
+    "legs": [
+      {
+        "action": "BUY",
+        "option_type": "SIGNAL",
+        "expiry": "CURRENT_WEEKLY",
+        "strike": {
+          "method": "MONEYNESS",
+          "moneyness": "ATM",
+          "distance_pts": 0
+        }
+      }
+    ],
+    "entry": {
+      "ce": {
+        "type": "cross",
+        "left": {
+          "ind": "ema9",
+          "output": "value"
+        },
+        "direction": "above",
+        "right": {
+          "ind": "ema21",
+          "output": "value"
+        }
+      },
+      "pe": {
+        "type": "cross",
+        "left": {
+          "ind": "ema9",
+          "output": "value"
+        },
+        "direction": "below",
+        "right": {
+          "ind": "ema21",
+          "output": "value"
+        }
+      }
+    },
+    "exit": {
+      "stop_loss": {
+        "type": "PCT_PREMIUM",
+        "value": 30
+      },
+      "target": {
+        "type": "PCT_PREMIUM",
+        "value": 50
+      }
+    },
+    "advanced": {
+      "entry_windows": [
+        {
+          "from": "09:30",
+          "to": "14:30"
+        }
+      ],
+      "daily": {
+        "max_trades": 2
+      }
+    }
+  }
+}

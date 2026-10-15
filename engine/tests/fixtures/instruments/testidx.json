@@ -1,0 +1,54 @@
+{
+  "profile_version": "1.0",
+  "identity": { "symbol": "TESTIDX", "name": "Test Index", "exchange": "TEST", "segment": "Test options", "timezone": "Asia/Kolkata" },
+  "session": {
+    "sessions": [ { "open": "10:00", "close": "16:00" } ],
+    "first_bar": "10:00",
+    "last_bar": "15:59",
+    "intraday_squareoff": "15:45"
+  },
+  "contract": {
+    "strike_interval": 100,
+    "lot_size_suggested": 25,
+    "lot_size_note": "Test lot size.",
+    "multiplier": 1,
+    "tick_size": 0.1,
+    "settlement": "CASH_INTRINSIC_LAST_BAR_CLOSE"
+  },
+  "expiry": {
+    "expiry_time": "16:00",
+    "rules": [
+      { "kind": "MONTHLY", "weekday": "WED", "position": "LAST", "valid_from": "2020-01-01" },
+      { "kind": "WEEKLY", "weekday": "WED", "valid_from": "2020-01-01" }
+    ],
+    "holiday_rule": "PREVIOUS_TRADING_DAY",
+    "extra_trading_days": []
+  },
+  "underlying_type": "SPOT_INDEX",
+  "volatility": { "source": "INDEX_FILE", "name": "Test VIX" },
+  "pricing": { "provider": "BLACK_SCHOLES_VIX", "risk_free_rate": 0.05, "sensitivity_shift_pts": 3 },
+  "default_costs": {
+    "verified_on": "2026-10-15",
+    "items": {
+      "brokerage_per_order": { "value": 15, "label": "Brokerage", "applies_to": "Each order", "source": "Test" },
+      "stt_sell_pct": { "value": 0.1, "label": "STT", "applies_to": "Sell side", "source": "Test" },
+      "stt_exercise_pct": { "value": 0.1, "label": "STT on exercise", "applies_to": "Exercise", "source": "Test" },
+      "exchange_txn_pct": { "value": 0.05, "label": "Exchange charges", "applies_to": "Both sides", "source": "Test" },
+      "sebi_per_crore": { "value": 5, "label": "SEBI fee", "applies_to": "Both sides", "source": "Test" },
+      "stamp_buy_pct": { "value": 0.002, "label": "Stamp duty", "applies_to": "Buy side", "source": "Test" },
+      "gst_pct": { "value": 18, "label": "GST", "applies_to": "Charges", "source": "Test" },
+      "slippage_pts": { "value": 1, "label": "Slippage", "applies_to": "Each fill", "source": "Test" }
+    }
+  },
+  "periods": {
+    "WEEKLY": { "available_from": "2020-01-01", "in_sample": { "from": "2020-01-01", "to": "2020-06-30" }, "out_of_sample_from": "2020-07-01" },
+    "MONTHLY": { "available_from": "2020-01-01", "in_sample": { "from": "2020-01-01", "to": "2020-06-30" }, "out_of_sample_from": "2020-07-01" }
+  },
+  "report": { "vol_band_edges": [15, 25], "regime": { "adx_period": 10, "trending_min": 30, "sideways_max": 15 } },
+  "allowed_timeframes_min": [5, 15, 60],
+  "data": {
+    "underlying_file": "testidx_1min.parquet",
+    "volatility_file": "testvix_1min.parquet",
+    "source": { "name": "Synthetic test data", "url": "https://example.com/test", "note": "Generated for tests only." }
+  }
+}
