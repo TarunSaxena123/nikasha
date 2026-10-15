@@ -151,3 +151,18 @@ describe("advanced options list", () => {
     expect(describeStrategy({}, inst).filter((r) => r.advanced).map((r) => r.rule)).toEqual(opts.map((o) => o.label));
   });
 });
+
+describe("unfinished conditions block the entry step", () => {
+  it("flags empty boxes, missing look-backs and empty groups; accepts complete trees", async () => {
+    const { unfinished } = await import("./completeness");
+    const ema = (id: string) => ({ ind: id, output: "value" });
+    expect(unfinished({ type: "compare", left: ema("ema9"), op: "gt", right: { const: undefined } })).toBe(true);
+    expect(unfinished({ type: "compare", left: ema("ema9"), op: "gt", right: ema("ema21") })).toBe(false);
+    expect(unfinished({ type: "compare", left: ema("ema9"), op: "gt", right: { ...ema("ema21"), offset: { pts: undefined } } })).toBe(true);
+    expect(unfinished({ type: "cross", left: { price: "close" }, direction: "above", right: { const: 55 } })).toBe(false);
+    expect(unfinished({ type: "slope", operand: ema("adx14"), direction: "up" })).toBe(true);
+    expect(unfinished({ type: "turns", to: "up" })).toBe(true);
+    expect(unfinished({ type: "all", conditions: [] })).toBe(true);
+    expect(unfinished({ type: "any", conditions: [{ type: "state", ind: "st", is: "up" }] })).toBe(false);
+  });
+});

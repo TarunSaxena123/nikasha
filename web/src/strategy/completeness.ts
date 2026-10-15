@@ -28,6 +28,41 @@ const legPaths = (n: number, field: string) => Array.from({ length: Math.max(n, 
 
 export const POSITIONAL_EXIT_PROMPT = "Your strategy has no target or time exit. What should happen to an open position?";
 
+const finite = (v: unknown) => typeof v === "number" && Number.isFinite(v);
+
+function operandUnfinished(o: AnyRec | undefined): boolean {
+  if (!o) return true;
+  const off = o.offset as AnyRec | undefined;
+  if (off && !finite(off.pts ?? off.pct)) return true;
+  if ("ind" in o) return !o.ind || !o.output;
+  if ("price" in o) return !o.price;
+  if ("vix" in o) return !o.vix;
+  if ("const" in o) return !finite(o.const);
+  return true;
+}
+
+/** A condition with an empty box (no value chosen, no number, no look-back) or an empty group. */
+export function unfinished(n: AnyRec): boolean {
+  switch (n.type) {
+    case "all":
+    case "any": {
+      const c = (n.conditions ?? []) as AnyRec[];
+      return c.length === 0 || c.some(unfinished);
+    }
+    case "compare":
+      return !n.op || operandUnfinished(n.left as AnyRec) || operandUnfinished(n.right as AnyRec);
+    case "cross":
+      return !n.direction || operandUnfinished(n.left as AnyRec) || operandUnfinished(n.right as AnyRec);
+    case "turns":
+    case "state":
+      return !n.ind;
+    case "slope":
+      return operandUnfinished(n.operand as AnyRec) || !finite(n.lookback);
+    default:
+      return true;
+  }
+}
+
 export function completeness(draft: Draft | null, meta: MetaResponse | null): MissingItem[] {
   const s = (draft?.strategy ?? {}) as AnyRec;
   const legs = (Array.isArray(s.legs) ? s.legs : []) as AnyRec[];
@@ -157,6 +192,9 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
             : hasTime || !!entry.ce || !!entry.pe || !!entry.all_legs;
   if (!sideOk || (draft?.pending.length ?? 0) > 0) {
     out.push({ key: "entry", label: "Entry trigger", step: "entry", question: null });
+  }
+  if (["ce", "pe", "all_legs"].some((k) => entry[k] && unfinished(entry[k] as AnyRec))) {
+    out.push({ key: "entry_conditions", label: "Entry conditions", step: "entry", question: null });
   }
 
   const ex = (s.exit ?? {}) as AnyRec;

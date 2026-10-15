@@ -55,3 +55,27 @@ test("builder preview panel has no clipped or scrolled-away columns", async ({ p
   const overflow = await panel.evaluate((el) => [...el.querySelectorAll("div")].some((d) => d.scrollWidth > d.clientWidth + 1));
   expect(overflow).toBe(false);
 });
+
+test("conditions: compare EMA 9 with EMA 21 from one list; an empty number blocks Next and never reads NaN (REQ-INP-12, 13)", async ({ page }) => {
+  await toStrikeStep(page);
+  await page.getByRole("button", { name: "Next" }).click();
+  await page.getByRole("radio", { name: "When conditions are met" }).check();
+  for (const period of ["9", "21"]) {
+    await page.getByRole("button", { name: "Add indicator" }).click();
+    await page.getByRole("button", { name: "EMA", exact: true }).click();
+    await page.getByLabel("EMA Period").last().fill(period);
+    await page.getByLabel("EMA Price").last().selectOption("close"); // never defaulted
+  }
+  await page.getByRole("button", { name: "Add condition" }).click();
+  await page.getByLabel("What to check").selectOption({ label: "EMA 9 (close)" });
+  await expect(page.getByText("Reads as: EMA 9 (close) is above (number not set yet)")).toBeVisible();
+  await expect(page.getByTestId("step-needed")).toContainText("Entry conditions");
+  await expect(page.getByRole("button", { name: "Next" })).toBeDisabled();
+  const compare = page.getByLabel("Compare with");
+  await expect(compare.locator("option", { hasText: "EMA 21 (close)" })).toHaveCount(1);
+  await expect(compare.locator("option", { hasText: "EMA 9 (close)" })).toHaveCount(0); // not against itself
+  await compare.selectOption({ label: "EMA 21 (close)" });
+  await expect(page.getByText("Reads as: EMA 9 (close) is above EMA 21 (close)")).toBeVisible();
+  await expect(page.getByRole("button", { name: "Next" })).toBeEnabled();
+  await expect(page.getByText("NaN")).toHaveCount(0);
+});

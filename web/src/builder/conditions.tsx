@@ -148,7 +148,7 @@ export function buildNode(op: string, left: AnyRec | undefined, right: AnyRec | 
   return { type: "compare", left, op, right };
 }
 
-function OperandSelect({ value, onChange, indicators, label, supertrendOnly }: { value: AnyRec | undefined; onChange: (o: AnyRec | undefined) => void; indicators: Record<string, AnyRec>; label: string; supertrendOnly?: boolean }) {
+function operandOptions(indicators: Record<string, AnyRec>, supertrendOnly = false): { key: string; label: string }[] {
   const opts: { key: string; label: string }[] = [];
   for (const [id, ind] of Object.entries(indicators)) {
     if (supertrendOnly && ind.type !== "SUPERTREND") continue;
@@ -160,10 +160,14 @@ function OperandSelect({ value, onChange, indicators, label, supertrendOnly }: {
     for (const p of ["close", "open", "high", "low"]) opts.push({ key: `price:${p}`, label: `Candle ${p}` });
     opts.push({ key: "vix:close", label: "India VIX (close)" });
   }
+  return opts;
+}
+
+function OperandSelect({ value, onChange, indicators, label, supertrendOnly }: { value: AnyRec | undefined; onChange: (o: AnyRec | undefined) => void; indicators: Record<string, AnyRec>; label: string; supertrendOnly?: boolean }) {
   return (
     <select aria-label={label} className="rounded-md border border-line px-2 py-1 text-sm" value={operandKey(value)} onChange={(e) => onChange(operandFromKey(e.target.value))}>
       <option value="">Choose…</option>
-      {opts.map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+      {operandOptions(indicators, supertrendOnly).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
     </select>
   );
 }
@@ -191,10 +195,13 @@ export function ConditionRow({ node, onChange, indicators, highlight }: { node: 
         </select>
         {isCmp && (
           <>
-            <select aria-label="Compare with" className="rounded-md border border-line px-2 py-1" value={rightIsNumber ? "number" : "operand"}
-              onChange={(e) => set(op, left, e.target.value === "number" ? { const: undefined } : undefined)}>
+            {/* One list: a number, or any indicator, candle price or India VIX (e.g. EMA 9 above EMA 21). */}
+            <select aria-label="Compare with" className="rounded-md border border-line px-2 py-1" value={rightIsNumber ? "number" : operandKey(right)}
+              onChange={(e) => set(op, left, e.target.value === "number" ? { const: undefined } : operandFromKey(e.target.value))}>
               <option value="number">a number</option>
-              <option value="operand">another value</option>
+              <optgroup label="or another value">
+                {operandOptions(indicators).filter((o) => o.key !== operandKey(left)).map((o) => <option key={o.key} value={o.key}>{o.label}</option>)}
+              </optgroup>
             </select>
             {rightIsNumber ? (
               <span className={highlight ? "rounded ring-2 ring-accent" : ""} title={highlight ? "Copied from the call side: please check this number" : undefined}>
@@ -202,7 +209,6 @@ export function ConditionRow({ node, onChange, indicators, highlight }: { node: 
               </span>
             ) : (
               <>
-                <OperandSelect label="Other value" value={right} indicators={indicators} onChange={(o) => set(op, left, o)} />
                 <select aria-label="Margin" className="rounded-md border border-line px-2 py-1" value={offset ? ("pts" in offset ? "pts" : "pct") : ""} onChange={(e) => withOffset(e.target.value as "" | "pts" | "pct", undefined)}>
                   <option value="">no margin</option>
                   <option value="pts">+ points</option>

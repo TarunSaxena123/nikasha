@@ -23,7 +23,10 @@ export function stepIssues(draft: Draft, meta: MetaResponse | null): Record<Step
   const out: Record<StepId, StepIssue[]> = { basics: [], strike: [], entry: [], exit: [], advanced: [] };
   const missing = completeness(draft, meta);
   for (const m of missing) {
-    out[m.step].push({ label: m.label, message: m.key === "lots" || m.key === "lot_size" ? "please confirm" : "not set yet" });
+    const message = m.key === "lots" || m.key === "lot_size" ? "please confirm"
+      : m.key === "entry_conditions" ? "fill in every box of each condition, or remove the ones you don't need"
+      : "not set yet";
+    out[m.step].push({ label: m.label, message });
   }
   // The whole-strategy checks (schema + SEM) run once nothing is missing; until then their messages
   // would only repeat the missing inputs. The strike distance rule (SEM-06) is checked straight away.

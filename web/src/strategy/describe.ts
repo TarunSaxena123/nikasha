@@ -78,14 +78,14 @@ function operandText(o: AnyRec | undefined, ctx: Ctx): string {
     else base = out && out !== "value" ? `${name} ${OUTPUT_NAMES[out] ?? out}` : name;
   } else if ("price" in o) base = `${PRICE[o.price as string] ?? "Price"}`;
   else if ("vix" in o) base = `${ctx.volName} (${o.vix === "open" ? "open" : "close"})`;
-  else base = points(Number(o.const));
+  else base = Number.isFinite(o.const) ? points(Number(o.const)) : "(number not set yet)";
   const off = o.offset as AnyRec | undefined;
   if (off && "pts" in off) {
     const v = Number(off.pts);
-    base += v >= 0 ? ` + ${points(v)} points` : ` − ${points(-v)} points`;
+    base += !Number.isFinite(v) ? " + (margin not set yet)" : v >= 0 ? ` + ${points(v)} points` : ` − ${points(-v)} points`;
   } else if (off && "pct" in off) {
     const v = Number(off.pct);
-    base += v >= 0 ? ` + ${points(v)}%` : ` − ${points(-v)}%`;
+    base += !Number.isFinite(v) ? " + (margin not set yet)" : v >= 0 ? ` + ${points(v)}%` : ` − ${points(-v)}%`;
   }
   return base;
 }
