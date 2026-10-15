@@ -30,21 +30,24 @@ export function RuleTable({
   editHref,
   extra,
   caption,
+  compact = false,
 }: {
   rows: RuleLine[];
   editHref?: (row: RuleLine) => string;
   extra?: (row: RuleLine) => ReactNode;
   caption?: string;
+  /** Narrow panels (the builder's preview): rule and setting only; the review screen shows the meaning. */
+  compact?: boolean;
 }) {
   return (
     <div className="overflow-x-auto">
-      <table className="w-full min-w-[560px] border-collapse text-left text-sm">
+      <table className={`w-full border-collapse text-left text-sm ${compact ? "" : "min-w-[560px]"}`}>
         {caption && <caption className="mb-2 text-left text-sm text-ink-muted">{caption}</caption>}
         <thead>
           <tr className="border-b border-line text-xs uppercase tracking-wide text-ink-muted">
             <th scope="col" className="py-2 pr-3">Rule</th>
             <th scope="col" className="py-2 pr-3">Setting</th>
-            <th scope="col" className="py-2 pr-3">What it means</th>
+            {!compact && <th scope="col" className="py-2 pr-3">What it means</th>}
             {(editHref || extra) && <th scope="col" className="py-2"><span className="sr-only">Actions</span></th>}
           </tr>
         </thead>
@@ -58,7 +61,7 @@ export function RuleTable({
                 {r.setting}
                 {r.tree && <div className="mt-1"><Tree nodes={r.tree} /></div>}
               </td>
-              <td className="py-2 pr-3 text-ink-muted">{r.meaning}</td>
+              {!compact && <td className="py-2 pr-3 text-ink-muted">{r.meaning}</td>}
               {(editHref || extra) && (
                 <td className="whitespace-nowrap py-2 text-right">
                   {extra?.(r)}

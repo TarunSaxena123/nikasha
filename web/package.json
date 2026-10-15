@@ -24,7 +24,6 @@
     "@radix-ui/react-slider": "1.6.1",
     "@radix-ui/react-switch": "1.4.1",
     "@radix-ui/react-tabs": "1.2.1",
-    "@radix-ui/react-tooltip": "1.4.1",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
     "jspdf": "3.0.4",

@@ -101,7 +101,7 @@ function Builder() {
 
       <aside aria-label="Your strategy so far" className="hidden rounded-lg border border-line bg-surface p-4 lg:block">
         <h2 className="mb-2 text-sm font-semibold">Your strategy so far</h2>
-        <RuleTable rows={describeStrategy(draft.strategy, inst).filter((r) => !r.advanced || r.used)} />
+        <RuleTable compact rows={describeStrategy(draft.strategy, inst).filter((r) => !r.advanced || r.used)} />
       </aside>
     </main>
   );
