@@ -4,6 +4,8 @@
 
 It is an educational backtesting tool. It does not give advice, signals or recommendations.
 
+**Try it live: [nikasha.vercel.app](https://nikasha.vercel.app/)**
+
 ## What Nikasha is
 
 - **Three ways in:** pick a ready-made template, build a strategy step by step, or upload your written rules (PDF, Word, text) for an AI model to read.
