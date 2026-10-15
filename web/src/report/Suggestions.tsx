@@ -58,11 +58,11 @@ function MetricsTable({ base, variant }: { base: Report; variant: Report }) {
     ["Trades", (m) => String(m.trades)],
   ];
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
       <table className="num w-full min-w-[520px] text-sm">
         <thead>
-          <tr className="text-xs uppercase text-ink-muted"><th /><th colSpan={2} className="text-center">Whole period</th><th colSpan={2} className="text-center">Unseen period</th></tr>
-          <tr className="text-xs text-ink-muted"><th /><th className="text-right">Yours</th><th className="text-right">This idea</th><th className="text-right">Yours</th><th className="text-right">This idea</th></tr>
+          <tr className="text-xs uppercase text-ink-muted"><th scope="col"><span className="sr-only">Measure</span></th><th colSpan={2} className="text-center">Whole period</th><th colSpan={2} className="text-center">Unseen period</th></tr>
+          <tr className="text-xs text-ink-muted"><th scope="col"><span className="sr-only">Measure</span></th><th className="text-right">Yours</th><th className="text-right">This idea</th><th className="text-right">Yours</th><th className="text-right">This idea</th></tr>
         </thead>
         <tbody>
           {rows.map(([label, f]) => (

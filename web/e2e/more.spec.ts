@@ -26,7 +26,7 @@ test("no user content in the browser console (REQ-PRV-28)", async ({ page }) => 
   expect(logs.join("\n")).not.toContain(MARK);
 });
 
-test("leave-page warning while a report exists; ready notification when permitted (REQ-EVL-10, 12)", async ({ page, context }) => {
+test("leave-page warning while a report exists; ready notification when permitted (REQ-EVL-10, 12; AC-EVL-08)", async ({ page, context }) => {
   await context.grantPermissions(["notifications"]);
   await page.addInitScript(() => {
     const shown: string[] = [];

@@ -207,3 +207,19 @@ describe("mirror swaps pivot and opening-range sides (AC-INP-20)", () => {
     expect(r.needsReview).toEqual(expect.arrayContaining(["/conditions/0/left", "/conditions/0/right", "/conditions/1/right"]));
   });
 });
+
+describe("missing indicator settings are asked, never defaulted (UAT finding 2026-10-15)", () => {
+  it("an EMA without its price or period becomes questions; answering completes it", () => {
+    const d = emptyDraft("UPLOAD");
+    d.strategy = { ...(validStrategy("orb-cpr-sample-with-answers") as object), indicators: { ema20: { type: "EMA" }, piv: { type: "PIVOTS" }, or15: { type: "OPENING_RANGE", minutes: 15 } } } as never;
+    d.confirmed = { lots: true, lotSize: true };
+    const items = completeness(d, M).filter((m) => m.key.startsWith("indicator:"));
+    expect(items.map((m) => m.key)).toEqual(["indicator:ema20:period", "indicator:ema20:source"]);
+    const src = items[1]!.question!;
+    expect(src.kind).toBe("CHOICE");
+    expect(src.prompt).toBe("EMA: which price should it use?");
+    const close = src.options!.find((o) => o.label === "Close")!;
+    const answered = applyPatch(applyPatch(d.strategy as never, close.patch as never), [{ op: "add", path: "/indicators/ema20/period", value: 20 }]);
+    expect(completeness({ ...d, strategy: answered as never }, M).filter((m) => m.key.startsWith("indicator:"))).toEqual([]);
+  });
+});

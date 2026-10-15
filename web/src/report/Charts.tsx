@@ -26,7 +26,7 @@ function CurveTable({ rows }: { rows: ReturnType<typeof chartData> }) {
   const pages = Math.max(1, Math.ceil(rows.length / per));
   const slice = rows.slice(page * per, page * per + per);
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
       <table className="num w-full text-sm">
         <thead><tr className="border-b border-line text-left text-xs uppercase text-ink-muted"><th>Date</th><th>Trade #</th><th className="text-right">Equity</th><th className="text-right">Drawdown</th></tr></thead>
         <tbody>

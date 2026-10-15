@@ -83,6 +83,7 @@ def _two_signals(stop_pct: float = 30.0, loss: bool = True):
 
 
 def test_max_trades():
+    """AC-ENG-19 (with the two tests below): daily limits."""
     s = cond_strategy(advanced={"daily": {"max_trades": 1}})
     res = run(_two_signals(), s, settings("2024-06-03", "2024-06-03"))
     assert len(res.trades) == 1 and res.skipped == {"MAX_TRADES": 2}

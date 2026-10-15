@@ -42,7 +42,7 @@ engine/nikasha_engine/
 │   └── expiry.py         expiry dates from profile rules + trading days (product §7.4)
 ├── candles/
 │   └── resample.py       1-min → N-min candles from minutes present, anchored at session open
-├── indicators/           ema, sma, rsi, adx, supertrend, macd, bollinger (no VWAP: an index has no traded volume; users are told why, product §6.4)
+├── indicators/           ema, sma, rsi, adx, supertrend, macd, bollinger; levels.py: opening range, pivots / CPR (no VWAP: an index has no traded volume; users are told why, product §6.4)
 ├── conditions/
 │   └── evaluator.py      condition tree → boolean series per candle (and/or, compare, cross, state, turns, slope)
 ├── pricing/

@@ -169,7 +169,7 @@ export default function ReviewPage() {
 
             <div>
               <p className="font-medium">Costs</p>
-              <div className="mt-2 overflow-x-auto">
+              <div className="mt-2 overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
                 <table className="w-full min-w-[520px] text-left">
                   <thead><tr className="border-b border-line text-xs uppercase text-ink-muted"><th className="py-1">Charge</th><th>Value</th><th>Applies to</th><th>Source</th></tr></thead>
                   <tbody>

@@ -1,6 +1,6 @@
 # Nikasha
 
-**The touchstone for your trading strategy.** *Nikasha* (निकष) is the touchstone goldsmiths used to test gold. This project tests Nifty 50 options strategies the same way: on past market data, explaining *why* a strategy worked or failed, not just whether it did.
+**The touchstone for your trading strategy.** *Nikasha* (निकषा) is the touchstone goldsmiths used to test gold. This project tests Nifty 50 options strategies the same way: on past market data, explaining *why* a strategy worked or failed, not just whether it did.
 
 It is an educational backtesting tool. It does not give advice, signals or recommendations.
 

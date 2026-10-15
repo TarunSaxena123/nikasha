@@ -155,7 +155,7 @@ export function WhatIfPanel() {
           {w && (
             <div className="mt-4" aria-live="polite">
               <table className="num w-full max-w-lg text-sm">
-                <thead><tr className="text-xs uppercase text-ink-muted"><th /><th className="text-right">Original</th><th className="text-right">What-if</th></tr></thead>
+                <thead><tr className="text-xs uppercase text-ink-muted"><th scope="col"><span className="sr-only">Measure</span></th><th className="text-right">Original</th><th className="text-right">What-if</th></tr></thead>
                 <tbody>
                   {row("Net P&L", (m) => rupees(m.net_pnl, 0, "always"))}
                   {row("Win rate", (m) => (m.win_rate_pct === null ? "—" : pct(m.win_rate_pct)))}

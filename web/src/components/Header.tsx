@@ -27,7 +27,7 @@ export function Header() {
         </nav>
       </div>
       {current >= 0 && (
-        <ol aria-label="Progress" className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 pb-3 text-xs">
+        <ol aria-label="Progress" tabIndex={0} className="mx-auto flex max-w-6xl gap-2 overflow-x-auto px-4 pb-3 text-xs focus:outline-none focus-visible:ring-2 focus-visible:ring-accent">
           {STEPS.map((s, i) => (
             <li key={s.label} aria-current={i === current ? "step" : undefined}
               className={`whitespace-nowrap rounded-full border px-2 py-0.5 ${i === current ? "border-accent font-semibold text-ink" : i < current ? "border-line text-ink" : "border-line text-ink-muted"}`}>

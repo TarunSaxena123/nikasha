@@ -17,8 +17,9 @@ export interface Mocks {
   extract: unknown[];
 }
 
+// A request the page has already cancelled can't be answered; that's expected, not a failure.
 const json = (route: Route, status: number, body: unknown) =>
-  route.fulfill({ status, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(body) });
+  route.fulfill({ status, contentType: "application/json", headers: { "access-control-allow-origin": "*" }, body: JSON.stringify(body) }).catch(() => undefined);
 
 export async function mockServices(
   page: Page,

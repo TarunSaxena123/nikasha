@@ -38,7 +38,7 @@ function Bar({ value, max }: { value: number; max: number }) {
 export function BreakdownTable({ rows }: { rows: BreakdownRow[] }) {
   const max = Math.max(0, ...rows.map((r) => Math.abs(r.net_pnl)));
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
       <table className="num w-full min-w-[560px] text-sm">
         <thead><tr className="border-b border-line text-left text-xs uppercase text-ink-muted"><th>Group</th><th className="text-right">Trades</th><th className="text-right">Win rate</th><th className="text-right">Net P&amp;L</th><th><span className="sr-only">Bar</span></th><th className="text-right">Expectancy</th></tr></thead>
         <tbody>
@@ -65,7 +65,7 @@ export function MonthGrid({ rows }: { rows: BreakdownRow[] }) {
   const byKey = Object.fromEntries(rows.map((r) => [r.key, r]));
   const months = ["01", "02", "03", "04", "05", "06", "07", "08", "09", "10", "11", "12"];
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
       <table className="num w-full min-w-[720px] text-xs">
         <thead><tr className="border-b border-line text-ink-muted"><th className="text-left">Year</th>{months.map((m) => <th key={m} className="text-right">{monthLabel(`2000-${m}`).slice(0, 3)}</th>)}</tr></thead>
         <tbody>
@@ -168,9 +168,9 @@ export function Sensitivity({ report }: { report: Report }) {
     <section aria-labelledby="sens" data-testid="sensitivity">
       <h2 id="sens" className="text-lg font-semibold">Volatility sensitivity</h2>
       <p className="mt-1 text-sm text-ink-muted">The same test with India VIX a little lower and higher, because option prices are modelled from it.</p>
-      <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-surface p-4">
+      <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-surface p-4 focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
         <table className="num w-full text-sm">
-          <thead><tr className="text-left text-xs uppercase text-ink-muted"><th />{cols.map(([c]) => <th key={c} className="text-right">{c}</th>)}</tr></thead>
+          <thead><tr className="text-left text-xs uppercase text-ink-muted"><th scope="col"><span className="sr-only">Measure</span></th>{cols.map(([c]) => <th key={c} className="text-right">{c}</th>)}</tr></thead>
           <tbody>{rows.map(([label, f]) => <tr key={label} className="border-t border-line"><th className="py-1.5 text-left font-medium">{label}</th>{cols.map(([c, m]) => <td key={c} className="text-right">{f(m)}</td>)}</tr>)}</tbody>
         </table>
       </div>
@@ -186,7 +186,7 @@ export function TradesTable({ report }: { report: Report }) {
   return (
     <section aria-labelledby="tr" data-testid="trades">
       <h2 id="tr" className="text-lg font-semibold">Trades</h2>
-      <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-surface">
+      <div className="mt-3 overflow-x-auto rounded-lg border border-line bg-surface focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
         <table className="num w-full min-w-[900px] text-sm">
           <thead><tr className="border-b border-line text-left text-xs uppercase text-ink-muted">
             <th className="p-2">#</th><th>Option</th><th>Entry time</th><th>Exit time</th><th className="text-right">Entry premium</th><th className="text-right">Exit premium</th><th className="text-right">Quantity</th><th className="pl-3">Partial exit</th><th className="text-right">Net P&amp;L</th><th className="pl-3">Exit reason</th>

@@ -30,6 +30,23 @@ export const POSITIONAL_EXIT_PROMPT = "Your strategy has no target or time exit.
 
 const finite = (v: unknown) => typeof v === "number" && Number.isFinite(v);
 
+type ParamSpec = { key: string; prompt: string; unit: string; min: number; step: number };
+const PERIOD: ParamSpec = { key: "period", prompt: "what period (number of candles)?", unit: "candles", min: 1, step: 1 };
+const SOURCE: ParamSpec = { key: "source", prompt: "", unit: "", min: 0, step: 1 };
+/** Settings each indicator type needs (strategy.schema.json). */
+const INDICATOR_PARAMS: Record<string, ParamSpec[]> = {
+  EMA: [PERIOD, SOURCE], SMA: [PERIOD, SOURCE], RSI: [PERIOD], ADX: [PERIOD],
+  SUPERTREND: [PERIOD, { key: "multiplier", prompt: "what multiplier?", unit: "×", min: 0.1, step: 0.1 }],
+  MACD: [
+    { key: "fast", prompt: "what fast period?", unit: "candles", min: 1, step: 1 },
+    { key: "slow", prompt: "what slow period?", unit: "candles", min: 2, step: 1 },
+    { key: "signal", prompt: "what signal period?", unit: "candles", min: 1, step: 1 },
+  ],
+  BBANDS: [PERIOD, { key: "stddev", prompt: "how many standard deviations?", unit: "SD", min: 0.1, step: 0.1 }, SOURCE],
+  OPENING_RANGE: [{ key: "minutes", prompt: "how many minutes from the open?", unit: "minutes", min: 5, step: 1 }],
+  PIVOTS: [],
+};
+
 function operandUnfinished(o: AnyRec | undefined): boolean {
   if (!o) return true;
   const off = o.offset as AnyRec | undefined;
@@ -193,6 +210,23 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
             : hasTime || !!entry.ce || !!entry.pe || !!entry.all_legs;
   if (!sideOk || (draft?.pending.length ?? 0) > 0) {
     out.push({ key: "entry", label: "Entry trigger", step: "entry", question: null });
+  }
+  // Every setting an indicator needs is asked, never defaulted (e.g. an EMA whose price the text doesn't state).
+  for (const [id, ind] of Object.entries((s.indicators ?? {}) as Record<string, AnyRec>)) {
+    const name = `${ind.type === "OPENING_RANGE" ? "Opening range" : String(ind.type)}${ind.period !== undefined ? ` ${ind.period}` : ""}`;
+    for (const p of INDICATOR_PARAMS[String(ind.type)] ?? []) {
+      if (ind[p.key] !== undefined && ind[p.key] !== null) continue;
+      out.push({
+        key: `indicator:${id}:${p.key}`, label: "Indicator settings", step: "entry",
+        question: p.key === "source"
+          ? choice(`indicator:${id}:source`, `${name}: which price should it use?`,
+            ["close", "open", "high", "low"].map((v) => ({ label: v[0]!.toUpperCase() + v.slice(1), patch: [{ op: "add", path: `/indicators/${id}/source`, value: v }] })))
+          : {
+            id: `indicator:${id}:${p.key}`, item_id: `indicator:${id}:${p.key}`, kind: "NUMBER", prompt: `${name}: ${p.prompt}`,
+            number: { unit_label: p.unit, min: p.min, step: p.step, targets: [{ path: `/indicators/${id}/${p.key}` }] },
+          },
+      });
+    }
   }
   if (["ce", "pe", "all_legs"].some((k) => entry[k] && unfinished(entry[k] as AnyRec))) {
     out.push({ key: "entry_conditions", label: "Entry conditions", step: "entry", question: null });

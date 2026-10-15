@@ -224,7 +224,7 @@ Design sections refer to [`features/04-document-upload/design.md`](features/04-d
 | REQ-UPL-17 | Hand-off to review | §1.6 | T-UPL-14 | AC-UPL-13 (Playwright) | Built |
 | REQ-UPL-18 | No rules found | §1.3 | T-UPL-11 | AC-UPL-14 (component) | Built |
 | REQ-UPL-19 | Error messages | §1.7, §4 | T-UPL-15 | AC-UPL-14 (component) | Built |
-| REQ-UPL-20 | Advanced sample questions | §2.5 | T-UPL-08 | AC-UPL-15 (replay of live recordings, prompt upl-2, recorded 2026-10-15) | Built |
+| REQ-UPL-20 | Advanced sample questions | §2.5 | T-UPL-08 | AC-UPL-15 (replay of live recordings, prompt upl-3, recorded 2026-10-15) | Built |
 | REQ-UPL-21 | One-line sample questions | §2.5 | T-UPL-08, T-UPL-12 | AC-UPL-07 (replay + Playwright) | Built |
 | REQ-UPL-22 | Extraction of the new vocabulary | §2.5b | T-UPL-16 | AC-UPL-16 (`extractor/tests/test_extract.py`, `test_wire.py`; `extensions.spec.ts`) | Built |
 | REQ-UPL-23 | ORB + CPR sample extraction | §2.5b | T-UPL-16 | AC-UPL-16 (replay of a live recording, prompt upl-3) | Built |

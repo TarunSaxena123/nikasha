@@ -20,6 +20,7 @@ Run before every public release (feature 07 T-PRV-24). Tick each item; anything 
 
 ## Content
 - [ ] Owner has reviewed the six Learn articles (`web/src/content/learn/*.md`) and the intro copy.
+- [ ] Run the UAT against the real local stack (`web/e2e/uat.spec.ts`, see CLAUDE.md): all journeys pass.
 - [x] Record the live extraction once (done 2026-10-15, prompt `upl-2`): put the key in `extractor/.env`, run `extractor/.venv/bin/python extractor/scripts/record_extraction.py`, then `pytest` and `scripts/make_fixtures.py` in `extractor/`; review any difference against feature 04 design §2.5 before committing. After any change to `extractor/nikasha_extractor/wire.py`, first run `extractor/scripts/check_schema_compiles.py`.
 
 ## Deployment smoke test (`specs/architecture.md` §9)

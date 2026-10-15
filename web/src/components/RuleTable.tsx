@@ -40,7 +40,7 @@ export function RuleTable({
   compact?: boolean;
 }) {
   return (
-    <div className="overflow-x-auto">
+    <div className="overflow-x-auto focus:outline-none focus-visible:ring-2 focus-visible:ring-accent" tabIndex={0}>
       <table className={`w-full border-collapse text-left text-sm ${compact ? "" : "min-w-[560px]"}`}>
         {caption && <caption className="mb-2 text-left text-sm text-ink-muted">{caption}</caption>}
         <thead>

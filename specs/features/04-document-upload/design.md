@@ -131,7 +131,7 @@ The measured weights and the manual compile check are in `extractor/scripts/chec
 - **Options → patches.** `value_text` values are parsed by field type (number, enum, time) into RFC 6902 patches. Unparseable options are dropped. A question left with no usable options becomes NUMBER/TIME where possible, otherwise `EXTRACTION_FAILED` for that run (never a silent guess).
 - **Labels.** `understood` and `prompt` texts are kept from the model but trimmed (≤ 200 chars) and scanned against `banned-phrases.txt`. A hit replaces them with a fixed fallback ("We found a rule here; please check it on the review screen").
 
-### 2.4 System prompt (`prompt.py`, versioned `PROMPT_VERSION = "upl-2"`)
+### 2.4 System prompt (`prompt.py`, versioned `PROMPT_VERSION = "upl-3"`)
 
 Sections:
 1. **Role and limits:**
