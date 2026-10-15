@@ -26,7 +26,8 @@ Parameters:
     Description: Address for the monthly AWS budget alert.
   MonthlyBudgetUsd:
     Type: Number
-    Default: 5
+    Default: 1
+    Description: Zero hosting spend before UAT (architecture.md); alerts fire on the first cent.
 
 Conditions:
   IsProd: !Equals [!Ref Stage, prod]
@@ -111,10 +112,17 @@ Resources:
           Amount: !Ref MonthlyBudgetUsd
           Unit: USD
       NotificationsWithSubscribers:
-        - Notification:
+        - Notification:  # any actual spend: 1% of the $1 limit
             NotificationType: ACTUAL
             ComparisonOperator: GREATER_THAN
-            Threshold: 50
+            Threshold: 1
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+        - Notification:  # the month is forecast to exceed the limit
+            NotificationType: FORECASTED
+            ComparisonOperator: GREATER_THAN
+            Threshold: 100
           Subscribers:
             - SubscriptionType: EMAIL
               Address: !Ref BudgetEmail

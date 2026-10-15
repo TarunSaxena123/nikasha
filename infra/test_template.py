@@ -55,3 +55,13 @@ def test_extraction_package_is_copied_unchanged():
     # SAM's default Python build drops the prebuilt Linux libraries (*.so); found in the 2026-10-15 rehearsal.
     assert R["ExtractFunction"]["Metadata"]["BuildMethod"] == "makefile"
     assert "build-ExtractFunction:" in (Path(__file__).parent / "build-extractor.sh").read_text()
+
+
+def test_budget_alerts_on_any_spend():
+    """architecture.md: no hosting spend before UAT, so the first cent and any forecast overrun alert."""
+    notes = R["Budget"]["Properties"]["NotificationsWithSubscribers"] if "Budget" in R else next(
+        r["Properties"]["NotificationsWithSubscribers"] for r in R.values() if r["Type"] == "AWS::Budgets::Budget"
+    )
+    kinds = {(n["Notification"]["NotificationType"], n["Notification"]["Threshold"]) for n in notes}
+    assert ("ACTUAL", 1) in kinds and ("FORECASTED", 100) in kinds
+    assert T["Parameters"]["MonthlyBudgetUsd"]["Default"] == 1
