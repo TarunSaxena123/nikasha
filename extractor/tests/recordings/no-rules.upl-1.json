@@ -1,0 +1,43 @@
+{
+ "match": "",
+ "recorded": "hand-written (not a live call)",
+ "output": {
+  "ignored_text_found": true,
+  "basics": {
+   "action": null,
+   "option_side": null,
+   "moneyness": null,
+   "distance_pts": null,
+   "expiry": null,
+   "timeframe_min": null,
+   "holding": null,
+   "lots": null,
+   "lot_size": null,
+   "fixed_entry_time": null
+  },
+  "indicators": [],
+  "conditions": [],
+  "exit": {
+   "sl_type": null,
+   "sl_value": null,
+   "target_type": null,
+   "target_value": null,
+   "time_exit_at": null,
+   "time_exit_on": null,
+   "hold_to_expiry": null
+  },
+  "advanced": {
+   "sl_cap_pts": null,
+   "trail_to_cost_at_r": null,
+   "exit_after_candles": null,
+   "vix_sizing": null,
+   "entry_windows": [],
+   "no_entry_windows": [],
+   "expiry_day_cutoff": null,
+   "daily_max_trades": null,
+   "daily_stop_after_sl_hits": null,
+   "daily_max_loss_rupees": null
+  },
+  "items": []
+ }
+}

@@ -1,0 +1,12 @@
+{
+ "items": [],
+ "draft": {
+  "schema_version": "1.0",
+  "name": "Uploaded strategy",
+  "origin": "UPLOAD",
+  "underlying": "NIFTY50",
+  "indicators": {}
+ },
+ "questions": [],
+ "ignored_text_found": true
+}

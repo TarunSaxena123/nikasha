@@ -1,0 +1,84 @@
+{
+ "match": "VWAP",
+ "recorded": "hand-written (not a live call)",
+ "output": {
+  "ignored_text_found": false,
+  "basics": {
+   "action": "BUY",
+   "option_side": "CALL",
+   "moneyness": "ATM",
+   "distance_pts": null,
+   "expiry": null,
+   "timeframe_min": 5,
+   "holding": null,
+   "lots": null,
+   "lot_size": null,
+   "fixed_entry_time": null
+  },
+  "indicators": [],
+  "conditions": [],
+  "exit": {
+   "sl_type": "POINTS",
+   "sl_value": 20.0,
+   "target_type": null,
+   "target_value": null,
+   "time_exit_at": null,
+   "time_exit_on": null,
+   "hold_to_expiry": null
+  },
+  "advanced": {
+   "sl_cap_pts": null,
+   "trail_to_cost_at_r": null,
+   "exit_after_candles": null,
+   "vix_sizing": null,
+   "entry_windows": [],
+   "no_entry_windows": [],
+   "expiry_day_cutoff": null,
+   "daily_max_trades": null,
+   "daily_stop_after_sl_hits": null,
+   "daily_max_loss_rupees": null
+  },
+  "items": [
+   {
+    "id": "i1",
+    "status": "FOUND",
+    "field": "moneyness",
+    "quote": "Buy ATM call",
+    "understood": "Buy an at-the-money call.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i2",
+    "status": "UNSUPPORTED",
+    "field": "condition",
+    "quote": "when price crosses above VWAP",
+    "understood": "Price crossing above VWAP.",
+    "reason": "VWAP isn't available for Nifty 50. VWAP is calculated from traded volume, and Nifty 50 is an index, not a traded stock, so its chart has no volume and no VWAP.",
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "timeframe_min",
+    "quote": "on the 5-minute chart",
+    "understood": "5-minute candles.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i4",
+    "status": "FOUND",
+    "field": "stop_loss",
+    "quote": "stop-loss 20 points",
+    "understood": "The stop-loss is 20 premium points.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   }
+  ]
+ }
+}

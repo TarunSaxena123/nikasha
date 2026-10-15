@@ -1,0 +1,696 @@
+{
+ "items": [
+  {
+   "id": "i1",
+   "status": "VAGUE",
+   "field_label": "Expiry",
+   "text": "The title says weekly, but which weekly or monthly contract isn't stated.",
+   "mandatory": true,
+   "quote": "NIFTY 15-MIN WEEKLY OPTION BUYING"
+  },
+  {
+   "id": "i2",
+   "status": "VAGUE",
+   "field_label": "Volatility (VIX) sizing",
+   "text": "India VIX is checked before the market opens; the data starts at 09:15.",
+   "mandatory": false,
+   "quote": "Pre-Market Routine (09:00 AM) Check India VIX to determine risk allocation before market open"
+  },
+  {
+   "id": "i3",
+   "status": "FOUND",
+   "field_label": "Volatility (VIX) sizing",
+   "text": "With India VIX below 12, trade 50% of the normal size.",
+   "mandatory": false,
+   "quote": "VIX < 12: High sideways risk. Cut normal position size by 50%."
+  },
+  {
+   "id": "i4",
+   "status": "FOUND",
+   "field_label": "Volatility (VIX) sizing",
+   "text": "With India VIX from 12 to 18, trade the normal size.",
+   "mandatory": false,
+   "quote": "VIX 12–18: Ideal environment. Trade standard position size."
+  },
+  {
+   "id": "i5",
+   "status": "VAGUE",
+   "field_label": "Volatility (VIX) sizing",
+   "text": "With India VIX above 18, the size is reduced, but by how much isn't stated.",
+   "mandatory": false,
+   "quote": "VIX > 18: High premium volatility. Reduce position size significantly."
+  },
+  {
+   "id": "i6",
+   "status": "FOUND",
+   "field_label": "Candle timeframe",
+   "text": "15-minute candles.",
+   "mandatory": true,
+   "quote": "Timeframe: 15-Minute"
+  },
+  {
+   "id": "i7",
+   "status": "FOUND",
+   "field_label": "Indicators",
+   "text": "Supertrend 10 × 2, EMA 9 and EMA 21 on the close, RSI 14 and ADX 14.",
+   "mandatory": false,
+   "quote": "Supertrend: Period = 10, Multiplier = 2 EMA 1 (Fast): 9-period, Source = Close EMA 2 (Slow): 21-period, Source = Close RSI: 14-period ADX: 14-period"
+  },
+  {
+   "id": "i8",
+   "status": "VAGUE",
+   "field_label": "Entry conditions",
+   "text": "Supertrend turning green (red for puts) is an entry condition.",
+   "mandatory": true,
+   "quote": "Supertrend turns Green."
+  },
+  {
+   "id": "i9",
+   "status": "FOUND",
+   "field_label": "Entry conditions",
+   "text": "EMA 9 is above EMA 21 for calls (below for puts).",
+   "mandatory": true,
+   "quote": "9 EMA is completely above the 21 EMA."
+  },
+  {
+   "id": "i10",
+   "status": "VAGUE",
+   "field_label": "Entry conditions",
+   "text": "The candle closes above both EMAs (below for puts) by an amount that isn't stated.",
+   "mandatory": true,
+   "quote": "The trigger candle closes decisively above both EMAs."
+  },
+  {
+   "id": "i11",
+   "status": "FOUND",
+   "field_label": "Entry conditions",
+   "text": "RSI 14 is above 55 for calls and below 45 for puts.",
+   "mandatory": true,
+   "quote": "RSI is strictly above 55."
+  },
+  {
+   "id": "i12",
+   "status": "FOUND",
+   "field_label": "Entry conditions",
+   "text": "ADX 14 is above 20 and rising, or above 30.",
+   "mandatory": true,
+   "quote": "ADX is above 20 (Must slope up if between 20–30; slope does not matter if > 30)."
+  },
+  {
+   "id": "i13",
+   "status": "VAGUE",
+   "field_label": "Entry conditions",
+   "text": "ADX must be rising, but compared with how many candles back isn't stated.",
+   "mandatory": true,
+   "quote": "Must slope up if between 20–30"
+  },
+  {
+   "id": "i14",
+   "status": "FOUND",
+   "field_label": "Strike",
+   "text": "Buy options 100 points in the money: a call on the call signal, a put on the put signal.",
+   "mandatory": true,
+   "quote": "Buy In-The-Money (ITM) contract exactly 100 points below Nifty Spot."
+  },
+  {
+   "id": "i15",
+   "status": "FOUND",
+   "field_label": "Stop-loss",
+   "text": "The stop-loss is at the trigger candle's low on the option premium.",
+   "mandatory": true,
+   "quote": "Stop-Loss (SL): Low of the trigger candle on the Option Premium Chart."
+  },
+  {
+   "id": "i16",
+   "status": "VAGUE",
+   "field_label": "SL cap",
+   "text": "The stop is capped, but at 30 or 35 points isn't decided.",
+   "mandatory": false,
+   "quote": "Capped at a maximum of 30–35 premium points."
+  },
+  {
+   "id": "i17",
+   "status": "FOUND",
+   "field_label": "Target",
+   "text": "The target is 1.5 times the stop distance.",
+   "mandatory": true,
+   "quote": "Target: Strict 1:1.5 Risk-to-Reward Ratio"
+  },
+  {
+   "id": "i18",
+   "status": "FOUND",
+   "field_label": "Trail stop to cost",
+   "text": "The stop moves to the entry price after a gain of 1 × the risk.",
+   "mandatory": false,
+   "quote": "Move SL to cost (break-even) once the premium gains a 1:1 risk-equivalent ratio."
+  },
+  {
+   "id": "i19",
+   "status": "FOUND",
+   "field_label": "Exit after N candles",
+   "text": "Exit after 4 candles if neither the stop nor the target is hit.",
+   "mandatory": false,
+   "quote": "If neither SL nor Target is hit within 60 minutes (4 candles), exit at market price"
+  },
+  {
+   "id": "i20",
+   "status": "FOUND",
+   "field_label": "No-entry windows",
+   "text": "No new entries from 11:00 to 13:30.",
+   "mandatory": false,
+   "quote": "Do not open fresh positions between 11:00 AM and 01:30 PM"
+  },
+  {
+   "id": "i21",
+   "status": "VAGUE",
+   "field_label": "Expiry-day cutoff",
+   "text": "No trades after 12:00 on Thursdays; Thursday was the expiry day until August 2025.",
+   "mandatory": false,
+   "quote": "Do not trade this strategy after 12:00 PM on Thursdays due to high Gamma risk."
+  },
+  {
+   "id": "i22",
+   "status": "FOUND",
+   "field_label": "Daily limits",
+   "text": "At most 2 trades a day; stop for the day after 2 stop-losses.",
+   "mandatory": false,
+   "quote": "Maximum of 2 trades per day. Shut down your trading terminal immediately if both hit your SL."
+  }
+ ],
+ "draft": {
+  "schema_version": "1.0",
+  "name": "Uploaded strategy",
+  "origin": "UPLOAD",
+  "underlying": "NIFTY50",
+  "timeframe_min": 15,
+  "indicators": {
+   "st": {
+    "type": "SUPERTREND",
+    "period": 10,
+    "multiplier": 2
+   },
+   "ema9": {
+    "type": "EMA",
+    "period": 9,
+    "source": "close"
+   },
+   "ema21": {
+    "type": "EMA",
+    "period": 21,
+    "source": "close"
+   },
+   "rsi14": {
+    "type": "RSI",
+    "period": 14
+   },
+   "adx14": {
+    "type": "ADX",
+    "period": 14
+   }
+  },
+  "legs": [
+   {
+    "action": "BUY",
+    "strike": {
+     "method": "MONEYNESS",
+     "moneyness": "ITM",
+     "distance_pts": 100
+    },
+    "option_type": "SIGNAL"
+   }
+  ],
+  "entry": {
+   "ce": {
+    "type": "all",
+    "conditions": [
+     {
+      "type": "turns",
+      "ind": "st",
+      "to": "up"
+     },
+     {
+      "type": "compare",
+      "left": {
+       "ind": "ema9",
+       "output": "value"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "ema21",
+       "output": "value"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "ema9",
+       "output": "value"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "gt",
+      "right": {
+       "ind": "ema21",
+       "output": "value"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "ind": "rsi14",
+       "output": "value"
+      },
+      "op": "gt",
+      "right": {
+       "const": 55
+      }
+     },
+     {
+      "type": "any",
+      "conditions": [
+       {
+        "type": "all",
+        "conditions": [
+         {
+          "type": "compare",
+          "left": {
+           "ind": "adx14",
+           "output": "value"
+          },
+          "op": "gt",
+          "right": {
+           "const": 20
+          }
+         },
+         {
+          "type": "slope",
+          "operand": {
+           "ind": "adx14",
+           "output": "value"
+          },
+          "direction": "up"
+         }
+        ]
+       },
+       {
+        "type": "compare",
+        "left": {
+         "ind": "adx14",
+         "output": "value"
+        },
+        "op": "gt",
+        "right": {
+         "const": 30
+        }
+       }
+      ]
+     }
+    ]
+   },
+   "pe": {
+    "type": "all",
+    "conditions": [
+     {
+      "type": "turns",
+      "ind": "st",
+      "to": "down"
+     },
+     {
+      "type": "compare",
+      "left": {
+       "ind": "ema9",
+       "output": "value"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "ema21",
+       "output": "value"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "ema9",
+       "output": "value"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "price": "close"
+      },
+      "op": "lt",
+      "right": {
+       "ind": "ema21",
+       "output": "value"
+      }
+     },
+     {
+      "type": "compare",
+      "left": {
+       "ind": "rsi14",
+       "output": "value"
+      },
+      "op": "lt",
+      "right": {
+       "const": 45
+      }
+     },
+     {
+      "type": "any",
+      "conditions": [
+       {
+        "type": "all",
+        "conditions": [
+         {
+          "type": "compare",
+          "left": {
+           "ind": "adx14",
+           "output": "value"
+          },
+          "op": "gt",
+          "right": {
+           "const": 20
+          }
+         },
+         {
+          "type": "slope",
+          "operand": {
+           "ind": "adx14",
+           "output": "value"
+          },
+          "direction": "up"
+         }
+        ]
+       },
+       {
+        "type": "compare",
+        "left": {
+         "ind": "adx14",
+         "output": "value"
+        },
+        "op": "gt",
+        "right": {
+         "const": 30
+        }
+       }
+      ]
+     }
+    ]
+   }
+  },
+  "exit": {
+   "stop_loss": {
+    "type": "TRIGGER_CANDLE"
+   },
+   "target": {
+    "type": "RR",
+    "value": 1.5
+   }
+  },
+  "advanced": {
+   "trail_to_cost_at_r": 1,
+   "exit_after_candles": 4,
+   "vix_sizing": {
+    "bands": [
+     {
+      "vix_to": 12,
+      "size_pct": 50
+     },
+     {
+      "vix_from": 12,
+      "vix_to": 18,
+      "size_pct": 100
+     },
+     {
+      "vix_from": 18
+     }
+    ]
+   },
+   "no_entry_windows": [
+    {
+     "from": "11:00",
+     "to": "13:30"
+    }
+   ],
+   "daily": {
+    "max_trades": 2,
+    "stop_after_sl_hits": 2
+   }
+  }
+ },
+ "questions": [
+  {
+   "id": "q1",
+   "item_id": "i1",
+   "prompt": "Your title says weekly. Which expiry?",
+   "kind": "CHOICE",
+   "options": [
+    {
+     "label": "Current weekly",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/legs/0/expiry",
+       "value": "CURRENT_WEEKLY"
+      }
+     ]
+    },
+    {
+     "label": "Next weekly",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/legs/0/expiry",
+       "value": "NEXT_WEEKLY"
+      }
+     ]
+    },
+    {
+     "label": "Monthly",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/legs/0/expiry",
+       "value": "MONTHLY"
+      }
+     ]
+    }
+   ],
+   "recommended_option_index": null
+  },
+  {
+   "id": "q2",
+   "item_id": "i2",
+   "prompt": "Use the 09:15 opening VIX? (the earliest available)",
+   "kind": "CONFIRM",
+   "options": [
+    {
+     "label": "Yes, use the 09:15 opening VIX",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/advanced/vix_sizing/measured_at",
+       "value": "DAY_OPEN"
+      }
+     ]
+    },
+    {
+     "label": "No, use India VIX at the time of entry",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/advanced/vix_sizing/measured_at",
+       "value": "ENTRY"
+      }
+     ]
+    }
+   ],
+   "recommended_option_index": 0
+  },
+  {
+   "id": "q3",
+   "item_id": "i5",
+   "prompt": "With India VIX above 18, trade what % of your normal size?",
+   "kind": "NUMBER",
+   "number": {
+    "unit_label": "%",
+    "min": 1,
+    "step": 5,
+    "targets": [
+     {
+      "path": "/advanced/vix_sizing/bands/2/size_pct"
+     }
+    ],
+    "max": 1000
+   }
+  },
+  {
+   "id": "q4",
+   "item_id": "i8",
+   "prompt": "Enter only on the candle it turns green, or on any candle while it's green?",
+   "kind": "CHOICE",
+   "options": [
+    {
+     "label": "Only on the candle where it turns green (red for puts)",
+     "patch": [
+      {
+       "op": "replace",
+       "path": "/entry/ce/conditions/0",
+       "value": {
+        "type": "turns",
+        "ind": "st",
+        "to": "up"
+       }
+      },
+      {
+       "op": "replace",
+       "path": "/entry/pe/conditions/0",
+       "value": {
+        "type": "turns",
+        "ind": "st",
+        "to": "down"
+       }
+      }
+     ]
+    },
+    {
+     "label": "On any candle while it is green (red for puts)",
+     "patch": [
+      {
+       "op": "replace",
+       "path": "/entry/ce/conditions/0",
+       "value": {
+        "type": "state",
+        "ind": "st",
+        "is": "up"
+       }
+      },
+      {
+       "op": "replace",
+       "path": "/entry/pe/conditions/0",
+       "value": {
+        "type": "state",
+        "ind": "st",
+        "is": "down"
+       }
+      }
+     ]
+    }
+   ],
+   "recommended_option_index": null
+  },
+  {
+   "id": "q5",
+   "item_id": "i10",
+   "prompt": "How many points beyond both EMAs must the candle close? (0 = just beyond)",
+   "kind": "NUMBER",
+   "number": {
+    "unit_label": "points",
+    "min": 0,
+    "step": 1,
+    "targets": [
+     {
+      "path": "/entry/ce/conditions/2/right/offset/pts"
+     },
+     {
+      "path": "/entry/ce/conditions/3/right/offset/pts"
+     },
+     {
+      "path": "/entry/pe/conditions/2/right/offset/pts",
+      "multiplier": -1
+     },
+     {
+      "path": "/entry/pe/conditions/3/right/offset/pts",
+      "multiplier": -1
+     }
+    ]
+   }
+  },
+  {
+   "id": "q6",
+   "item_id": "i13",
+   "prompt": "'Rising' compared with how many candles back?",
+   "kind": "NUMBER",
+   "number": {
+    "unit_label": "candles",
+    "min": 1,
+    "step": 1,
+    "targets": [
+     {
+      "path": "/entry/ce/conditions/5/conditions/0/conditions/1/lookback"
+     },
+     {
+      "path": "/entry/pe/conditions/5/conditions/0/conditions/1/lookback"
+     }
+    ],
+    "max": 50
+   }
+  },
+  {
+   "id": "q7",
+   "item_id": "i16",
+   "prompt": "SL cap: 30 or 35 points?",
+   "kind": "CHOICE",
+   "options": [
+    {
+     "label": "30 points",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/advanced/sl_cap_pts",
+       "value": 30
+      }
+     ]
+    },
+    {
+     "label": "35 points",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/advanced/sl_cap_pts",
+       "value": 35
+      }
+     ]
+    }
+   ],
+   "recommended_option_index": null
+  },
+  {
+   "id": "q8",
+   "item_id": "i21",
+   "prompt": "By 'Thursday', do you mean expiry day? (Thursday until Aug 2025, Tuesday since)",
+   "kind": "CONFIRM",
+   "options": [
+    {
+     "label": "Yes, no new trades from 12:00 on expiry day",
+     "patch": [
+      {
+       "op": "add",
+       "path": "/advanced/expiry_day_cutoff",
+       "value": "12:00"
+      }
+     ]
+    },
+    {
+     "label": "No, leave this rule out",
+     "patch": []
+    }
+   ],
+   "recommended_option_index": 0
+  }
+ ],
+ "ignored_text_found": true
+}

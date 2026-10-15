@@ -1,0 +1,128 @@
+{
+ "match": "RSI 14 crosses above 60",
+ "recorded": "hand-written (not a live call)",
+ "output": {
+  "ignored_text_found": false,
+  "basics": {
+   "action": "BUY",
+   "option_side": "CALL",
+   "moneyness": "ATM",
+   "distance_pts": null,
+   "expiry": null,
+   "timeframe_min": 5,
+   "holding": null,
+   "lots": null,
+   "lot_size": null,
+   "fixed_entry_time": null
+  },
+  "indicators": [
+   {
+    "id": "rsi14",
+    "type": "RSI",
+    "period": 14,
+    "source": null,
+    "multiplier": null,
+    "fast": null,
+    "slow": null,
+    "signal": null,
+    "stddev": null
+   }
+  ],
+  "conditions": [
+   {
+    "id": "c1",
+    "parent_id": null,
+    "side": "CE",
+    "kind": "cross",
+    "left": {
+     "kind": "indicator",
+     "ind": "rsi14",
+     "output": "value",
+     "price": null,
+     "vix": null,
+     "const": null,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "op": null,
+    "right": {
+     "kind": "const",
+     "ind": null,
+     "output": null,
+     "price": null,
+     "vix": null,
+     "const": 60.0,
+     "offset_pts": null,
+     "offset_pct": null
+    },
+    "direction": "above",
+    "ind": null,
+    "to_or_is": null,
+    "lookback": null
+   }
+  ],
+  "exit": {
+   "sl_type": "PCT_PREMIUM",
+   "sl_value": 30.0,
+   "target_type": null,
+   "target_value": null,
+   "time_exit_at": null,
+   "time_exit_on": null,
+   "hold_to_expiry": null
+  },
+  "advanced": {
+   "sl_cap_pts": null,
+   "trail_to_cost_at_r": null,
+   "exit_after_candles": null,
+   "vix_sizing": null,
+   "entry_windows": [],
+   "no_entry_windows": [],
+   "expiry_day_cutoff": null,
+   "daily_max_trades": null,
+   "daily_stop_after_sl_hits": null,
+   "daily_max_loss_rupees": null
+  },
+  "items": [
+   {
+    "id": "i1",
+    "status": "FOUND",
+    "field": "moneyness",
+    "quote": "Buy ATM Nifty call",
+    "understood": "Buy an at-the-money Nifty call.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i2",
+    "status": "FOUND",
+    "field": "condition",
+    "quote": "when RSI 14 crosses above 60",
+    "understood": "Enter when RSI 14 crosses above 60.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i3",
+    "status": "FOUND",
+    "field": "timeframe_min",
+    "quote": "on 5-minute chart",
+    "understood": "5-minute candles.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   },
+   {
+    "id": "i4",
+    "status": "FOUND",
+    "field": "stop_loss",
+    "quote": "stop-loss 30%",
+    "understood": "The stop-loss is 30% of the option premium.",
+    "reason": null,
+    "targets": [],
+    "question": null
+   }
+  ]
+ }
+}
