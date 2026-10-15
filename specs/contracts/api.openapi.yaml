@@ -22,7 +22,7 @@ servers:
     description: Engine (Lambda Function URL)
     variables:
       engineUrl:
-        default: https://example.lambda-url.ap-south-1.on.aws
+        default: https://example.lambda-url.ap-southeast-2.on.aws
     # /v1/extract overrides this with the extraction function's URL (path-level servers).
 
 tags:
@@ -104,7 +104,7 @@ paths:
         description: Extraction function (Lambda Function URL)
         variables:
           extractUrl:
-            default: https://example-extract.lambda-url.ap-south-1.on.aws
+            default: https://example-extract.lambda-url.ap-southeast-2.on.aws
     post:
       tags: [extraction]
       operationId: extract

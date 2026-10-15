@@ -18,7 +18,7 @@ flowchart LR
     APP["<b>Nikasha web app</b><br/>screens · results kept in memory<br/>PDF / CSV made here"]
   end
 
-  subgraph AWS["AWS Lambda · Mumbai"]
+  subgraph AWS["AWS Lambda · Sydney"]
     ENGINE["<b>Engine</b><br/>runs backtests,<br/>builds reports"]
     EXTRACT["<b>Extraction</b><br/>reads uploaded<br/>strategy documents"]
   end
@@ -184,7 +184,7 @@ The LLM never computes results, never picks values the user did not state, and i
 - **Extraction — zip package** on the managed Python 3.12 runtime (small dependencies, so no container image and no image storage). Memory 512 MB (it mostly waits for the LLM), timeout 120 s.
 - **`ANTHROPIC_API_KEY`** is passed to the extraction function as a Lambda environment variable from a `NoEcho` SAM parameter at deploy time (encrypted at rest by Lambda's default key). It is never committed to the repo and never sent to the browser. Secrets Manager is not used (paid service).
 - **AWS SAM** template in `infra/` defines: both functions, both Function URLs (auth NONE, CORS, buffered invoke mode), a CloudWatch log group per function with **1-day retention**, and an AWS Budgets alert. No API Gateway, S3, EC2, NAT gateway or Secrets Manager.
-- Region: `ap-south-1` (Mumbai).
+- Region: `ap-southeast-2` (Sydney). Changed from `ap-south-1` (Mumbai) on 2026-10-15: the account's AWS Free plan allows only this region (owner decision). Nothing is stored, so the region only adds about 0.1–0.2 s per request from India.
 - Deploy: `sam build && sam deploy` from a developer machine for the MVP (a GitHub Actions deploy with OIDC is a later improvement).
 
 ### 5.3 Portability

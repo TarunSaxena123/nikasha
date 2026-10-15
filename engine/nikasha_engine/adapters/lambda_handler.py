@@ -1,7 +1,9 @@
 """AWS Lambda Function URL adapter: event ↔ core.api.dispatch (architecture.md §5.3).
 
 CORS is configured on the Function URL itself (SAM template), so this handler adds no CORS headers.
-Data and profiles are loaded during the init phase (module import), once per container.
+Data and profiles load on the first request, once per container (`api.dispatch` calls `api.init`).
+Loading at import ran into Lambda's 10 s init-phase limit, which then repeated the work inside the
+first request (cold start ~17.6 s, budget 8 s; measured 2026-10-15).
 """
 
 from __future__ import annotations
@@ -11,8 +13,6 @@ import json
 from typing import Any
 
 from nikasha_engine.core import api
-
-api.init()
 
 
 def handler(event: dict[str, Any], context: Any) -> dict[str, Any]:

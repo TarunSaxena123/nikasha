@@ -69,7 +69,7 @@ Free tiers only; see [`specs/architecture.md`](specs/architecture.md) §5 and §
      --parameter-overrides Stage=prod AllowedOrigin=https://<your-vercel-domain> BudgetEmail=<you@example.com> \
        EngineVersion=$(git rev-parse --short HEAD) AnthropicApiKey=<key>
    ```
-   Region `ap-south-1`. The key is a `NoEcho` parameter that reaches only the extraction function. Set an Anthropic monthly spend limit before the first live upload. The stack outputs `EngineUrl` and `ExtractUrl`.
+   Region `ap-southeast-2` (Sydney; the Free plan account allows only this region). The key is a `NoEcho` parameter that reaches only the extraction function. Set an Anthropic monthly spend limit before the first live upload. The stack outputs `EngineUrl` and `ExtractUrl`.
 2. **Vercel (web).** Import the GitHub repo, set the root directory to `web/`, and set `NEXT_PUBLIC_ENGINE_URL` and `NEXT_PUBLIC_EXTRACT_URL` to the two stack outputs. No analytics, no log drains. Security headers come from `web/vercel.json`.
 3. Run the smoke tests and the checks in [`docs/release-checklist.md`](docs/release-checklist.md).
 
