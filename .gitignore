@@ -230,3 +230,6 @@ web/out/
 web/test-results/
 web/playwright-report/
 .aws-sam/
+*.tsbuildinfo
+!web/src/lib/
+!web/src/app/(gated)/build/
