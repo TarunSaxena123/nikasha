@@ -26,5 +26,6 @@ RUN pip install --no-cache-dir /tmp/pylib/nikasha_log /tmp/engine && rm -rf /tmp
 COPY --from=data /build/parquet/ /opt/nikasha/data/
 COPY instruments/ /opt/nikasha/instruments/
 COPY specs/contracts/strategy.schema.json specs/contracts/instrument.schema.json specs/contracts/advanced-options.json /opt/nikasha/contracts/
+COPY specs/contracts/fixtures/strategies/valid/simple-trend-follower.json /opt/nikasha/contracts/fixtures/strategies/valid/
 ENTRYPOINT ["python", "-m", "awslambdaric"]
 CMD ["nikasha_engine.adapters.lambda_handler.handler"]
