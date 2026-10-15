@@ -30,6 +30,45 @@ jobs:
       - name: Logging helper tests
         run: .venv/bin/python -m pytest -q ../pylib/nikasha_log/tests
 
+  extractor:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: extractor
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.12"
+      - name: Install
+        run: |
+          python -m venv .venv
+          .venv/bin/pip install -q -e ../pylib/nikasha_log -e ".[dev]"
+      - name: Lint and types
+        run: .venv/bin/ruff check . && .venv/bin/mypy nikasha_extractor
+      - name: Tests (recorded LLM responses only; no paid calls)
+        run: .venv/bin/python -m pytest -q
+
+  web:
+    runs-on: ubuntu-latest
+    defaults:
+      run:
+        working-directory: web
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: npm ci
+      - name: Generated code is current
+        run: npm run codegen:check
+      - name: Lint and types
+        run: npm run lint && npm run typecheck
+      - name: Unit tests
+        run: npm test
+      - name: Production build
+        run: npm run build
+
   contracts-and-repo:
     runs-on: ubuntu-latest
     steps:
@@ -39,7 +78,7 @@ jobs:
           python-version: "3.12"
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
       - name: Install engine (for contract checks)
         run: |
           python -m venv engine/.venv
@@ -56,3 +95,7 @@ jobs:
         run: scripts/check-contracts.sh
       - name: Product-name check
         run: node scripts/check-names.mjs --self-test && node scripts/check-names.mjs
+      - name: README disclaimer is in sync
+        run: node scripts/sync-readme-disclaimer.mjs --check
+      - name: SAM template rules
+        run: engine/.venv/bin/python -m pytest -q -p no:cacheprovider infra/test_template.py

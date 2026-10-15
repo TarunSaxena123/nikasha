@@ -27,6 +27,8 @@ const config = [
   // consent.ts is the one storage module; its own tests inspect what it stored.
   { files: ["src/legal/consent.ts", "src/legal/legal.test.ts"], rules: { "no-restricted-globals": "off", "no-restricted-properties": "off" } },
   { files: ["scripts/**", "e2e/**", "**/*.test.ts", "**/*.test.tsx", "*.config.*"], rules: { "no-console": "off" } },
+  // E2E tests inspect the browser storage to prove nothing else is stored.
+  { files: ["e2e/**"], rules: { "no-restricted-properties": "off" } },
 ];
 
 export default config;

@@ -48,7 +48,7 @@ Requirement IDs are stable: a changed requirement keeps its ID, and a removed ID
 
 ## Running tests locally
 
-The commands below become available as each part is scaffolded (T-DAT-03 engine, T-UPL-02 extractor, T-EVL-07 web, T-DAT-11 CI and `scripts/check-contracts.sh`, T-PRV-23 privacy marker test). Update this section when they change.
+All parts are scaffolded; CI (`.github/workflows/ci.yml`) runs the same checks. Update this section when they change.
 
 | Part | Command (from repo root) |
 |---|---|
@@ -57,11 +57,16 @@ The commands below become available as each part is scaffolded (T-DAT-03 engine,
 | Extraction function tests | `cd extractor && pytest` |
 | Shared Python logging helper | `cd pylib/nikasha_log && pytest` |
 | Web unit and component tests | `cd web && npm test` |
-| Web end-to-end tests (needs local engine on :8000, extractor on :8001) | `cd web && npx playwright test` |
+| Web end-to-end tests (services mocked from the shared fixtures; serves the production build) | `cd web && npm run build && npx playwright test` |
+| Web end-to-end against the real local engine (engine running on :8000) | `cd web && NIKASHA_STACK=1 npx playwright test -g @stack` |
+| Web lint, types, generated-code drift | `cd web && npx eslint . && npx tsc --noEmit && npm run codegen:check` |
+| SAM template checks | `engine/.venv/bin/python -m pytest -p no:cacheprovider infra/test_template.py` |
 | Contract checks (schemas, OpenAPI, fixtures, generated-code drift) | `scripts/check-contracts.sh` |
 | Repo checks (README disclaimer sync, product-name scan) | `node scripts/sync-readme-disclaimer.mjs --check && node scripts/check-names.mjs` |
 | Privacy marker test (local stack) | `scripts/privacy-marker-test.sh` |
 
 Engine setup (once): `cd engine && python3.12 -m venv .venv && .venv/bin/pip install -e ../pylib/nikasha_log -e ".[dev]" && .venv/bin/python scripts/csv_to_parquet.py` (builds the Parquet files into `engine/build/data/`). Engine tests run with `cd engine && .venv/bin/python -m pytest`; benchmarks with `-m perf tests/perf`. Generated models: `cd engine && .venv/bin/python scripts/codegen.py`.
 
-Local run: engine `cd engine && python -m nikasha_engine.adapters.http_app` (port 8000), extractor `cd extractor && python -m nikasha_extractor.adapters.http_app` (port 8001, needs `ANTHROPIC_API_KEY` in `extractor/.env` for live uploads only), web `cd web && npm run dev` (port 3000).
+Extractor setup (once): `cd extractor && python3.12 -m venv .venv && .venv/bin/pip install -e ../pylib/nikasha_log -e ".[dev]"`; tests replay `extractor/tests/recordings/` and never call the AI provider. Web setup (once): `cd web && npm ci && npx playwright install chromium`; generated types and validators: `npm run codegen`.
+
+Local run: engine `cd engine && python -m nikasha_engine.adapters.http_app` (port 8000), extractor `cd extractor && python -m nikasha_extractor.adapters.http_app` (port 8001, needs `ANTHROPIC_API_KEY` in `extractor/.env` for live uploads only; `NIKASHA_EXTRACT_REPLAY=tests/recordings` replays the recordings instead), web `cd web && npm run dev` (port 3000).

@@ -146,6 +146,13 @@ export function Strike({ draft, update, inst, problem }: StepProps) {
 
 type Mode = "conditions" | "time" | "time_if";
 
+/** The editor always edits a group: a single condition (e.g. a template's crossover) is shown inside "All of". */
+function asGroup(node: AnyRec | undefined): AnyRec & { type: string } {
+  if (!node) return { type: "all", conditions: [] };
+  if (node.type === "all" || node.type === "any") return node as AnyRec & { type: string };
+  return { type: "all", conditions: [node] };
+}
+
 export function Entry({ draft, update, problem }: StepProps) {
   const s = draft.strategy as AnyRec;
   const entry = (s.entry ?? {}) as AnyRec;
@@ -210,7 +217,7 @@ export function Entry({ draft, update, problem }: StepProps) {
                     {sd.key === "pe" && <Button variant="quiet" onClick={doMirror} disabled={!entry.ce}>Mirror from Call</Button>}
                   </div>
                   {sd.key === "pe" && highlights.length > 0 && <p className="mb-1 text-xs text-accent">Highlighted numbers were copied unchanged from the call side. Please check them.</p>}
-                  <ConditionGroup node={(entry[sd.key] as AnyRec & { type: string }) ?? { type: "all", conditions: [] }} indicators={indicators}
+                  <ConditionGroup node={asGroup(entry[sd.key] as AnyRec | undefined)} indicators={indicators}
                     highlights={sd.key === "pe" ? highlights : []}
                     onChange={(n) => {
                       if (sd.key === "pe") {

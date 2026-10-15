@@ -35,6 +35,8 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
   const inst = meta?.instruments.find((i) => i.symbol === (s.underlying ?? "NIFTY50")) ?? meta?.instruments[0];
   const interval = inst?.strike_interval ?? 50;
   const out: MissingItem[] = [];
+  // With several legs, each leg's buy/sell, call/put and strike are edited under Advanced → Multiple legs.
+  const legStep = (step: StepId): StepId => (n > 1 ? "advanced" : step);
 
   if (!s.underlying) {
     out.push({
@@ -45,7 +47,7 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
 
   if (n === 0 || legs.some((l) => !l.action)) {
     out.push({
-      key: "action", label: "Buy or sell", step: "basics",
+      key: "action", label: "Buy or sell", step: legStep("basics"),
       question: choice("action", "Do you buy options or sell options?", [
         { label: "Buy options", patch: legPaths(n, "action").map((path) => ({ op: "add", path, value: "BUY" })) },
         { label: "Sell options", patch: legPaths(n, "action").map((path) => ({ op: "add", path, value: "SELL" })) },
@@ -55,7 +57,7 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
 
   if (n === 0 || legs.some((l) => !l.option_type)) {
     out.push({
-      key: "option_type", label: "Option type", step: "basics",
+      key: "option_type", label: "Option type", step: legStep("basics"),
       question: choice("option_type", "Which option do you trade?", [
         { label: "Call (CE)", patch: [{ op: "add", path: "/legs/0/option_type", value: "CE" }] },
         { label: "Put (PE)", patch: [{ op: "add", path: "/legs/0/option_type", value: "PE" }] },
@@ -67,7 +69,7 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
   const strikes = legs.map((l) => (l.strike ?? {}) as AnyRec);
   if (n === 0 || strikes.some((st) => !st.method || (st.method === "MONEYNESS" && !st.moneyness))) {
     out.push({
-      key: "moneyness", label: "Strike", step: "strike",
+      key: "moneyness", label: "Strike", step: legStep("strike"),
       question: choice("moneyness", "Which strike: at the money, in the money or out of the money?", [
         { label: "At the money (ATM)", patch: legPaths(n, "strike").map((path) => ({ op: "add", path, value: { method: "MONEYNESS", moneyness: "ATM", distance_pts: 0 } })) },
         { label: "In the money (ITM)", patch: legPaths(n, "strike").map((path) => ({ op: "add", path, value: { method: "MONEYNESS", moneyness: "ITM" } })) },
@@ -76,7 +78,7 @@ export function completeness(draft: Draft | null, meta: MetaResponse | null): Mi
     });
   } else if (strikes.some((st) => st.method === "MONEYNESS" && st.moneyness !== "ATM" && (st.distance_pts === undefined || st.distance_pts === null))) {
     out.push({
-      key: "distance", label: "Strike distance", step: "strike",
+      key: "distance", label: "Strike distance", step: legStep("strike"),
       question: {
         id: "distance", item_id: "distance", kind: "NUMBER",
         prompt: `How many points from the at-the-money strike? (steps of ${interval})`,

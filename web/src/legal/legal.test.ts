@@ -3,7 +3,7 @@ import { join } from "node:path";
 import { afterEach, describe, expect, it, vi } from "vitest";
 import { CONTRACTS } from "@/test/fixtures";
 import { accept, CONSENT_KEY, read, _resetForTests } from "./consent";
-import { DISCLAIMER_VERSION, FULL_DISCLAIMER, FULL_TITLE, SHORT_DISCLAIMER, fillDates, fullTemplateText } from "./disclaimer";
+import { AI_RETENTION_DAYS, DISCLAIMER_VERSION, FULL_DISCLAIMER, FULL_TITLE, SHORT_DISCLAIMER, fillDates, fullTemplateText } from "./disclaimer";
 
 const PRODUCT = readFileSync(join(CONTRACTS, "..", "product.md"), "utf8");
 
@@ -74,5 +74,14 @@ describe("consent (AC-PRV-05, 06, 07, 22)", () => {
     vi.useFakeTimers();
     vi.setSystemTime(new Date(Date.now() + 366 * 24 * 3600 * 1000));
     expect(read()).toBe("accepted");
+  });
+});
+
+describe("AI provider retention (REQ-PRV-30)", () => {
+  it("the one retention constant matches the disclaimer and the upload notice", () => {
+    expect(AI_RETENTION_DAYS).toBe(30);
+    expect(FULL_DISCLAIMER.map((p) => p.text).join(" ")).toContain(`within ${AI_RETENTION_DAYS} days`);
+    const legal = readFileSync(join(__dirname, "..", "components", "legal", "Legal.tsx"), "utf8");
+    expect(legal).toContain("{AI_RETENTION_DAYS} days");
   });
 });

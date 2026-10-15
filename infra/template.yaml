@@ -1,0 +1,124 @@
+AWSTemplateFormatVersion: "2010-09-09"
+Transform: AWS::Serverless-2016-10-31
+Description: >
+  Nikasha: the engine (container image) and the extraction function (zip), each behind a Function URL.
+  No storage resources of any kind; logs kept 1 day; the Anthropic key reaches the extraction function only
+  (architecture.md §5.2, feature 07 design §2.5).
+
+Parameters:
+  Stage:
+    Type: String
+    AllowedValues: [dev, prod]
+    Default: dev
+  AllowedOrigin:
+    Type: String
+    Description: Production web origin (e.g. https://nikasha.vercel.app). The dev stage allows any origin.
+    Default: "*"
+  AnthropicApiKey:
+    Type: String
+    NoEcho: true
+    Description: Passed only to the extraction function. Never committed.
+  EngineVersion:
+    Type: String
+    Default: dev
+  BudgetEmail:
+    Type: String
+    Description: Address for the monthly AWS budget alert.
+  MonthlyBudgetUsd:
+    Type: Number
+    Default: 5
+
+Conditions:
+  IsProd: !Equals [!Ref Stage, prod]
+
+Resources:
+  EngineLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/nikasha-engine-${Stage}
+      RetentionInDays: 1
+
+  ExtractLogGroup:
+    Type: AWS::Logs::LogGroup
+    Properties:
+      LogGroupName: !Sub /aws/lambda/nikasha-extract-${Stage}
+      RetentionInDays: 1
+
+  EngineFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub nikasha-engine-${Stage}
+      PackageType: Image
+      MemorySize: 2048
+      Timeout: 120
+      Architectures: [x86_64]
+      LoggingConfig:
+        LogGroup: !Ref EngineLogGroup
+      Environment:
+        Variables:
+          NIKASHA_ENGINE_VERSION: !Ref EngineVersion
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: BUFFERED
+        Cors:
+          AllowOrigins: [!If [IsProd, !Ref AllowedOrigin, "*"]]
+          AllowMethods: [GET, POST]
+          AllowHeaders: [content-type]
+          MaxAge: 600
+    Metadata:
+      DockerContext: ..
+      Dockerfile: engine/Dockerfile
+      DockerTag: !Ref Stage
+      DockerBuildArgs:
+        ENGINE_VERSION: !Ref EngineVersion
+
+  ExtractFunction:
+    Type: AWS::Serverless::Function
+    Properties:
+      FunctionName: !Sub nikasha-extract-${Stage}
+      Runtime: python3.12
+      Handler: nikasha_extractor.adapters.lambda_handler.handler
+      CodeUri: build/extractor
+      MemorySize: 512
+      Timeout: 120
+      Architectures: [x86_64]
+      LoggingConfig:
+        LogGroup: !Ref ExtractLogGroup
+      Environment:
+        Variables:
+          ANTHROPIC_API_KEY: !Ref AnthropicApiKey
+      FunctionUrlConfig:
+        AuthType: NONE
+        InvokeMode: BUFFERED
+        Cors:
+          AllowOrigins: [!If [IsProd, !Ref AllowedOrigin, "*"]]
+          AllowMethods: [POST]
+          AllowHeaders: [content-type]
+          MaxAge: 600
+
+  MonthlyBudget:
+    Type: AWS::Budgets::Budget
+    Properties:
+      Budget:
+        BudgetName: !Sub nikasha-${Stage}-monthly
+        BudgetType: COST
+        TimeUnit: MONTHLY
+        BudgetLimit:
+          Amount: !Ref MonthlyBudgetUsd
+          Unit: USD
+      NotificationsWithSubscribers:
+        - Notification:
+            NotificationType: ACTUAL
+            ComparisonOperator: GREATER_THAN
+            Threshold: 50
+          Subscribers:
+            - SubscriptionType: EMAIL
+              Address: !Ref BudgetEmail
+
+Outputs:
+  EngineUrl:
+    Description: NEXT_PUBLIC_ENGINE_URL for the web app
+    Value: !GetAtt EngineFunctionUrl.FunctionUrl
+  ExtractUrl:
+    Description: NEXT_PUBLIC_EXTRACT_URL for the web app
+    Value: !GetAtt ExtractFunctionUrl.FunctionUrl

@@ -26,7 +26,9 @@ TEMPLATE_ID = "simple-trend-follower"
 T_NOT_OFFERED = "Ideas need at least 30 trades to compare fairly; this strategy had {n} in the period."
 T_NONE_APPLY = "No ideas apply to this strategy's settings."
 T_SWEEP_CHANGE = "{field} {new} instead of {old}"
-T_SWEEP_REASON = "Your {field_lower} of {old} was tested on {n} trades; this shows how sensitive that result was to the value."
+T_SWEEP_REASON = (
+    "Your {field_lower} of {old} was tested on {n} trades; this shows how sensitive that result was to the value."
+)
 T_VIX_CHANGE = "Skip trades when {vol} is {band}"
 T_VIX_REASON = "Trades taken when {vol} was {band} lost {exp} on average ({n} trades)."
 T_SIDE_CHANGE = "{keep} only (skip {skip})"
@@ -68,17 +70,21 @@ def sweeps(strategy: dict[str, Any], trades: int) -> list[dict[str, Any]]:
         for new in values:
             s = copy.deepcopy(strategy)
             s["exit"][field]["value"] = int(new) if float(new).is_integer() else new
-            out.append({
-                "kind": "PARAMETER_SWEEP",
-                "group": _group(field, level["type"]),
-                "change_text": T_SWEEP_CHANGE.format(field=name, new=_value_text(level["type"], new),
-                                                     old=_value_text(level["type"], v)),
-                "reason_text": T_SWEEP_REASON.format(field_lower=name.lower(), old=_value_text(level["type"], v),
-                                                     n=fmt.number(trades)),
-                "strategy": s,
-                "_field": field,
-                "_value": new,
-            })
+            out.append(
+                {
+                    "kind": "PARAMETER_SWEEP",
+                    "group": _group(field, level["type"]),
+                    "change_text": T_SWEEP_CHANGE.format(
+                        field=name, new=_value_text(level["type"], new), old=_value_text(level["type"], v)
+                    ),
+                    "reason_text": T_SWEEP_REASON.format(
+                        field_lower=name.lower(), old=_value_text(level["type"], v), n=fmt.number(trades)
+                    ),
+                    "strategy": s,
+                    "_field": field,
+                    "_value": new,
+                }
+            )
     return out
 
 
@@ -125,14 +131,17 @@ def filters(strategy: dict[str, Any], base: dict[str, Any], md: MarketData) -> l
             lo, hi = edges[i - 1], edges[i]
             rule = {"type": "any", "conditions": [_vix("lt", lo), _vix("gte", hi)]}
             band = f"{_num(lo)}–{_num(hi)}"
-        out.append({
-            "kind": "REGIME_FILTER",
-            "group": "Filters",
-            "change_text": T_VIX_CHANGE.format(vol=vol, band=band),
-            "reason_text": T_VIX_REASON.format(vol=vol, band=band, exp=fmt.rupees(abs(row["expectancy"])),
-                                               n=fmt.number(row["trades"])),
-            "strategy": _add_condition(strategy, rule),
-        })
+        out.append(
+            {
+                "kind": "REGIME_FILTER",
+                "group": "Filters",
+                "change_text": T_VIX_CHANGE.format(vol=vol, band=band),
+                "reason_text": T_VIX_REASON.format(
+                    vol=vol, band=band, exp=fmt.rupees(abs(row["expectancy"])), n=fmt.number(row["trades"])
+                ),
+                "strategy": _add_condition(strategy, rule),
+            }
+        )
     legs = strategy["legs"]
     if len(legs) == 1 and legs[0]["option_type"] == "SIGNAL":
         sides = {r["key"]: r for r in base.get("by_side", [])}
@@ -145,14 +154,20 @@ def filters(strategy: dict[str, Any], base: dict[str, Any], md: MarketData) -> l
                 s["legs"][0]["option_type"] = keep
                 s["entry"].pop(skip.lower(), None)
                 names = {"CE": "Calls", "PE": "Puts"}
-                out.append({
-                    "kind": "REGIME_FILTER",
-                    "group": "Filters",
-                    "change_text": T_SIDE_CHANGE.format(keep=names[keep], skip=names[skip].lower()),
-                    "reason_text": T_SIDE_REASON.format(skip_cap=names[skip][:-1], exp=fmt.rupees(abs(losing["expectancy"])),
-                                                        n=fmt.number(losing["trades"]), keep_lower=names[keep][:-1].lower()),
-                    "strategy": s,
-                })
+                out.append(
+                    {
+                        "kind": "REGIME_FILTER",
+                        "group": "Filters",
+                        "change_text": T_SIDE_CHANGE.format(keep=names[keep], skip=names[skip].lower()),
+                        "reason_text": T_SIDE_REASON.format(
+                            skip_cap=names[skip][:-1],
+                            exp=fmt.rupees(abs(losing["expectancy"])),
+                            n=fmt.number(losing["trades"]),
+                            keep_lower=names[keep][:-1].lower(),
+                        ),
+                        "strategy": s,
+                    }
+                )
     return out[:MAX_FILTERS]
 
 
@@ -163,12 +178,18 @@ def alternative(strategy: dict[str, Any]) -> list[dict[str, Any]]:
     try:
         tpl = json.loads(path.read_text(encoding="utf-8"))
     except OSError:
-        tpl = _TEMPLATE_FALLBACK
-    tpl = copy.deepcopy(tpl)
+        return []  # the template file ships with the engine image; without it, no alternative is offered
     tpl["position"] = copy.deepcopy(strategy["position"])
     tpl["underlying"] = strategy["underlying"]
-    return [{"kind": "ALTERNATIVE", "group": "Another approach", "change_text": T_ALT_CHANGE,
-             "reason_text": T_ALT_REASON, "strategy": tpl}]
+    return [
+        {
+            "kind": "ALTERNATIVE",
+            "group": "Another approach",
+            "change_text": T_ALT_CHANGE,
+            "reason_text": T_ALT_REASON,
+            "strategy": tpl,
+        }
+    ]
 
 
 def plan(strategy: dict[str, Any], settings: dict[str, Any], base: dict[str, Any], md: MarketData) -> dict[str, Any]:
@@ -192,19 +213,3 @@ def plan(strategy: dict[str, Any], settings: dict[str, Any], base: dict[str, Any
         return {"variants": [], "not_offered_text": T_NONE_APPLY}
     return {"variants": variants, "not_offered_text": None}
 
-
-# Used only if the shared fixture file isn't packaged (e.g. a stripped image).
-_TEMPLATE_FALLBACK: dict[str, Any] = {
-    "schema_version": "1.0", "name": "Simple Trend Follower", "origin": "TEMPLATE", "template_id": TEMPLATE_ID,
-    "underlying": "NIFTY50", "timeframe_min": 15, "holding": "INTRADAY", "position": {"lots": 1, "lot_size": 65},
-    "indicators": {"ema9": {"type": "EMA", "period": 9, "source": "close"},
-                   "ema21": {"type": "EMA", "period": 21, "source": "close"}},
-    "legs": [{"action": "BUY", "option_type": "SIGNAL", "expiry": "CURRENT_WEEKLY",
-              "strike": {"method": "MONEYNESS", "moneyness": "ATM", "distance_pts": 0}}],
-    "entry": {"ce": {"type": "cross", "left": {"ind": "ema9", "output": "value"}, "direction": "above",
-                     "right": {"ind": "ema21", "output": "value"}},
-              "pe": {"type": "cross", "left": {"ind": "ema9", "output": "value"}, "direction": "below",
-                     "right": {"ind": "ema21", "output": "value"}}},
-    "exit": {"stop_loss": {"type": "PCT_PREMIUM", "value": 30}, "target": {"type": "PCT_PREMIUM", "value": 50}},
-    "advanced": {"entry_windows": [{"from": "09:30", "to": "14:30"}], "daily": {"max_trades": 2}},
-}

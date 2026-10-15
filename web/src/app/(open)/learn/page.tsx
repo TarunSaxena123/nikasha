@@ -26,19 +26,19 @@ export default function LearnPage() {
         <nav aria-label="Glossary letters" className="mt-2 flex flex-wrap gap-2 text-sm">
           {letters.map((l) => <a key={l} href={`#letter-${l}`} className="rounded border border-line px-2 py-0.5">{l}</a>)}
         </nav>
-        <dl className="mt-4 space-y-3">
-          {sorted.map((g, i) => {
-            const letter = g.term[0]!.toUpperCase();
-            const first = i === 0 || sorted[i - 1]!.term[0]!.toUpperCase() !== letter;
-            return (
-              <div key={g.slug} id={g.slug} className="rounded-lg border border-line bg-surface p-3">
-                {first && <span id={`letter-${letter}`} />}
-                <dt className="font-semibold">{g.term}</dt>
-                <dd className="text-sm">{g.definition}</dd>
-              </div>
-            );
-          })}
-        </dl>
+        {letters.map((letter) => (
+          <div key={letter} className="mt-4">
+            <h3 id={`letter-${letter}`} className="text-sm font-semibold text-ink-muted">{letter}</h3>
+            <dl className="mt-2 space-y-3">
+              {sorted.filter((g) => g.term[0]!.toUpperCase() === letter).map((g) => (
+                <div key={g.slug} id={g.slug} className="rounded-lg border border-line bg-surface p-3">
+                  <dt className="font-semibold">{g.term}</dt>
+                  <dd className="text-sm">{g.definition}</dd>
+                </div>
+              ))}
+            </dl>
+          </div>
+        ))}
       </section>
     </main>
   );

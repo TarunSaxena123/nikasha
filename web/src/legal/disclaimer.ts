@@ -43,7 +43,12 @@ export function fillDates(template: string, range: DateState): string {
   if (range === "unavailable") {
     return template.replace(/\s*\(?\{firstDate\}( to | – )\{lastDate\}([^)]*)\)?/, " (dates unavailable)");
   }
-  return template.replace("{firstDate}", day(range.first)).replace("{lastDate}", day(range.last));
+  // "(filled in automatically from the data)" is the spec's note about the placeholders; once the
+  // real dates are in, it is dropped (the README sync script does the same).
+  return template
+    .replace("{firstDate}", day(range.first))
+    .replace("{lastDate}", day(range.last))
+    .replace(" (filled in automatically from the data)", "");
 }
 
 export function fullTemplateText(): string {

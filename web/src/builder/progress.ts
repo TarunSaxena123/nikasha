@@ -21,10 +21,24 @@ export interface StepIssue {
 
 export function stepIssues(draft: Draft, meta: MetaResponse | null): Record<StepId, StepIssue[]> {
   const out: Record<StepId, StepIssue[]> = { basics: [], strike: [], entry: [], exit: [], advanced: [] };
-  for (const m of completeness(draft, meta)) {
+  const missing = completeness(draft, meta);
+  for (const m of missing) {
     out[m.step].push({ label: m.label, message: m.key === "lots" || m.key === "lot_size" ? "please confirm" : "not set yet" });
   }
-  const problems: Problem[] = meta ? validate(draft.strategy, { meta }) : [];
+  // The whole-strategy checks (schema + SEM) run once nothing is missing; until then their messages
+  // would only repeat the missing inputs. The strike distance rule (SEM-06) is checked straight away.
+  const interval = meta?.instruments[0]?.strike_interval ?? 50;
+  for (const leg of ((draft.strategy.legs ?? []) as { strike?: { moneyness?: string; distance_pts?: number } }[])) {
+    const st = leg.strike;
+    if (st && (st.moneyness === "ITM" || st.moneyness === "OTM") && typeof st.distance_pts === "number") {
+      const d = st.distance_pts;
+      if (d <= 0 || Math.abs(d / interval - Math.round(d / interval)) > 1e-9) {
+        out.strike.push({ label: "Strike", message: `For ITM or OTM, enter a distance in steps of ${interval} points (e.g. ${interval * 2}).` });
+        break;
+      }
+    }
+  }
+  const problems: Problem[] = meta && missing.length === 0 ? validate(draft.strategy, { meta }) : [];
   for (const p of problems) {
     const st = stepFor(p);
     if (st === "settings") continue;
@@ -43,6 +57,7 @@ export function firstIncomplete(issues: Record<StepId, StepIssue[]>): StepId | n
 
 /** Can the user open `target` now? Back freely; forward only up to the first incomplete step. */
 export function canOpen(target: StepId, issues: Record<StepId, StepIssue[]>): boolean {
+  if (target === "advanced") return true; // optional, and where multi-leg details are edited
   const order: StepId[] = ["basics", "strike", "entry", "exit", "advanced"];
   const first = firstIncomplete(issues);
   if (!first || first === "advanced") return true;

@@ -16,9 +16,14 @@ import { useStore } from "@/store";
 
 export default function ReportPage() {
   const evaluation = useStore((s) => s.evaluation);
-  useEffect(() => () => {
-    if (document.title === READY_TITLE) document.title = "Nikasha — The touchstone for your trading strategy";
-  }, []);
+  const ready = evaluation.status === "done";
+  useEffect(() => {
+    // The tab title says the report is ready while it is on screen (REQ-EVL-12); the next navigation restores it.
+    if (ready) document.title = READY_TITLE;
+    return () => {
+      if (document.title === READY_TITLE) document.title = "Nikasha — The touchstone for your trading strategy";
+    };
+  }, [ready]);
 
   if (evaluation.status !== "done") {
     return (

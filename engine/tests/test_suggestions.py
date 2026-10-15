@@ -24,7 +24,15 @@ def base(trades=100, bands=(), sides=()):
 
 
 def row(key, trades, expectancy):
-    return {"key": key, "label": key, "trades": trades, "wins": 0, "win_rate_pct": 0, "net_pnl": 0, "expectancy": expectancy}
+    return {
+        "key": key,
+        "label": key,
+        "trades": trades,
+        "wins": 0,
+        "win_rate_pct": 0,
+        "net_pnl": 0,
+        "expectancy": expectancy,
+    }
 
 
 def test_too_few_trades(md):
@@ -48,15 +56,28 @@ def test_sweeps_ac_sug_03(md):
 
 
 def test_vix_and_side_filters_ac_sug_04(md):
-    out = planner.plan(strategy("simple-trend-follower"), SETTINGS,
-                       base(bands=[row("band_0", 12, -85.0), row("band_1", 50, 10.0), row("band_2", 15, -5.0)],
-                            sides=[row("CE", 40, -20.0), row("PE", 45, 30.0)]), md)
+    out = planner.plan(
+        strategy("simple-trend-follower"),
+        SETTINGS,
+        base(
+            bands=[row("band_0", 12, -85.0), row("band_1", 50, 10.0), row("band_2", 15, -5.0)],
+            sides=[row("CE", 40, -20.0), row("PE", 45, 30.0)],
+        ),
+        md,
+    )
     f = [v for v in out["variants"] if v["kind"] == "REGIME_FILTER"]
     assert [v["change_text"] for v in f] == [
-        "Skip trades when India VIX is below 12", "Skip trades when India VIX is 18–25", "Puts only (skip calls)"]
+        "Skip trades when India VIX is below 12",
+        "Skip trades when India VIX is 18–25",
+        "Puts only (skip calls)",
+    ]
     low = f[0]["strategy"]["entry"]["ce"]
-    assert low["type"] == "all" and low["conditions"][1] == {"type": "compare", "left": {"vix": "close"}, "op": "gte",
-                                                            "right": {"const": 12.0}}
+    assert low["type"] == "all" and low["conditions"][1] == {
+        "type": "compare",
+        "left": {"vix": "close"},
+        "op": "gte",
+        "right": {"const": 12.0},
+    }
     assert f[0]["reason_text"] == "Trades taken when India VIX was below 12 lost ₹85 on average (12 trades)."
     mid = f[1]["strategy"]["entry"]["pe"]["conditions"][1]
     assert mid["type"] == "any"
@@ -67,8 +88,12 @@ def test_vix_and_side_filters_ac_sug_04(md):
 def test_fixed_time_entry_becomes_conditional(md):
     s = strategy("short-straddle")
     out = planner.filters(s, base(bands=[row("band_3", 20, -50.0)]), md)
-    assert out[0]["strategy"]["entry"]["all_legs"] == {"type": "compare", "left": {"vix": "close"}, "op": "lt",
-                                                       "right": {"const": 25.0}}
+    assert out[0]["strategy"]["entry"]["all_legs"] == {
+        "type": "compare",
+        "left": {"vix": "close"},
+        "op": "lt",
+        "right": {"const": 25.0},
+    }
     assert out[0]["strategy"]["entry"]["at_time"] == "09:20"
 
 
@@ -97,15 +122,20 @@ def test_response_shape_and_api(real_md, nifty):
     assert status == 200
     b = {k: rep["breakdowns"][k] for k in ("by_vol_band", "by_regime", "by_side")}
     b["metrics"] = rep["metrics"]
-    status, plan = api.dispatch("POST", "/v1/suggestions/plan",
-                                json.dumps({"strategy": s, "settings": sett, "base": b}).encode())
+    status, plan = api.dispatch(
+        "POST", "/v1/suggestions/plan", json.dumps({"strategy": s, "settings": sett, "base": b}).encode()
+    )
     assert status == 200
     assert_valid("SuggestionPlanResponse", plan)
     assert 1 <= len(plan["variants"]) <= 12
 
 
 def test_wording_is_past_simulated_and_clean():
-    banned = [x.strip() for x in (CONTRACTS / "banned-phrases.txt").read_text().splitlines() if x.strip() and not x.startswith("#")]
+    banned = [
+        x.strip()
+        for x in (CONTRACTS / "banned-phrases.txt").read_text().splitlines()
+        if x.strip() and not x.startswith("#")
+    ]
     blob = "\n".join(planner.TEMPLATES).lower()
     for phrase in banned:
         assert phrase not in blob

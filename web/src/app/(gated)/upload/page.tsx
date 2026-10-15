@@ -68,8 +68,11 @@ export default function UploadPage() {
     let d = original;
     const list: Q[] = [...vague];
     const asked = new Set<string>();
+    // An input already covered by a vague question (e.g. "Your title says weekly. Which expiry?")
+    // isn't asked again as missing.
+    const vagueLabels = new Set(result.items.filter((i) => i.status === "VAGUE").map((i) => i.field_label));
     const addMissing = (dd: Draft) => {
-      const items = completeness(dd, meta).filter((m) => m.question && !asked.has(m.key));
+      const items = completeness(dd, meta).filter((m) => m.question && !asked.has(m.key) && !vagueLabels.has(m.label));
       items.sort((a, b) => MANDATORY_ORDER.indexOf(a.key) - MANDATORY_ORDER.indexOf(b.key));
       for (const m of items) {
         asked.add(m.key);
