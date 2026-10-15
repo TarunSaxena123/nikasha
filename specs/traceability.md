@@ -4,7 +4,7 @@ Requirement ID → design section → task(s) → test(s). Constitution §11: ev
 
 **Status values:** `Specified` (spec approved, not built) · `Built` (code done, tests passing) · `Not built` (cut for time; gap kept visible, `product.md` §15).
 
-All seven features are specified (written in the order 07, 01, 02, 05, 04, 03, 06; listed here by feature number) and built (2026-10-15). Only T-EVL-09, the deployed page, waits for deployment day. Vocabulary extensions (ENG-48…57, RPT-22–23, INP-22–26, UPL-22–23) were added on 2026-10-15 at the owner's request.
+All seven features are specified (written in the order 07, 01, 02, 05, 04, 03, 06; listed here by feature number) and built (2026-10-15). Deployed 2026-10-15 (Vercel + AWS Lambda, ap-southeast-2). Vocabulary extensions (ENG-48…57, RPT-22–23, INP-22–26, UPL-22–23) were added on 2026-10-15 at the owner's request.
 
 ## Totals (all features)
 
@@ -30,7 +30,7 @@ These tasks build the foundations, fixtures and pipelines that the requirement t
 | T-UPL-02 | 04 | Extraction function project, adapters, deployment | Built |
 | T-EVL-07 | 02 | Web app scaffold, design tokens, shared components, store, test tooling | Built |
 | T-EVL-08 | 02 | Generated TypeScript types from the contracts, drift check | Built |
-| T-EVL-09 | 02 | Minimal deployed page proving Vercel → Lambda (build step 5) | Specified (done on deployment day; locally proven by the `@stack` Playwright test) |
+| T-EVL-09 | 02 | Minimal deployed page proving Vercel → Lambda (build step 5) | Built (2026-10-15: nikasha.vercel.app → AWS Lambda ap-southeast-2; live UAT) |
 | T-RPT-02, T-RPT-10 | 02 | Engine-generated report fixtures and golden reports used by web and engine tests | Built |
 | T-UPL-01 | 04 | Extraction fixtures used by web tests | Built |
 

@@ -60,6 +60,7 @@ All parts are scaffolded; CI (`.github/workflows/ci.yml`) runs the same checks. 
 | Web end-to-end tests (services mocked from the shared fixtures; serves the production build) | `cd web && npm run build && npx playwright test` |
 | Web end-to-end against the real local engine (engine running on :8000) | `cd web && NIKASHA_STACK=1 npx playwright test -g @stack` |
 | UAT against the real local stack (engine :8000, extractor :8001 with a live key; a few cents of AI calls; never in CI) | `cd web && npm run build && NIKASHA_UAT=1 npx playwright test e2e/uat.spec.ts --workers=1` |
+| UAT against the live site (engine-only journeys free; U3 is one paid AI call, so keep live AI checks to that) | `cd web && NIKASHA_UAT=1 npx playwright test --config playwright.live.config.ts -g "U1|U2|U5"` |
 | Web lint, types, generated-code drift | `cd web && npx eslint . && npx tsc --noEmit && npm run codegen:check` |
 | SAM template checks | `engine/.venv/bin/python -m pytest -p no:cacheprovider infra/test_template.py` |
 | Contract checks (schemas, OpenAPI, fixtures, generated-code drift) | `scripts/check-contracts.sh` |

@@ -4,6 +4,7 @@ Every spec change: date, IDs affected, what and why. Newest first.
 
 | Date | IDs / files affected | What | Why |
 |---|---|---|---|
+| 2026-10-15 | `traceability.md` (T-EVL-09 Built); `docs/release-checklist.md` | Deployed: web on nikasha.vercel.app, engine and extraction on AWS Lambda (ap-southeast-2). Live UAT passed; live log audit clean; cold start and evaluation timings recorded | Deployment |
 | 2026-10-15 | `architecture.md` §1, §5 (region); `contracts/api.openapi.yaml` (example server URLs); `web/vercel.json` (CSP); README | Deployment region `ap-southeast-2` (Sydney) instead of `ap-south-1` (Mumbai). No product behaviour or requirement changes | The AWS Free plan account allows only ap-southeast-2 (every service the stack needs is denied elsewhere by an organization policy); owner chose Sydney over upgrading to a paid plan |
 | 2026-10-15 | `PENDING-REVIEW.md` (closed) | The owner approved every reading R1–R27 as recommended (R23 decided as option 2). On deployment day, R18's `connect-src` is narrowed to the two Function URLs | Owner review of pending decisions |
 | 2026-10-15 | REQ-ENG-53, AC-ENG-32; `product.md` §7.2; feature 01 design §2.18; `PENDING-REVIEW.md` (R23 decided) | An index level (target, partial exit) counts only when it lies on the trade's profitable side at entry; a level already passed isn't used for that trade and is reported under rules with no effect | Owner decision on R23 (option 2): "profit booking at R1" must never book a loss because the index started above R1 |
