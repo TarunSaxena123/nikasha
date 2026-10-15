@@ -1,4 +1,6 @@
 import Link from "next/link";
+import { BackLink } from "@/components/BackLink";
+import { BACK } from "@/lib/navigation";
 import { GLOSSARY } from "@/copy/glossary";
 import { ARTICLES } from "@/learn/articles";
 
@@ -9,6 +11,7 @@ export default function LearnPage() {
   const letters = [...new Set(sorted.map((g) => g.term[0]!.toUpperCase()))];
   return (
     <main id="main" className="mx-auto max-w-4xl px-4 py-8">
+      <BackLink to={BACK["/learn"]!} className="mb-4" />
       <h1 className="text-2xl font-semibold">Learn</h1>
       <section className="mt-6">
         <h2 className="text-lg font-semibold">Articles</h2>

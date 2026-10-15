@@ -3,6 +3,7 @@
 import { useRouter } from "next/navigation";
 import { useEffect, useMemo } from "react";
 import type { CostKey } from "@/api/types";
+import { BackLink } from "@/components/BackLink";
 import { ConfirmPrefill } from "@/components/ConfirmPrefill";
 import { DisclaimerShort } from "@/components/legal/Legal";
 import { RuleTable } from "@/components/RuleTable";
@@ -12,6 +13,7 @@ import { InfoTip } from "@/components/ui/Glossary";
 import { startEvaluation } from "@/evaluation/run";
 import { useMeta } from "@/hooks/useMeta";
 import { day, period as fmtPeriod } from "@/lib/format";
+import { reviewBack } from "@/lib/navigation";
 import { useStore, type PeriodChoice } from "@/store";
 import { completeness } from "@/strategy/completeness";
 import { describeStrategy } from "@/strategy/describe";
@@ -33,6 +35,7 @@ export default function ReviewPage() {
   const draft = useStore((s) => s.draft);
   const settings = useStore((s) => s.settings);
   const serverProblems = useStore((s) => s.reviewProblems);
+  const evaluation = useStore((s) => s.evaluation);
   const set = useStore((s) => s.set);
 
   // Settings arrive pre-filled from meta the first time this screen sees a draft.
@@ -62,6 +65,9 @@ export default function ReviewPage() {
   const kind = expiryKind(draft.strategy as never);
   const k = inst?.expiry_kinds.find((x) => x.kind === kind);
   const evalSettings = toEvaluationSettings(settings);
+  // The report held in this tab still matches what is on screen (REQ-BEG-19: going back is never a dead end).
+  const heldReport = evaluation.status === "done" && !!evalSettings
+    && JSON.stringify(evaluation.request) === JSON.stringify({ strategy: asStrategy(draft), settings: evalSettings });
   const s = draft.strategy as Record<string, unknown>;
   const pos = (s.position ?? {}) as { lots?: number; lot_size?: number };
 
@@ -95,6 +101,10 @@ export default function ReviewPage() {
 
   return (
     <main id="main" className="mx-auto max-w-5xl space-y-6 px-4 py-8">
+      <div className="flex flex-wrap items-center justify-between gap-3">
+        <BackLink to={reviewBack(draft.origin)} />
+        {heldReport && <ButtonLink href="/report" variant="secondary">View report</ButtonLink>}
+      </div>
       <div className="flex flex-wrap items-center justify-between gap-2">
         <h1 className="text-2xl font-semibold">Review your strategy</h1>
         <Badge tone="caution">Premiums modelled, not actual</Badge>

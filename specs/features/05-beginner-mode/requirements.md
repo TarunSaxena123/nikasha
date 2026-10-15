@@ -57,6 +57,12 @@ Implements [`product.md`](../../product.md) §3 (beginner user), §6.5 (intro, C
 | REQ-BEG-17 | THE what-if panel SHALL NOT change the original report, and SHALL offer **Use these settings** to load the changed strategy into the review screen (nothing evaluated automatically). |
 | REQ-BEG-18 | IF the strategy has no %-or-points stop-loss or target (e.g. trigger-candle stop and R:R target only), THEN THE panel SHALL explain that what-if sliders work with % or points values. |
 
+### 2.5 Finding your way back (added 2026-10-15, owner request)
+
+| ID | Requirement |
+|---|---|
+| REQ-BEG-19 | WHILE any page other than the intro is shown, THE app SHALL show a "← Back to <page>" link at the top of the page content that leads to that page's parent in the flow (`frontend.md` §2.1), not to the browser history, and SHALL keep the strategy and report held in the tab. |
+
 ## 3. Acceptance criteria
 
 | AC | Req. | Given / When / Then |
@@ -74,6 +80,7 @@ Implements [`product.md`](../../product.md) §3 (beginner user), §6.5 (intro, C
 | AC-BEG-11 | 15 | **Given** a what-if request running, **when** the slider is moved again, **then** the earlier request is cancelled and only the latest result is shown. |
 | AC-BEG-12 | 17 | **Given** a what-if result, **then** the original report is unchanged; **when** Use these settings is clicked, **then** the review screen opens with the changed strategy and nothing is evaluated. |
 | AC-BEG-13 | 18 | **Given** the advanced sample (trigger-candle SL, R:R target), **then** the what-if panel shows the explanation instead of sliders. |
+| AC-BEG-14 | 19 | **Given** each page in `frontend.md` §2.1, **then** a Back link at the top names its target and leads there; **given** a report, **when** Back to review is clicked and then Evaluate is not clicked, **then** the draft is unchanged and the report can be reopened. |
 
 ## 4. Edge cases
 

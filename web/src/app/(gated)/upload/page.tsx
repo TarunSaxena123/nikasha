@@ -1,12 +1,14 @@
 "use client";
 // Document upload (feature 04 design §1; REQ-UPL-01…03, 11…19).
 import { useRouter } from "next/navigation";
-import { useMemo, useRef, useState } from "react";
+import { useEffect, useMemo, useRef, useState } from "react";
 import { ApiFailure, extractFile, extractText } from "@/api/client";
 import type { ExtractionResult, Question } from "@/api/types";
+import { BackLink } from "@/components/BackLink";
 import { UploadPrivacyNotice } from "@/components/legal/Legal";
 import { Button, ButtonLink } from "@/components/ui/Button";
 import { Card, ErrorPanel } from "@/components/ui/Card";
+import { BACK } from "@/lib/navigation";
 import { applyPatch } from "@/lib/patch";
 import { emptyWhatIf, useStore } from "@/store";
 import { completeness, MANDATORY_ORDER, type MissingItem } from "@/strategy/completeness";
@@ -50,13 +52,19 @@ export default function UploadPage() {
   const [file, setFile] = useState<File | null>(null);
   const [text, setText] = useState("");
   const [refusal, setRefusal] = useState<string | null>(null);
-  const [phase, setPhase] = useState<"input" | "reading" | "results" | "questions" | "unsupported">("input");
+  // Coming back from review (REQ-BEG-19) restores the result and answers held in this tab.
+  const saved = useStore((s) => s.extraction);
+  const restored = saved.status === "questions" && saved.result ? saved : null;
+  const [phase, setPhase] = useState<"input" | "reading" | "results" | "questions" | "unsupported">(restored ? "results" : "input");
   const [error, setError] = useState<string | null>(null);
-  const [result, setResult] = useState<ExtractionResult | null>(null);
-  const [answers, setAnswers] = useState<Record<string, Answer>>({});
+  const [result, setResult] = useState<ExtractionResult | null>(restored?.result ?? null);
+  const [answers, setAnswers] = useState<Record<string, Answer>>((restored?.answers ?? {}) as Record<string, Answer>);
   const [step, setStep] = useState(0);
   const [ack, setAck] = useState(false);
   const request = useRef<{ id: number; abort: AbortController | null }>({ id: 0, abort: null });
+  useEffect(() => {
+    if (result) set({ extraction: { status: "questions", result, answers, message: null } });
+  }, [result, answers, set]);
 
   const original: Draft | null = useMemo(() => (result ? { ...emptyDraft("UPLOAD"), strategy: result.draft as StrategyDraft } : null), [result]);
 
@@ -165,6 +173,7 @@ export default function UploadPage() {
     const err = error ? MESSAGES[error]! : null;
     return (
       <main id="main" className="mx-auto max-w-3xl space-y-5 px-4 py-8">
+        <BackLink to={BACK["/upload"]!} />
         <h1 className="text-2xl font-semibold">Upload your strategy</h1>
         <UploadPrivacyNotice />
         <div role="tablist" aria-label="Upload or paste" className="flex gap-2">
@@ -214,6 +223,7 @@ export default function UploadPage() {
   if (phase === "results") {
     return (
       <main id="main" className="mx-auto max-w-3xl space-y-5 px-4 py-8">
+        <BackLink to={BACK["/upload"]!} />
         <h1 className="text-2xl font-semibold">What we found</h1>
         {noRules ? (
           <Card>
@@ -242,6 +252,7 @@ export default function UploadPage() {
   if (phase === "unsupported") {
     return (
       <main id="main" className="mx-auto max-w-3xl space-y-5 px-4 py-8">
+        <BackLink to={BACK["/upload"]!} />
         <h1 className="text-2xl font-semibold">Rules that can&apos;t be tested</h1>
         <ul className="space-y-2 text-sm">{unsupported.map((u) => <li key={u.id} className="rounded-md border border-line bg-surface p-3">&ldquo;{u.quote}&rdquo; — {u.text}</li>)}</ul>
         <label className="flex items-center gap-2 text-sm font-medium">
@@ -256,6 +267,7 @@ export default function UploadPage() {
   const q = questions[Math.min(step, questions.length - 1)]!;
   return (
     <main id="main" className="mx-auto grid max-w-5xl gap-6 px-4 py-8 lg:grid-cols-[1fr_20rem]">
+      <BackLink to={BACK["/upload"]!} className="lg:col-span-2" />
       <section aria-labelledby="qtitle" className="rounded-lg border border-line bg-surface p-5">
         <p className="text-xs text-ink-muted" aria-live="polite">Question {step + 1} of {questions.length}</p>
         <QuestionCard key={q.id} q={q} answer={answers[q.id]} onAnswer={(a) => setAnswers((prev) => {

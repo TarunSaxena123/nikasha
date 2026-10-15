@@ -128,6 +128,13 @@ All articles are written in past-simulated, educational language and are reviewe
 - **Use these settings** replaces the draft's strategy with the what-if strategy, keeps existing confirmations (lots, lot size and settings are unchanged), and navigates to `/review`. Nothing is evaluated (BEG-17).
 - **Not applicable** (BEG-18): "What-if sliders work when the stop-loss or target is set in % of premium or in points. This strategy uses {types}."
 
+### 1.7 Back links (BEG-19, added 2026-10-15)
+- One shared component, `BackLink`, renders "← Back to <page>" as the first element of the page content (a plain link, keyboard reachable, before the page heading). Targets come from one table in `web/src/lib/navigation.ts` that mirrors `frontend.md` §2.1, so every page uses the same rule.
+- Targets are routes in the flow, not browser history, so a refresh or a shared link still gives a sensible way back. In-app navigation keeps the Zustand store, so the draft and the report survive.
+- Review's target depends on the draft's `origin`: TEMPLATE → Templates, BUILDER → Builder at its last step, UPLOAD → Upload. The builder's target is the previous step (first step → Choose a path); "Back to review" replaces it when the builder was opened from review.
+- The report page offers "View report" on the review screen while a report for the unchanged draft is held, so going back is never a dead end.
+- The evaluating screen has no Back link; its Cancel already returns to review.
+
 ## 2. Backend
 
 **Not applicable.** Templates are static web data; what-if uses the existing `POST /v1/evaluate` unchanged. The engine validates every template through the shared fixtures (feature 01 T-DAT-02).

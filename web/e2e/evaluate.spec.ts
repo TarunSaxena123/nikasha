@@ -88,7 +88,7 @@ test("review: rules with Not used, costs checkbox, confirm and Edit link (AC-EVL
   await expect(page.getByRole("button", { name: "Evaluate Strategy" })).toBeDisabled(); // changing a cost asks for a fresh tick
   await page.locator('[data-rule="stop_loss"]').getByRole("link", { name: /Edit/ }).click();
   await expect(page).toHaveURL(/\/build\?step=exit&from=review/);
-  await expect(page.getByRole("button", { name: "Back to review" })).toBeVisible();
+  await expect(page.getByRole("link", { name: "Back to review" })).toBeVisible();
 });
 
 test("4-hour intraday note (AC-EVL-05)", async ({ page }) => {
@@ -96,7 +96,7 @@ test("4-hour intraday note (AC-EVL-05)", async ({ page }) => {
   await useTemplate(page);
   await page.locator('[data-rule="timeframe"]').getByRole("link", { name: /Edit/ }).click();
   await page.getByTestId("timeframe").selectOption("240");
-  await page.getByRole("button", { name: "Back to review" }).click();
+  await page.getByRole("link", { name: "Back to review" }).click();
   await expect(page.getByText(/only the 13:14 candle close can trigger entries/)).toBeVisible();
 });
 

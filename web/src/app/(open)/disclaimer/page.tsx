@@ -1,10 +1,13 @@
+import { BackLink } from "@/components/BackLink";
 import { DataSourceLine, DisclaimerText } from "@/components/legal/Legal";
+import { BACK } from "@/lib/navigation";
 
 export const metadata = { title: "Disclaimer — Nikasha" };
 
 export default function DisclaimerPage() {
   return (
     <main id="main" className="mx-auto max-w-3xl px-4 py-8">
+      <BackLink to={BACK["/disclaimer"]!} className="mb-4" />
       <div className="rounded-lg border border-line bg-surface p-6">
         <DisclaimerText />
         <h2 id="data-source" className="mt-8 text-base font-semibold">Data source</h2>

@@ -2,9 +2,11 @@
 // Guided builder (feature 03; REQ-INP-04…07).
 import { useRouter, useSearchParams } from "next/navigation";
 import { Suspense, useEffect, useMemo } from "react";
+import { BackLink } from "@/components/BackLink";
 import { RuleTable } from "@/components/RuleTable";
 import { Button } from "@/components/ui/Button";
 import { useMeta } from "@/hooks/useMeta";
+import { builderBack } from "@/lib/navigation";
 import { useStore } from "@/store";
 import type { StepId } from "@/strategy/completeness";
 import { describeStrategy } from "@/strategy/describe";
@@ -58,6 +60,7 @@ function Builder() {
 
   return (
     <main id="main" className="mx-auto grid max-w-6xl gap-6 px-4 py-8 lg:grid-cols-[13rem_1fr_20rem]">
+      <BackLink to={builderBack(step, fromReview)} className="lg:col-span-3" />
       <nav aria-label="Builder steps" className="space-y-1">
         {[...STEPS, { id: "advanced" as StepId, label: "Advanced options" }].map((s, i) => {
           const done = issues[s.id].length === 0;
@@ -71,7 +74,6 @@ function Builder() {
             </button>
           );
         })}
-        {fromReview && <Button variant="secondary" className="mt-3 w-full" onClick={() => router.push("/review")}>Back to review</Button>}
       </nav>
 
       <section aria-labelledby="step-title" className="rounded-lg border border-line bg-surface p-5">

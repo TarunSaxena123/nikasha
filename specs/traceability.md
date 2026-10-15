@@ -13,11 +13,11 @@ All seven features are specified (written in the order 07, 01, 02, 05, 04, 03, 0
 | 07 Privacy and legal | 36 | 36 |
 | 01 Data and engine | 66 | 66 |
 | 02 Evaluation and report | 34 | 34 |
-| 05 Beginner mode | 18 | 18 |
+| 05 Beginner mode | 19 | 19 |
 | 04 Document upload | 21 | 21 |
 | 03 Strategy builder | 21 | 21 |
 | 06 Suggestions | 12 | 12 |
-| **Total** | **208** | **208** |
+| **Total** | **209** | **209** |
 
 ## Enabling tasks (no single requirement)
 
@@ -236,8 +236,9 @@ Design sections refer to [`features/05-beginner-mode/design.md`](features/05-beg
 | REQ-BEG-16 | Side-by-side comparison and sentence | §1.6 | T-BEG-10 | AC-BEG-10 (Playwright) | Built |
 | REQ-BEG-17 | Original untouched; Use these settings | §1.6 | T-BEG-10 | AC-BEG-12 (Playwright) | Built |
 | REQ-BEG-18 | Not-applicable explanation | §1.6 | T-BEG-10 | AC-BEG-13 (component) | Built |
+| REQ-BEG-19 | Back link to the page's parent on every page but the intro | §1.7 | T-BEG-11 | AC-BEG-14 (Playwright, `web/e2e/navigation.spec.ts`) | Built |
 
-**Coverage check (feature 05):** 18 requirements · all have a design section, at least one task and at least one automated test.
+**Coverage check (feature 05):** 19 requirements · all have a design section, at least one task and at least one automated test.
 
 ## Feature 06 — Suggestions
 

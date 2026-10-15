@@ -49,6 +49,21 @@ Direct link:      /build (not accepted)  ─►  disclaimer gate  ─[I agree]�
 ```
 - The header shows a small **step indicator** on the strategy paths: *Choose → Rules → Review → Evaluate → Report*.
 
+### 2.1 Back links (REQ-BEG-19)
+
+Every page except the intro starts with "← Back to <page>", leading to the page's parent in the flow (not the browser history). In-app navigation keeps the draft and report.
+
+| Page | Back link goes to |
+|---|---|
+| `/start` Choose a path | Intro (`/`) |
+| `/templates`, `/upload`, `/build` (first step) | Choose a path |
+| `/build` (later steps) | The previous step; "Back to review" instead when opened from review |
+| `/review` | Where the strategy came from: Templates, Builder (last step) or Upload |
+| `/evaluate` | None; Cancel returns to review |
+| `/report` | Review (the report stays in the tab until the next evaluation) |
+| `/learn/<article>` | Learn |
+| `/learn`, `/disclaimer` | Intro |
+
 ## 3. Screen map
 
 | Route | Screen | Feature | Gated | Needs in-memory state |

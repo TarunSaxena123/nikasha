@@ -1,10 +1,13 @@
 "use client";
+import { BackLink } from "@/components/BackLink";
 import { ButtonLink } from "@/components/ui/Button";
+import { BACK } from "@/lib/navigation";
 import { START } from "@/copy/intro";
 
 export default function StartPage() {
   return (
     <main id="main" className="mx-auto max-w-5xl px-4 py-8">
+      <BackLink to={BACK["/start"]!} className="mb-4" />
       <h1 className="text-2xl font-semibold">{START.title}</h1>
       <p className="mt-2 text-sm text-ink-muted">{START.intro}</p>
       <div className="mt-6 grid gap-4 md:grid-cols-3">

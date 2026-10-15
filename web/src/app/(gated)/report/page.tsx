@@ -1,11 +1,13 @@
 "use client";
 // Report screen (feature 02 design §1.4; REQ-RPT-15…18). Section order is fixed: risk before reward.
 import { useEffect } from "react";
+import { BackLink } from "@/components/BackLink";
 import { DataSourceLine, DisclaimerShort } from "@/components/legal/Legal";
 import { ButtonLink } from "@/components/ui/Button";
 import { Badge, EmptyState } from "@/components/ui/Card";
 import { READY_TITLE } from "@/evaluation/run";
 import { period } from "@/lib/format";
+import { BACK } from "@/lib/navigation";
 import { EquityAndDrawdown } from "@/report/Charts";
 import { Downloads } from "@/report/Downloads";
 import { Breakdowns, OverfitPanel, Sensitivity, SettingsAndNotes, TradesTable } from "@/report/Sections";
@@ -39,6 +41,7 @@ export default function ReportPage() {
   return (
     <>
       <main id="main" className="mx-auto max-w-6xl space-y-8 px-4 py-8" data-testid="report">
+        <BackLink to={BACK["/report"]!} />
         <header data-section="header">
           <h1 className="truncate text-2xl font-semibold" title={strategyName}>{strategyName}</h1>
           <p className="mt-1 text-sm text-ink-muted">{period(report.period.start, report.period.end)} · {report.period.trading_days.toLocaleString("en-IN")} trading days</p>

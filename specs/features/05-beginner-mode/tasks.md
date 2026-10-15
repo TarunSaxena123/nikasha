@@ -16,6 +16,7 @@ Rules: [CONTRACT] first; this feature is frontend only (no [BE] tasks). **Build 
 | T-BEG-08 | [FE] Learn articles: draft all six (`content/learn/*.md`) from the design outlines; build-time rendering; word-count and banned-phrase tests; owner review recorded in the release checklist | 12 | AC-BEG-09 | 9 (three progress articles + How to use), 9/P1 (remaining two) |
 | T-BEG-09 | [FE] Article cards for the progress screen (used by feature 02 T-EVL-05), opening in an in-page panel | 13 | AC-BEG-09 (progress cards present) | 9 |
 | T-BEG-10 | [FE] What-if panel (design §1.6): slider selection and ranges, one change at a time, debounce 600 ms, cancel/stale handling, comparison table and sentence, Use these settings, not-applicable text, short disclaimer | 14–18 | AC-BEG-10, 11, 12, 13 (Playwright with mocked engine) | 10 (P1) |
+| T-BEG-11 | [FE] Back links (design §1.7): `BackLink` component, route → parent table, review target by origin, View report on review | 19 | AC-BEG-14 (Playwright) | 11 (added 2026-10-15) |
 
 ## Order of work
 
@@ -25,5 +26,6 @@ Step 6   T-BEG-02, 03  →  T-BEG-04 (STF)  →  T-BEG-05  →  T-BEG-06, 07 (re
 Step 8   T-BEG-07 (builder keys);  8b: T-BEG-04 (HTF)
 Step 9   T-BEG-08, 09
 Step 10  T-BEG-10
+Step 11  T-BEG-11 (owner request after local testing, 2026-10-15)
 Last     T-BEG-04 (straddle) — first thing cut if time runs short
 ```

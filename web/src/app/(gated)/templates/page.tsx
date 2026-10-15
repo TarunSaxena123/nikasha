@@ -1,10 +1,12 @@
 "use client";
 import { useRouter } from "next/navigation";
+import { BackLink } from "@/components/BackLink";
 import { Button } from "@/components/ui/Button";
 import { Callout } from "@/components/ui/Card";
 import { RuleTable } from "@/components/RuleTable";
 import { useMeta } from "@/hooks/useMeta";
 import { period } from "@/lib/format";
+import { BACK } from "@/lib/navigation";
 import { useStore, emptyWhatIf } from "@/store";
 import { describeStrategy } from "@/strategy/describe";
 import { clone, emptyDraft } from "@/strategy/draft";
@@ -65,6 +67,7 @@ function TemplateCard({ t }: { t: TemplateMeta }) {
 export default function TemplatesPage() {
   return (
     <main id="main" className="mx-auto max-w-5xl px-4 py-8">
+      <BackLink to={BACK["/templates"]!} className="mb-4" />
       <h1 className="text-2xl font-semibold">Templates</h1>
       <p className="mt-2 text-sm text-ink-muted">Ready-made strategies, explained in plain words. Use one as it is, or customize it in the builder.</p>
       <div className="mt-6 grid gap-6">
