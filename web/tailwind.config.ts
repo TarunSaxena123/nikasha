@@ -15,6 +15,7 @@ const config: Config = {
         line: v("line"),
         brand: v("brand"),
         accent: v("accent"),
+        "accent-soft": v("accent-soft"),
         risk: v("risk"),
         gain: v("gain"),
         caution: v("caution"),

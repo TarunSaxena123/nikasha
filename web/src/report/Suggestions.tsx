@@ -160,13 +160,16 @@ export function SuggestionsPanel() {
   for (const r of sug.runs) if (!groups.includes(r.variant.group ?? r.variant.kind)) groups.push(r.variant.group ?? r.variant.kind);
 
   return (
-    <section aria-labelledby="sug" className="rounded-lg border border-line bg-surface p-5" data-testid="suggestions">
-      <div className="flex flex-wrap items-center justify-between gap-3">
-        <div>
-          <h2 id="sug" className="text-lg font-semibold">{SUG.title}</h2>
-          <p className="mt-1 text-sm text-ink-muted">{SUG.intro}</p>
+    <section aria-labelledby="sug" className="rounded-xl border-2 border-accent bg-accent-soft p-6 shadow-sm" data-testid="suggestions">
+      <div className="flex flex-wrap items-center justify-between gap-4">
+        <div className="flex items-start gap-3">
+          <span aria-hidden className="mt-0.5 flex h-9 w-9 shrink-0 items-center justify-center rounded-full bg-accent text-lg text-white">✦</span>
+          <div>
+            <h2 id="sug" className="text-xl font-semibold">{SUG.title}</h2>
+            <p className="mt-1 text-sm text-ink">{SUG.intro}</p>
+          </div>
         </div>
-        {(sug.status === "idle" || sug.status === "error") && <Button onClick={() => void show()}>{SUG.show}</Button>}
+        {(sug.status === "idle" || sug.status === "error") && <Button className="px-5 py-2.5 text-base" onClick={() => void show()}>{SUG.show}</Button>}
       </div>
       {sug.status === "planning" && <p className="mt-3 text-sm" aria-live="polite">Preparing ideas…</p>}
       {sug.message && <p className="mt-3 text-sm text-risk" role="alert">{sug.message}</p>}
@@ -197,7 +200,7 @@ export function SuggestionsPanel() {
               {tuningHidden && <p className="mt-2 text-sm text-ink-muted">{SUG.longerPeriod}</p>}
               <div className="mt-2 space-y-3">
                 {runs.map((r) => (
-                  <article key={r.variant.id} className="rounded-lg border border-line p-4" data-testid="sug-card">
+                  <article key={r.variant.id} className="rounded-lg border border-line bg-surface p-4" data-testid="sug-card">
                     <h4 className="font-medium">{r.variant.change_text}</h4>
                     <p className="mt-1 text-sm text-ink-muted"><strong>Why:</strong> {r.variant.reason_text}</p>
                     {r.status === "queued" || r.status === "running" ? <p className="mt-2 text-sm text-ink-muted">{r.status === "queued" ? "Waiting…" : "Running…"}</p> : null}

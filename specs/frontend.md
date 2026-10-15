@@ -120,6 +120,7 @@ Calm, trustworthy, educational. **Risk before reward.** Numbers are easy to scan
 | `--line` | Borders, dividers | `#E3E5E8` |
 | `--brand` | Brand mark, primary buttons (touchstone charcoal) | `#2B2F36` |
 | `--accent` | Highlights, focus ring (touchstone gold) | `#B08A2E` |
+| `--accent-soft` | Background of highlighted sections, e.g. Ideas to test (added 2026-10-15) | `#FAF5E8` |
 | `--risk` | Losses, drawdown, warnings | `#B42318` |
 | `--gain` | Profits | `#1F7A4D` |
 | `--caution` | "Possibly overfit", modelled-data badges | `#B54708` |
