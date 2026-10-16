@@ -1,6 +1,7 @@
 "use client";
 import Link from "next/link";
 import { ContinuePanel } from "@/components/ContinuePanel";
+import { Logo } from "@/components/Logo";
 import { ButtonLink } from "@/components/ui/Button";
 import { RichText } from "@/components/ui/Glossary";
 import { DataSourceLine } from "@/components/legal/Legal";
@@ -15,6 +16,7 @@ export default function IntroPage() {
     <main id="main">
       <div className="mx-auto max-w-5xl px-4 pt-6 empty:hidden"><ContinuePanel /></div>
       <section className="flex min-h-[70vh] flex-col items-center justify-center bg-surface px-4 text-center" data-section="hero">
+        <Logo size={80} className="mb-5 h-14 w-14 sm:h-20 sm:w-20" />
         <h1 className="text-2xl font-semibold sm:text-[40px] sm:leading-tight">
           {INTRO.heroTitle} <span className="block text-xl font-normal text-ink-muted sm:text-2xl">{INTRO.tagline}</span>
         </h1>
