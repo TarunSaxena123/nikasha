@@ -1,0 +1,377 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Nikasha design walkthrough</title>
+<meta name="description" content="How Nikasha was specified, designed, built and deployed: architecture, key decisions and trade-offs, problems and fixes, testing, and interview questions with answers.">
+<style>
+:root{--bg:#FAFAF7;--card:#fff;--ink:#1C1F24;--muted:#5B6270;--line:#E3E5E8;--accent:#B08A2E;--link:#1D4E89;--soft:#F4F5F2;--gold-soft:#FBF4E2;--blue-soft:#EAF1FB;--purple-soft:#F4EEF9}
+*{box-sizing:border-box}
+body{margin:0;background:var(--bg);color:var(--ink);font:16px/1.65 -apple-system,Inter,system-ui,"Segoe UI",sans-serif}
+a{color:var(--link)}
+.wrap{max-width:980px;margin:0 auto;padding:0 16px}
+.hero{background:#1C1F24;color:#F3EFE4;padding:44px 0 36px}
+.hero .eyebrow{font-size:12px;letter-spacing:.14em;text-transform:uppercase;color:#D8AD55;font-weight:600;margin:0 0 8px}
+.hero h1{font-family:Georgia,serif;font-size:clamp(30px,6vw,46px);line-height:1.1;margin:0 0 10px}
+.hero p{margin:0 0 6px;color:#CFC9BA;max-width:720px}
+.hero .links{margin-top:14px;display:flex;flex-wrap:wrap;gap:10px}
+.hero .links a{color:#1C1F24;background:#F3EFE4;border-radius:8px;padding:6px 12px;text-decoration:none;font-weight:600;font-size:14px}
+nav.toc{position:sticky;top:0;z-index:2;background:var(--bg);border-bottom:1px solid var(--line)}
+nav.toc .wrap{display:flex;gap:6px;overflow-x:auto;padding-top:10px;padding-bottom:10px}
+nav.toc a{flex:0 0 auto;font-size:13.5px;text-decoration:none;border:1px solid var(--line);background:var(--card);border-radius:999px;padding:4px 12px;color:var(--ink)}
+nav.toc a:hover{border-color:var(--accent)}
+section{padding:34px 0 6px;scroll-margin-top:60px}
+h2{font-family:Georgia,serif;font-size:28px;margin:0 0 6px}
+h3{font-size:17px;margin:22px 0 6px}
+.lead{color:var(--muted);margin:0 0 16px;max-width:760px}
+.card{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:16px 18px;margin:10px 0}
+.grid{display:grid;gap:12px}
+.g2{grid-template-columns:repeat(2,1fr)} .g3{grid-template-columns:repeat(3,1fr)} .g4{grid-template-columns:repeat(4,1fr)}
+@media (max-width:760px){.g2,.g3,.g4{grid-template-columns:1fr}}
+.stat{background:var(--card);border:1px solid var(--line);border-radius:12px;padding:14px 16px}
+.stat b{display:block;font-size:26px;font-family:Georgia,serif;line-height:1.1}
+.stat span{color:var(--muted);font-size:14px}
+table{border-collapse:collapse;width:100%;font-size:14.5px;background:var(--card)}
+th,td{border:1px solid var(--line);padding:8px 10px;text-align:left;vertical-align:top}
+th{background:var(--soft);font-weight:600}
+.tablewrap{overflow-x:auto;margin:10px 0}
+code{background:var(--soft);padding:1px 5px;border-radius:4px;font-size:.9em;overflow-wrap:anywhere}
+ol.steps{counter-reset:s;list-style:none;padding:0;margin:10px 0}
+ol.steps>li{counter-increment:s;position:relative;padding:12px 14px 12px 54px;background:var(--card);border:1px solid var(--line);border-radius:12px;margin:8px 0}
+ol.steps>li::before{content:counter(s);position:absolute;left:14px;top:12px;width:28px;height:28px;border-radius:50%;background:var(--gold-soft);color:var(--accent);font-weight:700;display:grid;place-items:center;font-size:14px}
+.diagram{display:grid;grid-template-columns:1fr auto 1.2fr auto 1fr;gap:10px;align-items:center;margin:14px 0}
+.box{border-radius:12px;padding:12px 14px;border:1px solid var(--line);font-size:14px}
+.box b{display:block;font-size:15px;margin-bottom:2px}
+.box.host{background:var(--soft)} .box.app{background:var(--gold-soft);border-color:#E3CF9E}
+.box.fn{background:var(--blue-soft);border-color:#BBD0EC} .box.ext{background:var(--purple-soft);border-color:#D4C3E5}
+.arrow{color:var(--muted);font-size:13px;text-align:center}
+.stack{display:grid;gap:10px}
+@media (max-width:760px){.diagram{grid-template-columns:1fr}.arrow{transform:rotate(90deg);margin:-4px 0}}
+.decision h3{margin-top:0}
+.decision .why{color:var(--muted);font-size:15px;margin:4px 0 0}
+.tag{display:inline-block;font-size:12px;font-weight:600;border-radius:999px;padding:1px 9px;margin-right:6px;background:var(--soft);color:var(--muted)}
+.tag.p{background:#FBE9E7;color:#9A2A1E} .tag.f{background:#E3F1E8;color:#1F6B44}
+details.qa{background:var(--card);border:1px solid var(--line);border-radius:12px;margin:8px 0;padding:0 16px}
+details.qa summary{cursor:pointer;font-weight:600;padding:12px 0;list-style:none}
+details.qa summary::before{content:"Q  ";color:var(--accent);font-weight:700}
+details.qa[open] summary{border-bottom:1px solid var(--line)}
+details.qa .a{padding:10px 0 14px}
+details.qa .a p{margin:6px 0}
+.pills{display:flex;flex-wrap:wrap;gap:8px;margin:8px 0}
+.pill{background:var(--card);border:1px solid var(--line);border-radius:999px;padding:5px 12px;font-size:14px}
+.note{border-left:3px solid var(--accent);padding:8px 14px;background:var(--card);border-radius:0 10px 10px 0;color:var(--muted);font-size:15px}
+footer{margin-top:40px;padding:24px 0 40px;border-top:1px solid var(--line);color:var(--muted);font-size:13px}
+</style>
+</head>
+<body>
+
+<header class="hero">
+  <div class="wrap">
+    <p class="eyebrow">Design walkthrough · interview preparation</p>
+    <h1>Nikasha: how it was designed and built</h1>
+    <p>An educational backtester for Nifty 50 options, built spec-first with Claude in three days (14–16 October 2026). This page explains the architecture, the decisions and their trade-offs, the problems met along the way, how it was tested, and the questions an interviewer is likely to ask.</p>
+    <div class="links">
+      <a href="https://nikasha.vercel.app/">Live app</a>
+      <a href="/transcript">Session transcript</a>
+      <a href="https://github.com/TarunSaxena123/nikasha">Source code</a>
+    </div>
+  </div>
+</header>
+
+<nav class="toc" aria-label="Sections">
+  <div class="wrap">
+    <a href="#glance">At a glance</a>
+    <a href="#problem">Problem</a>
+    <a href="#process">Spec-driven process</a>
+    <a href="#architecture">Architecture</a>
+    <a href="#decisions">Decisions</a>
+    <a href="#problems">Problems &amp; fixes</a>
+    <a href="#testing">Testing</a>
+    <a href="#limits">Limitations</a>
+    <a href="#interview">Interview Q&amp;A</a>
+  </div>
+</nav>
+
+<main class="wrap">
+
+<section id="glance">
+  <h2>At a glance</h2>
+  <p class="lead">The numbers behind the project.</p>
+  <div class="grid g4">
+    <div class="stat"><b>230</b><span>requirements, every one traced to a design section, a task and an automated test</span></div>
+    <div class="stat"><b>7</b><span>features, each with EARS requirements, a design and a task list</span></div>
+    <div class="stat"><b>11 years</b><span>of 1-minute Nifty 50 and India VIX data (about 1.05 million rows each)</span></div>
+    <div class="stat"><b>~370</b><span>automated tests: 211 engine, 39 extraction, 60 web unit, 59 end-to-end</span></div>
+  </div>
+  <div class="grid g3" style="margin-top:12px">
+    <div class="stat"><b>₹0</b><span>hosting cost: Vercel Hobby plus AWS Lambda free allowances</span></div>
+    <div class="stat"><b>15.5 s</b><span>to evaluate a 15-minute strategy over the full period on Lambda</span></div>
+    <div class="stat"><b>0</b><span>bytes of user data stored, anywhere</span></div>
+  </div>
+</section>
+
+<section id="problem">
+  <h2>The problem and the product</h2>
+  <p class="lead">Retail options traders often risk money on strategies they have never tested, and the strategies usually exist as notes with vague rules.</p>
+  <div class="grid g3">
+    <div class="card"><h3 style="margin-top:0">Untestable rules</h3>"Exit if it closes decisively below", "reduce size significantly". A computer can't test that as written.</div>
+    <div class="card"><h3 style="margin-top:0">Results without reasons</h3>A profit number alone doesn't say when a strategy works, or whether the result is luck fitted to the past.</div>
+    <div class="card"><h3 style="margin-top:0">No safe start</h3>Beginners don't know the terms and have no safe way to learn why most strategies fail.</div>
+  </div>
+  <h3>What Nikasha does</h3>
+  <ol class="steps">
+    <li><b>Describe:</b> upload or paste a strategy document, build it step by step, or start from a template.</li>
+    <li><b>Clarify:</b> it never guesses. It asks only for missing mandatory inputs and vague rules, then shows the rules in plain English.</li>
+    <li><b>Evaluate:</b> the strategy is replayed minute by minute on the historical data, with option premiums modelled from the index and India VIX.</li>
+    <li><b>Understand:</b> a report that puts risk before profit: plain-English summary, breakdowns by year, volatility and market regime, an overfitting check, a volatility sensitivity check and "what-if" ideas. PDF and CSV are made in the browser.</li>
+  </ol>
+  <p class="note">Nikasha is educational, not advisory. It gives no signals or recommendations; ideas are worded as "this change would have…" on past simulated results. A full disclaimer (not SEBI-registered, modelled prices, unofficial data source) must be accepted before any strategy screen.</p>
+</section>
+
+<section id="process">
+  <h2>The spec-driven process</h2>
+  <p class="lead">No application code was written until every spec was approved. After that, every change in behaviour went through the spec first.</p>
+  <ol class="steps">
+    <li><b>Brief (claude.ai):</b> idea, scope, name, data, disclaimer and spec structure agreed in a planning chat, handed over as <code>NIKASHA_BRIEF.md</code>.</li>
+    <li><b>Clarify:</b> Claude Code asked 22 grouped questions (fill timing, strike rounding, costs, overfitting threshold…) before writing anything.</li>
+    <li><b>Project-level specs:</b> <code>constitution.md</code> (11 non-negotiable principles) and <code>product.md</code> (complete requirements), then <code>architecture.md</code>, <code>frontend.md</code>, <code>backend.md</code> and the contracts.</li>
+    <li><b>Contracts:</b> an OpenAPI 3.1 file and JSON Schemas for the strategy and instrument formats, plus <code>strategy-rules.md</code> for rules a schema can't express (SEM-01…25) and shared fixtures both sides must agree on.</li>
+    <li><b>Feature specs:</b> seven folders, each with <code>requirements.md</code> in EARS form ("WHEN … THE SYSTEM SHALL …") with acceptance criteria, <code>design.md</code> with fixed Frontend / Backend / Contract sections, and <code>tasks.md</code> tagged [FE], [BE] or [CONTRACT]. Two quality gates ran before tasks were approved: clarify, and a consistency check.</li>
+    <li><b>Traceability:</b> <code>traceability.md</code> maps each requirement to its design section, task and test, with status.</li>
+    <li><b>Build, then change process:</b> features built and tested in order. Every later change was classified (behaviour change, bug fix or refactor); behaviour changes were proposed, approved and logged in <code>CHANGELOG.md</code> before code.</li>
+  </ol>
+  <h3>Why this structure</h3>
+  <div class="tablewrap"><table>
+    <tr><th>Choice</th><th>Reason</th></tr>
+    <tr><td>Constitution above everything</td><td>Principles like "never guess" and "zero storage" apply to every feature. A lower document may add detail but never relax a higher one.</td></tr>
+    <tr><td>One folder per feature</td><td>Each feature moves through requirements → design → tasks → build on its own and can be reviewed in one sitting.</td></tr>
+    <tr><td>Shared <code>frontend.md</code> / <code>backend.md</code></td><td>Cross-cutting rules (navigation, design system, error model, logging) have one home instead of being repeated per feature.</td></tr>
+    <tr><td>Contracts as the only link between web and engine</td><td>Either side can be built and tested independently; generated types and a drift check keep both in step.</td></tr>
+    <tr><td>Stable requirement IDs</td><td>A changed requirement keeps its ID and a removed ID is never reused, so the changelog and traceability stay meaningful.</td></tr>
+  </table></div>
+  <p class="note">Example of the process at work: when the owner uploaded an opening-range + CPR strategy that couldn't be tested, the fix was a spec change first (REQ-ENG-48…57, SEM-21…25, new acceptance criteria), approved and logged, then contracts, tests and code.</p>
+</section>
+
+<section id="architecture">
+  <h2>Architecture</h2>
+  <p class="lead">Three places run code. Vercel only serves files; it never sees user content or secrets.</p>
+  <div class="diagram" role="img" aria-label="Vercel serves the web app to the browser. The browser calls the engine and the extraction function on AWS Lambda. Only the extraction function calls the Anthropic API, with strategy text only.">
+    <div class="box host"><b>Vercel</b>Static Next.js export. No user data, no secrets.</div>
+    <div class="arrow">① loads<br>the app →</div>
+    <div class="box app"><b>Browser: Nikasha web app</b>Screens, builder, review, finding missing inputs, charts, PDF/CSV. Results live only in tab memory.</div>
+    <div class="arrow">② evaluate<br>③ upload →</div>
+    <div class="stack">
+      <div class="box fn"><b>Engine · AWS Lambda</b>Python container image with the data inside. Backtests and builds reports.</div>
+      <div class="box fn"><b>Extraction · AWS Lambda</b>Python. Reads documents in memory; holds the only API key.</div>
+      <div class="box ext"><b>Anthropic API</b>④ Strategy text only (Claude Sonnet 5.5)</div>
+    </div>
+  </div>
+  <div class="tablewrap"><table>
+    <tr><th>Part</th><th>Technology</th><th>Responsibility</th></tr>
+    <tr><td>Web app</td><td>Next.js (static export), React, TypeScript, Zustand, Radix UI, Recharts</td><td>All screens; plain-English rendering of rules from fixed sentence patterns; client-side validation; orchestrating engine calls; charts; PDF and CSV export</td></tr>
+    <tr><td>Engine</td><td>Python 3.12, numpy, pandas, scipy; Starlette adapter; Lambda container image (2,048 MB)</td><td>Data loading and checks, expiry calendar, indicators, conditions, Black-Scholes pricing, backtest, report, suggestion planning</td></tr>
+    <tr><td>Extraction</td><td>Python Lambda, official Anthropic SDK, structured outputs, pypdf / python-docx</td><td>Turn a document into a rule draft with Found / Vague / Unsupported items and questions</td></tr>
+    <tr><td>Infrastructure</td><td>AWS SAM, Lambda Function URLs, GitHub Actions CI, Vercel</td><td>Repeatable deploys, CORS limited to the production domain, a $1 budget alert</td></tr>
+  </table></div>
+  <h3>The engine pipeline</h3>
+  <div class="pills">
+    <span class="pill">Load Parquet + checks</span><span class="pill">Expiry calendar</span><span class="pill">Candles (1 min → chosen timeframe)</span><span class="pill">Indicators</span><span class="pill">Conditions</span><span class="pill">Entry gates</span><span class="pill">Strike + premium (Black-Scholes, VIX)</span><span class="pill">Exits (stop, target, trail, partial)</span><span class="pill">Costs</span><span class="pill">Report</span>
+  </div>
+  <p>Each evaluation runs three times, with VIX unchanged, −2 and +2 points, to show how sensitive results are to the modelled premiums. All instrument-specific values (session hours, strike interval, expiry rules, costs, pricing model) come from an instrument profile, so Bank Nifty or MCX crude can be added with data and a profile, not engine code.</p>
+</section>
+
+<section id="decisions">
+  <h2>Key decisions and trade-offs</h2>
+  <p class="lead">Each decision, why it was made, and what it costs.</p>
+
+  <div class="card decision"><h3>1. Model option premiums instead of using real option prices</h3>
+    <p>Only Nifty spot and India VIX minute data were available. Premiums are priced with Black-Scholes using VIX as volatility.</p>
+    <p class="why"><b>Trade-off:</b> VIX is a 30-day, near-the-money measure, so skew and expiry-day behaviour aren't captured. Mitigation: a "modelled, not actual" badge on every report and the VIX ±2 sensitivity rerun. A <code>PricingProvider</code> interface leaves room for real data later.</p></div>
+
+  <div class="card decision"><h3>2. Use the AI model only to read documents, never to produce results</h3>
+    <p>The model turns free text into candidate rules. Every number and every summary sentence in a report comes from the engine with fixed sentence patterns.</p>
+    <p class="why"><b>Trade-off:</b> summaries are less fluent than generated prose, but they are deterministic, testable and can't invent figures. Tests replay recorded model responses, so CI never calls a paid service.</p></div>
+
+  <div class="card decision"><h3>3. Never guess; no hidden defaults</h3>
+    <p>Thirteen mandatory inputs; anything missing or vague is asked. Advanced options are off unless set. The only pre-filled values (lots, lot size, costs, period) must be confirmed before evaluation.</p>
+    <p class="why"><b>Trade-off:</b> more questions for the user, but every result reflects rules the user actually stated, and the report lists every setting used.</p></div>
+
+  <div class="card decision"><h3>4. Zero data storage</h3>
+    <p>No database, accounts or files. Uploads are read in memory; logs carry no user content; reports live in the browser tab; PDF and CSV are generated client-side.</p>
+    <p class="why"><b>Trade-off:</b> no saved strategies and no "come back later". A privacy marker test proves a unique string from a test upload never reaches the logs.</p></div>
+
+  <div class="card decision"><h3>5. Browser calls Lambda Function URLs directly</h3>
+    <p>No API Gateway and no Vercel functions in the path.</p>
+    <p class="why"><b>Trade-off:</b> CORS and the browser's content security policy must name the exact URLs, and cold starts are visible to the user. In return: free tier only, and Vercel never sees user content.</p></div>
+
+  <div class="card decision"><h3>6. Data baked into the engine image, loaded on first request</h3>
+    <p>Eleven years of minute data ship as Parquet inside the container; no S3.</p>
+    <p class="why"><b>Trade-off:</b> a data update means a new image; the first request after idle pays about 8 seconds of cold start.</p></div>
+
+  <div class="card decision"><h3>7. Guard against overfitting</h3>
+    <p>Weekly-expiry strategies are tuned on 2019–2023 and checked on 2024 to May 2026. A strategy is flagged "possibly overfit" when unseen-period expectancy falls below half of the tuning period's (or changes sign), with at least 30 trades in each part.</p>
+    <p class="why"><b>Trade-off:</b> fewer years for the main result, but suggestions can't simply chase the past.</p></div>
+
+  <div class="card decision"><h3>8. Fixed rules wherever the market is ambiguous</h3>
+    <p>Signals fire on candle close and fill at the next minute's open; if stop and target are hit in the same minute, the stop counts (conservative). Expiry dates are derived from the rules (Thursday weekly expiry until August 2025, Tuesday from 1 September 2025) and the trading days actually in the data. Missing minutes are never filled.</p>
+    <p class="why"><b>Trade-off:</b> results can differ from a broker's fills, but every rule is written down, tested and disclosed.</p></div>
+</section>
+
+<section id="problems">
+  <h2>Problems met and how they were fixed</h2>
+  <p class="lead">Real issues from the build, in roughly the order they appeared.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Problem</th><th>Cause</th><th>Fix</th></tr>
+    <tr><td>Nifty weekly expiry changed weekday mid-dataset</td><td>NSE moved Nifty expiry from Thursday to Tuesday from 1 Sep 2025</td><td>Expiry calendar derived from dated rules plus the data's trading days; days removed during cleaning are not treated as holidays; spot-checked against known expiries</td></tr>
+    <tr><td>VWAP was in the indicator list</td><td>An index has no traded volume, so VWAP can't be computed</td><td>Dropped through a spec change, and users are told why in the builder, upload results and glossary</td></tr>
+    <tr><td>Green and red for gains and losses failed the colour-blind check</td><td>The pair's colour-vision-deficiency difference was 6.6, below the target of 8</td><td>Charts use blue for gains and red for losses, always with labels or signs, never colour alone</td></tr>
+    <tr><td>The AI API rejected the structured-output schema</td><td>The full extraction schema was too large for structured outputs</td><td>The model fills a compact flat schema, which code converts to the full draft; the draft format didn't change</td></tr>
+    <tr><td>An uploaded opening-range + CPR strategy couldn't be tested</td><td>Its rules (pivots, partial exits, index-level targets) weren't in the vocabulary</td><td>Ten new requirements via the change process, then engine, builder, upload and report support</td></tr>
+    <tr><td>"Book profit at R1" could book a loss</td><td>The index could already be past R1 when the trade opened</td><td>An index level counts only if it lies on the trade's profitable side at entry; otherwise it's reported as a rule with no effect</td></tr>
+    <tr><td>Users weren't sure how to go back, and feared losing work</td><td>Feedback from the owner's local testing</td><td>"Back to …" links on every page, "Continue where you left off", and a confirmation before replacing a held strategy</td></tr>
+    <tr><td>AWS deployment failed in Mumbai</td><td>The Free plan account's organisation policy only allows ap-southeast-2</td><td>Deployed to Sydney; the region is a deploy parameter, so it can move later</td></tr>
+    <tr><td>Engine cold start of 17.6 s</td><td>Loading the data at import time exceeded Lambda's 10-second init phase</td><td>Load data on the first request instead; cold start now about 8 s</td></tr>
+    <tr><td>Extraction function failed to import on Lambda</td><td>Native library wheels built on macOS don't run on Lambda's Linux</td><td>Build with a makefile that installs Linux-compatible wheels</td></tr>
+    <tr><td>CI failed on generated code drift</td><td>A newer version of the model-code generator produced different output</td><td>Pinned the generator version</td></tr>
+    <tr><td>Live AI testing cost more than estimated</td><td>Repeated uploads of a long document during UAT</td><td>Tests replay recordings; live checks limited to one short sample with a spending cap</td></tr>
+  </table></div>
+</section>
+
+<section id="testing">
+  <h2>How it was tested</h2>
+  <p class="lead">Every requirement has at least one automated test; CI runs them all on every push without calling any paid service.</p>
+  <div class="tablewrap"><table>
+    <tr><th>Level</th><th>What it covers</th></tr>
+    <tr><td>Engine unit and integration (pytest, 211)</td><td>Hand-calculated cases for indicators, pivots, opening range, pricing, strike selection, exits, partial exits, costs and gap handling; golden reports; performance benchmarks</td></tr>
+    <tr><td>Extraction (pytest, 39)</td><td>Recorded model responses replayed; conversion to the draft; vague items forced to questions; uploads read in memory only</td></tr>
+    <tr><td>Web unit and component (Vitest, 60)</td><td>Completeness check, plain-English rule text, validation, state</td></tr>
+    <tr><td>End-to-end (Playwright, 59, desktop and phone)</td><td>Template, builder and upload journeys against services mocked from shared fixtures; accessibility scans with axe; no sideways scrolling on phones</td></tr>
+    <tr><td>Contract checks</td><td>Schemas and OpenAPI valid; shared fixtures validate the same way in Python and TypeScript; generated types up to date</td></tr>
+    <tr><td>Repo checks</td><td>README disclaimer in sync; hashed product-name scan; banned advisory phrases; SAM template rules</td></tr>
+    <tr><td>Privacy marker test</td><td>A unique marker in a test upload and strategy never appears in either function's logs</td></tr>
+    <tr><td>UAT</td><td>Against the real local stack and the live site: report numbers add up trade by trade, CSV has one line per trade, PDF downloads, no console errors</td></tr>
+  </table></div>
+</section>
+
+<section id="limits">
+  <h2>Known limitations and what's next</h2>
+  <div class="grid g2">
+    <div class="card"><h3 style="margin-top:0">Limitations</h3>
+      <ul>
+        <li>Premiums are modelled, not real; expiry-day results are the least reliable.</li>
+        <li>The data is an unofficial Kaggle dataset used for education only.</li>
+        <li>Today's lot size and costs are applied to the whole history.</li>
+        <li>Nothing is saved; closing the tab loses the report unless downloaded.</li>
+        <li>About 8 seconds of cold start after the engine has been idle.</li>
+      </ul></div>
+    <div class="card"><h3 style="margin-top:0">Next steps</h3>
+      <ul>
+        <li>Bank Nifty and Sensex, then MCX crude through new instrument profiles (Black-76 pricing for options on futures).</li>
+        <li>Real option-premium data behind the same pricing interface.</li>
+        <li>A long-term host before the AWS Free plan ends; the engine container is portable.</li>
+        <li>Legal review of the disclaimer before any public launch.</li>
+      </ul></div>
+  </div>
+</section>
+
+<section id="interview">
+  <h2>Interview questions and answers</h2>
+  <p class="lead">Likely questions, with answers grounded in what was actually built. Click a question to open its answer.</p>
+
+  <h3>About the design and process</h3>
+
+  <details class="qa"><summary>What is spec-driven development, and how did you apply it here?</summary><div class="a">
+    <p>The specification is the source of truth and code follows it. I wrote a constitution, a complete product spec, architecture, frontend and backend specs, contracts, and seven feature specs with EARS requirements and acceptance criteria, all approved before any code. Every one of the 230 requirements is traced to a design section, a task and a test. After that, every behaviour change went through a proposal, approval and a changelog entry before code changed.</p></div></details>
+
+  <details class="qa"><summary>Why EARS for requirements?</summary><div class="a">
+    <p>"WHEN … THE SYSTEM SHALL …" forces a trigger and a single observable outcome, so each requirement is unambiguous and turns directly into a test. Given/When/Then acceptance criteria then give the concrete examples.</p></div></details>
+
+  <details class="qa"><summary>How did you keep the frontend and backend from disagreeing?</summary><div class="a">
+    <p>They are built only against shared contracts: OpenAPI 3.1 plus JSON Schemas. Types are generated for both Python and TypeScript, CI fails if generated code drifts, and shared fixtures must validate the same way on both sides. Rules a schema can't express are numbered in <code>strategy-rules.md</code> and tested on both sides.</p></div></details>
+
+  <details class="qa"><summary>You have no option price data. How can the backtest be trusted?</summary><div class="a">
+    <p>It's an educational tool and says so. Premiums come from Black-Scholes with India VIX; every report carries a "modelled, not actual" badge and reruns with VIX ±2 points so you can see how much results depend on that assumption. The pricing sits behind an interface, so real option data can replace it without touching the backtest.</p></div></details>
+
+  <details class="qa"><summary>Where is the AI used, and why only there?</summary><div class="a">
+    <p>Only to read an uploaded or pasted strategy into candidate rules. Results, numbers and summary text are all computed by deterministic code, because an AI shouldn't be able to invent a win rate. The AI output is a flat structured schema converted by tested code, vague items always become questions, and CI replays recorded responses so no test spends money.</p></div></details>
+
+  <details class="qa"><summary>How do you handle missing or vague inputs?</summary><div class="a">
+    <p>There are 13 mandatory inputs, and one completeness check in the browser is shared by the builder, the upload flow and the review screen. Missing inputs and vague words ("decisively", ranges like "30–35", "Thursday" for expiry) are asked one at a time; the Evaluate button stays disabled until everything is answered. Text that isn't a trading rule is ignored.</p></div></details>
+
+  <details class="qa"><summary>How did you guard against overfitting?</summary><div class="a">
+    <p>The data is split: 2019–2023 for tuning and 2024 onward as unseen data. The report flags "possibly overfit" when unseen-period expectancy drops below half, or changes sign, with at least 30 trades in each part, and says "too few trades to judge" otherwise. Suggestions are checked against the unseen period instead of being ranked as "best".</p></div></details>
+
+  <details class="qa"><summary>Walk me through the architecture.</summary><div class="a">
+    <p>Vercel serves a static Next.js app. The browser calls two AWS Lambda functions directly through Function URLs: the engine (a Python container with the market data inside) and the extraction function (the only holder of the Anthropic key). There's no database, queue or object store. CORS and the content security policy allow only the production domain and the two exact URLs.</p></div></details>
+
+  <details class="qa"><summary>How did you achieve zero data storage, and how do you prove it?</summary><div class="a">
+    <p>Uploads are read in memory and discarded, logs record only technical errors through a shared logging helper, the report lives in the tab, and PDF and CSV are generated in the browser. The only thing kept is the disclaimer acceptance flag in the user's own browser. A privacy marker test puts a unique string in a test upload and strategy and checks it never appears in either function's logs. The disclaimer also discloses that strategy text goes to the AI provider.</p></div></details>
+
+  <details class="qa"><summary>What was the hardest problem?</summary><div class="a">
+    <p>Two stand out. Getting time right: the weekly expiry moved from Thursday to Tuesday in September 2025, so the expiry calendar is derived from dated rules and the data's real trading days. And deployment: the AWS Free plan only allowed one region, and loading the data at import time exceeded Lambda's 10-second init limit (17.6 s cold start), fixed by loading on first request (about 8 s).</p></div></details>
+
+  <details class="qa"><summary>How did you handle a change request after the specs were approved?</summary><div class="a">
+    <p>The owner uploaded an opening-range + CPR strategy that Nikasha couldn't test. I classified it as a behaviour change, proposed new requirements and semantics with acceptance criteria, got approval, logged it in the changelog, updated contracts and traceability, wrote tests, then the code. During that work a new question came up ("profit booking at R1" when the index is already past R1); it was recorded as a pending decision, the owner chose the rule, and it went into the spec before the code.</p></div></details>
+
+  <details class="qa"><summary>How is it tested, and what runs in CI?</summary><div class="a">
+    <p>About 370 automated tests: engine (211, hand-calculated cases and golden reports), extraction (39, recorded responses), web unit (60) and Playwright end-to-end (59, on desktop and phone sizes, with accessibility scans). CI also runs lint and types, contract checks, generated-code drift, a hashed product-name scan, the README disclaimer sync and SAM template rules.</p></div></details>
+
+  <details class="qa"><summary>What would you change with more time or a budget?</summary><div class="a">
+    <p>Real option-premium data, more instruments through profiles, keeping the engine warm to remove cold starts, saved strategies with explicit consent, and a legal review before any public launch.</p></div></details>
+
+  <details class="qa"><summary>How did you work with Claude, and how did you keep control?</summary><div class="a">
+    <p>Planning happened on claude.ai and produced the brief; Claude Code then wrote the specs and the code. I approved each spec step, answered clarifying questions, and decided open points (a pending-review list of 27 readings). A <code>CLAUDE.md</code> file made the rules permanent: spec first, never guess, no product names, no paid calls in tests. The full session transcript is published alongside the app.</p></div></details>
+
+  <h3 style="margin-top:28px">About the functionality</h3>
+
+  <details class="qa"><summary>What can a user put into a strategy?</summary><div class="a">
+    <p><b>Mandatory inputs (13):</b> instrument, buy or sell, Call / Put / both (Call on the bullish signal, Put on the bearish one), ATM / ITM / OTM with the distance in points (a multiple of 50), expiry (current weekly, next weekly or monthly), candle timeframe (1, 3, 5, 15, 30 or 60 minutes, or 4 hours), intraday or positional, number of lots, lot size, an entry trigger, a stop-loss and an exit rule.</p>
+    <p><b>Entry conditions:</b> EMA, SMA, RSI, ADX, MACD, Bollinger Bands, Supertrend, opening range, daily pivots / CPR, candle range and body, price and VIX, compared with "above / below", "crosses", "turns up / down" or "rising / falling over N candles", grouped with AND / OR. The Put side can be mirrored from the Call side in one click. A fixed entry time works too.</p>
+    <p><b>15 advanced options,</b> all off unless set: SL cap, trigger-candle stop-loss, risk-reward target, trail stop to cost, exit after N candles, exit conditions, index-level target, partial exit, VIX sizing, entry and no-entry windows, expiry-day cutoff, daily limits, multiple legs, and strike by delta or premium.</p></div></details>
+
+  <details class="qa"><summary>Walk me through the upload flow with an example.</summary><div class="a">
+    <p>Paste "Buy ATM Nifty call when RSI 14 crosses above 60 on 5-minute chart, stop-loss 30%." The extraction function reads it and returns what it found (buy, Call, ATM, 5-minute, RSI condition, 30% stop). The browser's completeness check then asks only what is missing, one question at a time: the exit rule, intraday or positional, expiry, and confirming lots and lot size. Nothing about advanced options is asked. The user lands on the review screen with the rules in plain English and clicks Evaluate Strategy.</p>
+    <p>For a long document, vague wording ("closes decisively above", "SL 30–35") becomes a question, rules Nikasha can't test are listed as left out and must be acknowledged, and unrelated text is ignored.</p></div></details>
+
+  <details class="qa"><summary>Which exits are supported, and which one wins?</summary><div class="a">
+    <p>Stop-loss (% of premium, points, or the trigger candle's low/high, optionally capped), target (% of premium, points, risk-reward or an index level such as R2), trail stop to cost, exit after N candles, exit conditions (filled at the next minute's open), partial exits (book part of the position, then keep the stop, move it to cost or trail it), a time exit, and the 15:15 intraday square-off.</p>
+    <p>Every open trade is checked on each 1-minute bar. If the stop and the target are both hit in the same minute, the stop counts, the conservative reading. An index level is used only if it lies on the trade's profitable side at entry.</p></div></details>
+
+  <details class="qa"><summary>How do intraday and positional trades differ?</summary><div class="a">
+    <p>Intraday positions are always closed at 15:15. For a positional strategy with no target or time exit, Nikasha asks what to do (hold until expiry, exit at a set time on expiry day, set a target, or exit after N candles) rather than choosing for the user. A position still open on its expiry day is settled at intrinsic value, because Nifty options are cash-settled. Entries whose expiry falls after the last day of data are skipped and counted.</p></div></details>
+
+  <details class="qa"><summary>How is the strike chosen and the premium calculated?</summary><div class="a">
+    <p>The signal fires on a candle's close and the trade fills at the next minute's open. ATM is the spot rounded to the nearest 50 (a half rounds up); ITM and OTM move from there by the chosen distance. The premium is priced with Black-Scholes from that minute's spot, the strike, India VIX as volatility, the minutes left to expiry and a 6.5% risk-free rate. If that minute can't be priced (for example, VIX is missing), the entry is skipped rather than filled with a guessed price.</p></div></details>
+
+  <details class="qa"><summary>What does the report show?</summary><div class="a">
+    <p>Risk first: maximum drawdown and the worst losing streak, then net P&amp;L after costs, win rate, average win and loss, and expectancy. It includes an equity curve and drawdown chart; breakdowns by year, month, VIX band, market regime (trending / mixed / sideways by daily ADX), weekday and Calls vs Puts; in-sample vs unseen-period results with the overfitting status; and the VIX ±2 sensitivity. It ends with a plain-English summary, the settings used and the advanced options that were off, skipped signals and data gaps, and the trade list. Everything is calculated on the selected period only, and the report downloads as PDF, with trades as CSV.</p></div></details>
+
+  <details class="qa"><summary>How are transaction costs handled?</summary><div class="a">
+    <p>Pre-filled and editable: ₹20 brokerage per order, the current statutory charges (STT, exchange, SEBI, stamp duty and GST) and slippage of 0.5 premium points per side. The user must confirm them before evaluating. Today's rates are applied to the whole history, the same way the lot size is, and each order is charged for its own quantity, so a partial exit pays its own charges.</p></div></details>
+
+  <details class="qa"><summary>What do "ideas" and the what-if sliders do?</summary><div class="a">
+    <p><b>What-if:</b> sliders for the stop-loss and target. When a slider settles, a copy of the strategy with only that value changed is re-evaluated on the same period, and the report says, for example, "With a stop-loss of 25% instead of 30%…".</p>
+    <p><b>Ideas:</b> on "Show ideas", Nikasha runs variants on the same period (stop-loss and target sweeps, a VIX-band filter, Calls-only or Puts-only, and one template alternative), four at a time. Each shows a reason and its result on the whole period and on the unseen period. They are never ranked as "best" and are worded as "this change would have…", because Nikasha doesn't give advice.</p></div></details>
+
+  <details class="qa"><summary>What does a beginner get?</summary><div class="a">
+    <p>An intro page explaining what Nikasha is and isn't, a "Choose a path" page, and three templates: Simple Trend Follower (9/21 EMA crossover), Higher-Timeframe Trend (1-hour) and a short straddle that shows how option selling behaves. "Use this template" goes straight to the review screen, so one click on Evaluate runs it. Every field has a tooltip, there is a glossary and six Learn articles, and the progress screen offers reading while the evaluation runs.</p></div></details>
+
+  <details class="qa"><summary>What happens with data gaps or conflicting signals?</summary><div class="a">
+    <p>Missing minutes are never filled. A minute with Nifty but no VIX can't be priced, so no entry or exit happens there; 2019-07-02, which has no VIX at all, is skipped. If the Call and Put conditions are both true on the same candle, neither trade is taken. Every skip is counted in the report with its reason, and the date range shown everywhere is read from the data itself.</p></div></details>
+
+  <h3 style="margin-top:28px">About the name</h3>
+
+  <details class="qa"><summary>Why the name Nikasha?</summary><div class="a">
+    <p>It's Sanskrit for touchstone, the stone used to test whether gold is genuine. Nikasha tests whether a trading strategy's edge is real.</p></div></details>
+</section>
+
+</main>
+
+<footer>
+  <div class="wrap">
+    <p>Nikasha is an educational project, not investment advice. Its creator is not registered with SEBI. Results are simulated backtests with modelled option prices on unofficial historical data and do not guarantee future returns. NIFTY 50 and India VIX are trademarks of NSE Indices Limited; Nikasha is not affiliated with NSE, NSE Indices Limited or SEBI.</p>
+  </div>
+</footer>
+</body>
+</html>
